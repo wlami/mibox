@@ -73,6 +73,16 @@ public class AppSettings {
 	 * Password for accessing remote repository
 	 */
 	private String password;
+	
+	
+	/**
+	 * Constant for accessing String watchDirectory
+	 */
+	protected final static String WATCH_DIRECTORY = "monitoring.watch_directory";
+	/**
+	 * Directory which is synchronized
+	 */
+	private String watchDirectory;
 
 	/**
 	 * Read the AppSettings properties file and create a new AppSettings instance
@@ -96,6 +106,7 @@ public class AppSettings {
 		a.startAtSystemStartup = Boolean.parseBoolean( appSettings.getProperty(START_AT_SYSTEM_STARTUP) );
 		a.username = appSettings.getProperty(USERNAME);
 		a.password = appSettings.getProperty(PASSWORD);
+		a.watchDirectory = appSettings.getProperty(WATCH_DIRECTORY);
 		
 		return a;
 	}
@@ -113,6 +124,7 @@ public class AppSettings {
 		props.setProperty(START_AT_SYSTEM_STARTUP, appSettings.isStartAtSystemStartup().toString());
 		props.setProperty(USERNAME, appSettings.getUsername());
 		props.setProperty(PASSWORD, appSettings.getPassword());
+		props.setProperty(WATCH_DIRECTORY, appSettings.getWatchDirectory());
 		
 		FileOutputStream fileOutputStream = new FileOutputStream(new File(settingsFile));
 		props.store(fileOutputStream, "auto generated settings");
@@ -172,6 +184,20 @@ public class AppSettings {
 	 */
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	/**
+	 * @return the watchDirectory
+	 */
+	public String getWatchDirectory() {
+		return watchDirectory;
+	}
+
+	/**
+	 * @param watchDirectory the watchDirectory to set
+	 */
+	public void setWatchDirectory(String watchDirectory) {
+		this.watchDirectory = watchDirectory;
 	}
 	
 	
