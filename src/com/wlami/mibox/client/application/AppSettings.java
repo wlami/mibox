@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wlami.mibox.client.Application;
+package com.wlami.mibox.client.application;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -26,107 +26,118 @@ import java.util.Properties;
 
 /**
  * @author Wladislaw Mitzel
- *
+ * 
  */
-public class AppSettings {
-	
+public final class AppSettings {
+
 	/**
-	 * Private constructor, so that readAppSettings is the only way to get an instance of this class
+	 * Private constructor, so that readAppSettings is the only way to get an
+	 * instance of this class.
 	 */
-	private AppSettings() {}
-	
+	private AppSettings() {
+	}
+
 	/**
-	 * Constant for accessing bool showDesktopNotification
+	 * Constant for accessing bool showDesktopNotification.
 	 */
-	protected final static String SHOW_DESKTOP_NOTIFICATION = "behavior.show_settings_notification";
+	protected static final String SHOW_DESKTOP_NOTIFICATION = "behavior.show_settings_notification";
 	/**
 	 * Determines whether there should be tray notifications on changes.
 	 */
 	private Boolean showDesktopNotification;
-	
-	
+
 	/**
-	 * Constant for accessing bool startAtSystemStartup
+	 * Constant for accessing bool startAtSystemStartup.
 	 */
-	protected final static String START_AT_SYSTEM_STARTUP = "behavior.start_at_system_startup";
+	protected static final String START_AT_SYSTEM_STARTUP = "behavior.start_at_system_startup";
 	/**
 	 * Determines whether this app should be startet during the boot procedure.
 	 */
 	private Boolean startAtSystemStartup;
-	
-	
+
 	/**
-	 * Constant for accessing String username
+	 * Constant for accessing String username.
 	 */
-	protected final static String USERNAME = "account.username";
+	protected static final String USERNAME = "account.username";
 	/**
-	 * Username for accessing remote repository
+	 * Username for accessing remote repository.
 	 */
 	private String username;
-	
-	
+
 	/**
-	 * Constant for accessing String password
+	 * Constant for accessing String password.
 	 */
-	protected final static String PASSWORD = "account.password";
+	protected static final String PASSWORD = "account.password";
 	/**
-	 * Password for accessing remote repository
+	 * Password for accessing remote repository.
 	 */
 	private String password;
-	
-	
+
 	/**
-	 * Constant for accessing String watchDirectory
+	 * Constant for accessing String watchDirectory.
 	 */
-	protected final static String WATCH_DIRECTORY = "monitoring.watch_directory";
+	protected static final String WATCH_DIRECTORY = "monitoring.watch_directory";
 	/**
-	 * Directory which is synchronized
+	 * Directory which is synchronized.
 	 */
 	private String watchDirectory;
 
 	/**
-	 * Read the AppSettings properties file and create a new AppSettings instance
-	 * @param settingsFile path to the properties file
+	 * Read the AppSettings properties file and create a new AppSettings
+	 * instance.
+	 * 
+	 * @param settingsFile
+	 *            path to the properties file
 	 * @return returns an Instance of AppSettings
-	 * @throws IOException thrown, if the given path doesn't point to the right file
+	 * @throws IOException
+	 *             thrown, if the given path doesn't point to the right file.
 	 */
-	public static AppSettings readAppSettings(String settingsFile) throws IOException  {
-		
-		//Read our settings file
+	public static AppSettings readAppSettings(final String settingsFile)
+			throws IOException {
+
+		// Read our settings file
 		Properties appSettings = new Properties();
-		BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(settingsFile));
+		BufferedInputStream bufferedInputStream = new BufferedInputStream(
+				new FileInputStream(settingsFile));
 		appSettings.load(bufferedInputStream);
 		bufferedInputStream.close();
-		
-		//Create a new instance of AppSettings
+
+		// Create a new instance of AppSettings
 		AppSettings a = new AppSettings();
-		
-		//Read the properties and fill the variables
-		a.showDesktopNotification = Boolean.parseBoolean( appSettings.getProperty(SHOW_DESKTOP_NOTIFICATION) );
-		a.startAtSystemStartup = Boolean.parseBoolean( appSettings.getProperty(START_AT_SYSTEM_STARTUP) );
+
+		// Read the properties and fill the variables
+		a.showDesktopNotification = Boolean.parseBoolean(appSettings
+				.getProperty(SHOW_DESKTOP_NOTIFICATION));
+		a.startAtSystemStartup = Boolean.parseBoolean(appSettings
+				.getProperty(START_AT_SYSTEM_STARTUP));
 		a.username = appSettings.getProperty(USERNAME);
 		a.password = appSettings.getProperty(PASSWORD);
 		a.watchDirectory = appSettings.getProperty(WATCH_DIRECTORY);
-		
+
 		return a;
 	}
-	
+
 	/**
-	 * Writes the given AppSettings to a properties file on disk
-	 * @param appSettings 
+	 * Writes the given AppSettings to a properties file on disk.
+	 * 
+	 * @param appSettings
 	 * @param settingsFile
 	 * @throws IOException
 	 */
-	public static void writeAppSettings(AppSettings appSettings, String settingsFile) throws IOException {
-		
+	public static void writeAppSettings(final AppSettings appSettings,
+			final String settingsFile) throws IOException {
+
 		Properties props = new Properties();
-		props.setProperty(SHOW_DESKTOP_NOTIFICATION, appSettings.isShowDesktopNotification().toString());
-		props.setProperty(START_AT_SYSTEM_STARTUP, appSettings.isStartAtSystemStartup().toString());
+		props.setProperty(SHOW_DESKTOP_NOTIFICATION, appSettings
+				.isShowDesktopNotification().toString());
+		props.setProperty(START_AT_SYSTEM_STARTUP, appSettings
+				.isStartAtSystemStartup().toString());
 		props.setProperty(USERNAME, appSettings.getUsername());
 		props.setProperty(PASSWORD, appSettings.getPassword());
 		props.setProperty(WATCH_DIRECTORY, appSettings.getWatchDirectory());
-		
-		FileOutputStream fileOutputStream = new FileOutputStream(new File(settingsFile));
+
+		FileOutputStream fileOutputStream = new FileOutputStream(new File(
+				settingsFile));
 		props.store(fileOutputStream, "auto generated settings");
 	}
 
@@ -138,9 +149,10 @@ public class AppSettings {
 	}
 
 	/**
-	 * @param showDesktopNotification the showDesktopNotification to set
+	 * @param showDesktopNotification
+	 *            the showDesktopNotification to set
 	 */
-	public void setShowDesktopNotification(Boolean showDesktopNotification) {
+	public void setShowDesktopNotification(final Boolean showDesktopNotification) {
 		this.showDesktopNotification = showDesktopNotification;
 	}
 
@@ -152,9 +164,10 @@ public class AppSettings {
 	}
 
 	/**
-	 * @param startAtSystemStartup the startAtSystemStartup to set
+	 * @param startAtSystemStartup
+	 *            the startAtSystemStartup to set
 	 */
-	public void setStartAtSystemStartup(Boolean startAtSystemStartup) {
+	public void setStartAtSystemStartup(final Boolean startAtSystemStartup) {
 		this.startAtSystemStartup = startAtSystemStartup;
 	}
 
@@ -166,9 +179,10 @@ public class AppSettings {
 	}
 
 	/**
-	 * @param username the username to set
+	 * @param username
+	 *            the username to set
 	 */
-	public void setUsername(String username) {
+	public void setUsername(final String username) {
 		this.username = username;
 	}
 
@@ -180,9 +194,10 @@ public class AppSettings {
 	}
 
 	/**
-	 * @param password the password to set
+	 * @param password
+	 *            the password to set
 	 */
-	public void setPassword(String password) {
+	public void setPassword(final String password) {
 		this.password = password;
 	}
 
@@ -194,11 +209,11 @@ public class AppSettings {
 	}
 
 	/**
-	 * @param watchDirectory the watchDirectory to set
+	 * @param watchDirectory
+	 *            the watchDirectory to set
 	 */
-	public void setWatchDirectory(String watchDirectory) {
+	public void setWatchDirectory(final String watchDirectory) {
 		this.watchDirectory = watchDirectory;
 	}
-	
-	
+
 }

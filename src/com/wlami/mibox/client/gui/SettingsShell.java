@@ -15,12 +15,14 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wlami.mibox.client.Gui;
+package com.wlami.mibox.client.gui;
 
 import java.io.IOException;
 import java.util.ResourceBundle;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
@@ -42,11 +44,9 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
 
 import swing2swt.layout.BorderLayout;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.ModifyEvent;
 
-import com.wlami.mibox.client.Application.AppSettings;
-import com.wlami.mibox.client.Application.MiboxClientApp;
+import com.wlami.mibox.client.application.AppSettings;
+import com.wlami.mibox.client.application.MiboxClientApp;
 
 /**
  * This Class represents the settings dialog.
@@ -198,9 +198,11 @@ public class SettingsShell extends Shell {
 				.getString("Settings.tab.general.start_at_system_startup"));
 
 		Group grpSynchronization = new Group(composite_2, SWT.NONE);
-		grpSynchronization.setText(strings.getString("Settings.tab.general.synchronization"));
+		grpSynchronization.setText(strings
+				.getString("Settings.tab.general.synchronization"));
 		grpSynchronization.setLayout(new GridLayout(17, false));
-		new Label(grpSynchronization, SWT.NONE); //TODO: Change this auto generated code!!
+		new Label(grpSynchronization, SWT.NONE); // TODO: Change this auto
+													// generated code!!
 		new Label(grpSynchronization, SWT.NONE);
 		new Label(grpSynchronization, SWT.NONE);
 		new Label(grpSynchronization, SWT.NONE);
@@ -226,7 +228,7 @@ public class SettingsShell extends Shell {
 
 		setupTxtSyncDir(grpSynchronization);
 		final Text txtSyncDirectory = txtSyncDir;
-		
+
 		setupBtnChooseSyncDir(shell, grpSynchronization, txtSyncDirectory);
 
 		TabItem tbtmAccount = new TabItem(tabFolder, SWT.NONE);
@@ -269,8 +271,6 @@ public class SettingsShell extends Shell {
 		composite.setLayoutData(BorderLayout.SOUTH);
 		composite.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-		
-
 		setupBtnSave(settings, composite, shell);
 
 		setupBtnCancel(composite, shell);
@@ -293,7 +293,8 @@ public class SettingsShell extends Shell {
 				appSettings.setWatchDirectory(txtSyncDir.getText());
 			}
 		});
-		txtSyncDir.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 13,1));
+		txtSyncDir.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
+				false, 13, 1));
 	}
 
 	/**
@@ -309,8 +310,10 @@ public class SettingsShell extends Shell {
 			public void widgetSelected(SelectionEvent arg0) {
 				DirectoryDialog directoryDialog = new DirectoryDialog(shell);
 				directoryDialog.setFilterPath(txtSyncDirectory.getText());
-				directoryDialog.setText(strings.getString("Settings.tab.general.choose_dir_dialog"));
-				directoryDialog.setMessage(strings.getString("Settings.tab.general.choose_dir_dialog"));
+				directoryDialog.setText(strings
+						.getString("Settings.tab.general.choose_dir_dialog"));
+				directoryDialog.setMessage(strings
+						.getString("Settings.tab.general.choose_dir_dialog"));
 				String tempResult = directoryDialog.open();
 				if (tempResult != null) {
 					txtSyncDirectory.setText(tempResult);

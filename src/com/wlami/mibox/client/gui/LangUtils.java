@@ -15,29 +15,39 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wlami.mibox.client.Gui;
+package com.wlami.mibox.client.gui;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import com.wlami.mibox.client.Application.MiboxClientApp;
+import com.wlami.mibox.client.application.MiboxClientApp;
 
 /**
  * @author Wladislaw Mitzel
- *
+ * 
  */
-public class LangUtils {
-	
+public final class LangUtils {
+
 	/**
-	 * Static method for acquiring a Strings ResourceBundle. It contains all Strings for the graphical user interface.
+	 * Private constructor for utility class.
+	 */
+	private LangUtils() {
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
+	 * Static method for acquiring a Strings ResourceBundle. It contains all
+	 * Strings for the graphical user interface.
+	 * 
 	 * @return ResourceBundle with all translations.
 	 */
 	public static ResourceBundle getTranslationBundle() {
 		Locale currentLocale;
 		String language = MiboxClientApp.getAppProperties().getProperty("lang");
-		String country =  MiboxClientApp.getAppProperties().getProperty("country");
+		String country = MiboxClientApp.getAppProperties().getProperty(
+				"country");
 		if (language == null) {
-			currentLocale = new Locale("en","US");
+			currentLocale = new Locale("en", "US");
 		} else {
 			currentLocale = new Locale(language, country);
 		}

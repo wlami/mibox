@@ -15,47 +15,72 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wlami.mibox.client.Application;
+package com.wlami.mibox.client.application;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import com.wlami.mibox.client.Gui.MiboxTray;
+import com.wlami.mibox.client.gui.MiboxTray;
 
 /**
- * Main class for the MiboxClient. Serves as the coupling point between the GUI and
- * the background service.
+ * Main class for the MiboxClient. Serves as the coupling point between the GUI
+ * and the background service.
+ * 
  * @author Wladislaw Mitzel
  */
-public class MiboxClientApp {
+public final class MiboxClientApp {
 
+	/**
+	 * hide constructor, because this is an utility class.
+	 */
+	private MiboxClientApp() {
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
+	 * Constant for accessing the main properties file.
+	 */
 	protected static final String RES_MAIN_PROPERTIES = "res/main.properties";
+	/**
+	 * Properties variable of the main properties file.
+	 */
 	private static Properties appProperties;
 
 	/**
-	 * Main entry point for the MiboxClientApplication
+	 * Main entry point for the MiboxClientApplication.
+	 * 
 	 * @param args
-	 * @throws IOException 
+	 *            no command line arguments needed.
+	 * @throws IOException
+	 *             thrown, if app properties cannot be loaded.
 	 */
-	public static void main(String[] args) throws IOException {
-		loadAppProperties(); //TODO: Handle exception and show errorDialog
+	public static void main(final String[] args) throws IOException {
+		loadAppProperties(); // TODO: Handle exception and show errorDialog
 		MiboxTray miboxTray = new MiboxTray();
 		miboxTray.show();
 	}
 
+	/**
+	 * Loads the main properties file.
+	 * 
+	 * @throws IOException
+	 *             thrown, if there is an error while reading the properties.
+	 */
 	private static void loadAppProperties() throws IOException {
 		appProperties = new Properties();
-		BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(RES_MAIN_PROPERTIES));
+		BufferedInputStream bufferedInputStream = new BufferedInputStream(
+				new FileInputStream(RES_MAIN_PROPERTIES));
 		appProperties.load(bufferedInputStream);
 		bufferedInputStream.close();
 	}
 
+	/**
+	 * @return the appProperties
+	 */
 	public static Properties getAppProperties() {
 		return appProperties;
 	}
-	
-	
 
 }
