@@ -22,6 +22,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.wlami.mibox.client.backend.watchdog.DirectoryWatchdog;
 import com.wlami.mibox.client.gui.MiboxTray;
 
 /**
@@ -31,6 +35,12 @@ import com.wlami.mibox.client.gui.MiboxTray;
  * @author Wladislaw Mitzel
  */
 public final class MiboxClientApp {
+
+	/**
+	 * internal logging object.
+	 */
+	protected static Logger log = LoggerFactory.getLogger(MiboxClientApp.class
+			.getName());
 
 	/**
 	 * hide constructor, because this is an utility class.
@@ -57,9 +67,15 @@ public final class MiboxClientApp {
 	 *             thrown, if app properties cannot be loaded.
 	 */
 	public static void main(final String[] args) throws IOException {
+		log.info("Startup mibox client.");
 		loadAppProperties(); // TODO: Handle exception and show errorDialog
+		log.debug("Creating mibox tray");
 		MiboxTray miboxTray = new MiboxTray();
-		miboxTray.show();
+		log.debug("starting watchdog");
+		DirectoryWatchdog directoryWatchdog = new DirectoryWatchdog();
+		directoryWatchdog.setDirectory(appProperties
+				.getProperty(AppSettings.WATCH_DIRECTORY));
+		directoryWatchdog.start();
 	}
 
 	/**
@@ -69,6 +85,7 @@ public final class MiboxClientApp {
 	 *             thrown, if there is an error while reading the properties.
 	 */
 	private static void loadAppProperties() throws IOException {
+		log.info("Loading application properties from file");
 		appProperties = new Properties();
 		BufferedInputStream bufferedInputStream = new BufferedInputStream(
 				new FileInputStream(RES_MAIN_PROPERTIES));

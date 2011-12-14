@@ -71,8 +71,13 @@ public class MiboxTray {
 	 * strings during creation.
 	 */
 	public MiboxTray() {
-		strings = LangUtils.getTranslationBundle();
-		setupTray();
+		new Thread() {
+			public void run() {
+				strings = LangUtils.getTranslationBundle();
+				setupTray();
+				show();
+			}
+		}.start();
 	}
 
 	/**
@@ -143,7 +148,7 @@ public class MiboxTray {
 	/**
 	 * display the trayItem.
 	 */
-	public void show() {
+	protected void show() {
 		trayItem.setVisible(true);
 		while (true) {
 			if (!display.readAndDispatch()) {
