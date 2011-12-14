@@ -57,22 +57,22 @@ import com.wlami.mibox.client.application.MiboxClientApp;
 public class SettingsShell extends Shell {
 
 	/**
-	 * Constant for accessing the path to the AppSettings properties file
+	 * Constant for accessing the path to the AppSettings properties file.
 	 */
-	protected final static String APP_SETTINGS = "app_settings";
+	protected static final String APP_SETTINGS = "app_settings";
 
 	/**
-	 * Textfield for username
+	 * Textfield for username.
 	 */
 	private Text txtUsername;
 
 	/**
-	 * Textfield for password
+	 * Textfield for password.
 	 */
 	private Text txtPassword;
 
 	/**
-	 * ResourceBundle which stores all translated strings
+	 * ResourceBundle which stores all translated strings.
 	 */
 	private ResourceBundle strings;
 
@@ -83,31 +83,50 @@ public class SettingsShell extends Shell {
 	private boolean unsavedChanges = false;
 
 	/**
-	 * Apply-Button
+	 * Apply-Button.
 	 */
 	private Button btnApply;
 
 	/**
-	 * Cancel-Button
+	 * Cancel-Button.
 	 */
 	private Button btnCancel;
 
 	/**
-	 * Save-Button
+	 * Save-Button.
 	 */
 	private Button btnSave;
 
+	/**
+	 * Reference to the application settings.
+	 */
 	private AppSettings appSettings;
 
+	/**
+	 * Checkbutton for enabling desktop notifications.
+	 */
 	private Button btnShowDesktopNotification;
 
+	/**
+	 * Checkbutton for enabling automatic startup of mibox.
+	 */
 	private Button btnStartAtSystemStartup;
+
+	/**
+	 * Text-field for entering the synchronization path.
+	 */
 	private Text txtSyncDir;
 
+	/**
+	 * this button opens the "choose dir" dialog to choose the synchronization
+	 * path.
+	 */
 	private Button btnChooseSyncDir;
 
 	/**
 	 * Getter for unsavedChanges.
+	 * 
+	 * @return unsaved changes value
 	 */
 	protected boolean isUnsavedChanges() {
 		return unsavedChanges;
@@ -124,7 +143,7 @@ public class SettingsShell extends Shell {
 	}
 
 	/**
-	 * Create the shell.
+	 * Create the shell. Auto-generated code.
 	 * 
 	 * @param display
 	 * @throws IOException

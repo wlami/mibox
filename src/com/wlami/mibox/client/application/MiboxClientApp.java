@@ -36,13 +36,13 @@ public final class MiboxClientApp {
 	 * hide constructor, because this is an utility class.
 	 */
 	private MiboxClientApp() {
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
 	 * Constant for accessing the main properties file.
 	 */
 	protected static final String RES_MAIN_PROPERTIES = "res/main.properties";
+
 	/**
 	 * Properties variable of the main properties file.
 	 */
