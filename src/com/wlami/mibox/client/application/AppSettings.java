@@ -31,6 +31,11 @@ import java.util.Properties;
 public final class AppSettings {
 
 	/**
+	 * Constant for accessing the path to the AppSettings properties file.
+	 */
+	public static final String APP_SETTINGS = "app_settings";
+
+	/**
 	 * Private constructor, so that readAppSettings is the only way to get an
 	 * instance of this class.
 	 */

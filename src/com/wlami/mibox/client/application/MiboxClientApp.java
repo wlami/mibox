@@ -58,6 +58,8 @@ public final class MiboxClientApp {
 	 */
 	private static Properties appProperties;
 
+	private static AppSettings appSettings;
+
 	/**
 	 * Main entry point for the MiboxClientApplication.
 	 * 
@@ -70,16 +72,15 @@ public final class MiboxClientApp {
 		log.info("Startup mibox client.");
 		loadAppProperties(); // TODO: Handle exception and show errorDialog
 		log.debug("Creating mibox tray");
-		MiboxTray miboxTray = new MiboxTray();
+		new MiboxTray();
 		log.debug("starting watchdog");
 		DirectoryWatchdog directoryWatchdog = new DirectoryWatchdog();
-		directoryWatchdog.setDirectory(appProperties
-				.getProperty(AppSettings.WATCH_DIRECTORY));
+		directoryWatchdog.setDirectory(appSettings.getWatchDirectory());
 		directoryWatchdog.start();
 	}
 
 	/**
-	 * Loads the main properties file.
+	 * Loads the main and settings properties files.
 	 * 
 	 * @throws IOException
 	 *             thrown, if there is an error while reading the properties.
@@ -91,6 +92,12 @@ public final class MiboxClientApp {
 				new FileInputStream(RES_MAIN_PROPERTIES));
 		appProperties.load(bufferedInputStream);
 		bufferedInputStream.close();
+		try {
+			appSettings = AppSettings.readAppSettings(MiboxClientApp
+					.getAppProperties().getProperty(AppSettings.APP_SETTINGS));
+		} catch (IOException e) {
+			log.error(e.toString());
+		}
 	}
 
 	/**

@@ -57,11 +57,6 @@ import com.wlami.mibox.client.application.MiboxClientApp;
 public class SettingsShell extends Shell {
 
 	/**
-	 * Constant for accessing the path to the AppSettings properties file.
-	 */
-	protected static final String APP_SETTINGS = "app_settings";
-
-	/**
 	 * Textfield for username.
 	 */
 	private Text txtUsername;
@@ -152,7 +147,7 @@ public class SettingsShell extends Shell {
 		super(display, SWT.CLOSE | SWT.TITLE);
 		try {
 			appSettings = AppSettings.readAppSettings(MiboxClientApp
-					.getAppProperties().getProperty(APP_SETTINGS));
+					.getAppProperties().getProperty(AppSettings.APP_SETTINGS));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -415,8 +410,10 @@ public class SettingsShell extends Shell {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				try {
-					AppSettings.writeAppSettings(settings, MiboxClientApp
-							.getAppProperties().getProperty(APP_SETTINGS));
+					AppSettings.writeAppSettings(
+							settings,
+							MiboxClientApp.getAppProperties().getProperty(
+									AppSettings.APP_SETTINGS));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -460,8 +457,10 @@ public class SettingsShell extends Shell {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				try {
-					AppSettings.writeAppSettings(settings, MiboxClientApp
-							.getAppProperties().getProperty(APP_SETTINGS));
+					AppSettings.writeAppSettings(
+							settings,
+							MiboxClientApp.getAppProperties().getProperty(
+									AppSettings.APP_SETTINGS));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

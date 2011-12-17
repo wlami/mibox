@@ -17,6 +17,17 @@
  */
 package com.wlami.mibox.client.backend.watchdog;
 
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Paths;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,9 +70,49 @@ public class DirectoryWatchdog extends Thread {
 		log.info("Starting watchdog thread");
 		if (directory != null) {
 			log.info("watching for changes in [" + directory + "]");
+			startObservation();
 		} else {
 			log.warn("directory property is null!");
 		}
 		log.info("Stopping watchdog thread");
+	}
+
+	/**
+	 * 
+	 */
+	protected void startObservation() {
+		try {
+			WatchService ws = FileSystems.getDefault().newWatchService();
+			WatchKey wk = Paths.get(directory).register(ws, ENTRY_CREATE,
+					ENTRY_DELETE, ENTRY_MODIFY);
+			while (true) {
+				log.debug("Waiting for key");
+				wk = ws.take();
+				for (WatchEvent<?> watchEvent : wk.pollEvents()) {
+					WatchEvent.Kind<?> kind = watchEvent.kind();
+					if (kind.equals(ENTRY_CREATE)) {
+						log.debug("Observed an create event. ["
+								+ watchEvent.context() + "]");
+
+					} else if (kind.equals(ENTRY_MODIFY)) {
+						log.debug("Observed an modify event. ["
+								+ watchEvent.context() + "]");
+
+					} else if (kind.equals(ENTRY_DELETE)) {
+						log.debug("Observed an delete event. ["
+								+ watchEvent.context() + "]");
+
+					} else {
+
+					}
+				}
+				wk.reset();
+			}
+		} catch (IOException e) {
+			log.error(e.toString());
+		} catch (InterruptedException e) {
+			log.error(e.toString());
+		}
+
 	}
 }
