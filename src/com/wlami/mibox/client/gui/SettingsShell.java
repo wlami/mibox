@@ -15,12 +15,14 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wlami.mibox.client.Gui;
+package com.wlami.mibox.client.gui;
 
 import java.io.IOException;
 import java.util.ResourceBundle;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
@@ -28,6 +30,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
@@ -41,75 +44,92 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
 
 import swing2swt.layout.BorderLayout;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.ModifyEvent;
 
-import com.wlami.mibox.client.Application.AppSettings;
-import com.wlami.mibox.client.Application.MiboxClientApp;
+import com.wlami.mibox.client.application.AppSettings;
+import com.wlami.mibox.client.application.MiboxClientApp;
 
 /**
  * This Class represents the settings dialog.
+ * 
  * @author Wladislaw Mitzel
- *
+ * 
  */
 public class SettingsShell extends Shell {
-	
+
 	/**
-	 * Constant for accessing the path to the AppSettings properties file
-	 */
-	protected final static String APP_SETTINGS = "app_settings";
-	
-	/**
-	 * Textfield for username
+	 * Textfield for username.
 	 */
 	private Text txtUsername;
-	
+
 	/**
-	 * Textfield for password
+	 * Textfield for password.
 	 */
 	private Text txtPassword;
-	
+
 	/**
-	 * ResourceBundle which stores all translated strings
+	 * ResourceBundle which stores all translated strings.
 	 */
 	private ResourceBundle strings;
-	
+
 	/**
-	 * Bool which tells us whether there habe been made changes since the last save.
+	 * Bool which tells us whether there habe been made changes since the last
+	 * save.
 	 */
 	private boolean unsavedChanges = false;
-	
+
 	/**
-	 * Apply-Button
+	 * Apply-Button.
 	 */
 	private Button btnApply;
-	
+
 	/**
-	 * Cancel-Button
+	 * Cancel-Button.
 	 */
 	private Button btnCancel;
-	
+
 	/**
-	 * Save-Button
+	 * Save-Button.
 	 */
 	private Button btnSave;
 
+	/**
+	 * Reference to the application settings.
+	 */
 	private AppSettings appSettings;
 
+	/**
+	 * Checkbutton for enabling desktop notifications.
+	 */
 	private Button btnShowDesktopNotification;
 
+	/**
+	 * Checkbutton for enabling automatic startup of mibox.
+	 */
 	private Button btnStartAtSystemStartup;
 
 	/**
+	 * Text-field for entering the synchronization path.
+	 */
+	private Text txtSyncDir;
+
+	/**
+	 * this button opens the "choose dir" dialog to choose the synchronization
+	 * path.
+	 */
+	private Button btnChooseSyncDir;
+
+	/**
 	 * Getter for unsavedChanges.
+	 * 
+	 * @return unsaved changes value
 	 */
 	protected boolean isUnsavedChanges() {
 		return unsavedChanges;
 	}
 
 	/**
-	 * Setter for unsavedChanges.
-	 * Modifies the state of apply-Button.
+	 * Setter for unsavedChanges. Modifies the state of apply-Button.
+	 * 
 	 * @param unsavedChanges
 	 */
 	protected void setUnsavedChanges(boolean unsavedChanges) {
@@ -118,19 +138,21 @@ public class SettingsShell extends Shell {
 	}
 
 	/**
-	 * Create the shell.
+	 * Create the shell. Auto-generated code.
 	 * 
 	 * @param display
-	 * @throws IOException 
+	 * @throws IOException
 	 */
-	public SettingsShell(Display display)  {
+	public SettingsShell(Display display) {
 		super(display, SWT.CLOSE | SWT.TITLE);
 		try {
-			appSettings = AppSettings.readAppSettings( MiboxClientApp.getAppProperties().getProperty(APP_SETTINGS) );
+			appSettings = AppSettings.readAppSettings(MiboxClientApp
+					.getAppProperties().getProperty(AppSettings.APP_SETTINGS));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		final Shell shell = this;
 		final AppSettings settings = appSettings;
 		checkSaveBeforeClose();
 		strings = LangUtils.getTranslationBundle();
@@ -146,20 +168,82 @@ public class SettingsShell extends Shell {
 				"/i64/applications-system.png"));
 		tbtmNewItem.setText(strings.getString("Settings.tab.general"));
 
-		Group grpBehavior = new Group(tabFolder, SWT.NONE);
+		Composite composite_2 = new Composite(tabFolder, SWT.NONE);
+		tbtmNewItem.setControl(composite_2);
+		composite_2.setLayout(new FillLayout(SWT.VERTICAL));
+
+		Group grpBehavior = new Group(composite_2, SWT.NONE);
 		grpBehavior.setText(strings.getString("Settings.tab.general.behavior"));
-		tbtmNewItem.setControl(grpBehavior);
 		grpBehavior.setLayout(new GridLayout(2, false));
 		new Label(grpBehavior, SWT.NONE);
 		new Label(grpBehavior, SWT.NONE);
 		new Label(grpBehavior, SWT.NONE);
 
 		setupBtnShowDesktopNotification(settings, grpBehavior);
-		new Label(grpBehavior, SWT.NONE);
+		btnShowDesktopNotification = new Button(grpBehavior, SWT.CHECK);
+		btnShowDesktopNotification.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				setUnsavedChanges(true);
+				settings.setShowDesktopNotification(btnShowDesktopNotification
+						.getSelection());
+			}
+		});
+		btnShowDesktopNotification.setText(strings
+				.getString("Settings.tab.general.show_desktop_notification"));
 		new Label(grpBehavior, SWT.NONE);
 		new Label(grpBehavior, SWT.NONE);
 
 		setupBtnStartAtSystemStartup(settings, grpBehavior);
+		new Label(grpBehavior, SWT.NONE);
+		btnStartAtSystemStartup = new Button(grpBehavior, SWT.CHECK);
+		btnStartAtSystemStartup.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				setUnsavedChanges(true);
+				settings.setStartAtSystemStartup(btnStartAtSystemStartup
+						.getSelection());
+			}
+		});
+		btnStartAtSystemStartup.setToolTipText(strings
+				.getString("com.wlami.mibox.not_implemented_yes"));
+		btnStartAtSystemStartup.setEnabled(false);
+		btnStartAtSystemStartup.setText(strings
+				.getString("Settings.tab.general.start_at_system_startup"));
+
+		Group grpSynchronization = new Group(composite_2, SWT.NONE);
+		grpSynchronization.setText(strings
+				.getString("Settings.tab.general.synchronization"));
+		grpSynchronization.setLayout(new GridLayout(17, false));
+		new Label(grpSynchronization, SWT.NONE); // TODO: Change this auto
+													// generated code!!
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+		new Label(grpSynchronization, SWT.NONE);
+
+		Label lblSyncDir = new Label(grpSynchronization, SWT.NONE);
+		lblSyncDir.setText(strings.getString("Settings.tab.general.sync_dir")
+				+ ":");
+		new Label(grpSynchronization, SWT.NONE);
+
+		setupTxtSyncDir(grpSynchronization);
+		final Text txtSyncDirectory = txtSyncDir;
+
+		setupBtnChooseSyncDir(shell, grpSynchronization, txtSyncDirectory);
 
 		TabItem tbtmAccount = new TabItem(tabFolder, SWT.NONE);
 		tbtmAccount.setImage(SWTResourceManager.getImage(SettingsShell.class,
@@ -200,18 +284,58 @@ public class SettingsShell extends Shell {
 		Composite composite = new Composite(this, SWT.NONE);
 		composite.setLayoutData(BorderLayout.SOUTH);
 		composite.setLayout(new FillLayout(SWT.HORIZONTAL));
-		
-		final Shell shell = this;
-		
+
 		setupBtnSave(settings, composite, shell);
 
 		setupBtnCancel(composite, shell);
 
 		setupBtnApply(settings, composite);
-		
+
 		createContents();
 		loadValuesFromSettings();
 		setUnsavedChanges(false);
+	}
+
+	/**
+	 * @param grpSynchronization
+	 */
+	private void setupTxtSyncDir(Group grpSynchronization) {
+		txtSyncDir = new Text(grpSynchronization, SWT.BORDER);
+		txtSyncDir.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent arg0) {
+				setUnsavedChanges(true);
+				appSettings.setWatchDirectory(txtSyncDir.getText());
+			}
+		});
+		txtSyncDir.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
+				false, 13, 1));
+	}
+
+	/**
+	 * @param shell
+	 * @param grpSynchronization
+	 * @param txtSyncDirectory
+	 */
+	private void setupBtnChooseSyncDir(final Shell shell,
+			Group grpSynchronization, final Text txtSyncDirectory) {
+		btnChooseSyncDir = new Button(grpSynchronization, SWT.NONE);
+		btnChooseSyncDir.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				DirectoryDialog directoryDialog = new DirectoryDialog(shell);
+				directoryDialog.setFilterPath(txtSyncDirectory.getText());
+				directoryDialog.setText(strings
+						.getString("Settings.tab.general.choose_dir_dialog"));
+				directoryDialog.setMessage(strings
+						.getString("Settings.tab.general.choose_dir_dialog"));
+				String tempResult = directoryDialog.open();
+				if (tempResult != null) {
+					txtSyncDirectory.setText(tempResult);
+				}
+			}
+		});
+		btnChooseSyncDir.setText(strings
+				.getString("Settings.tab.general.choose_dir"));
 	}
 
 	/**
@@ -220,16 +344,6 @@ public class SettingsShell extends Shell {
 	 */
 	private void setupBtnShowDesktopNotification(final AppSettings settings,
 			Group grpBehavior) {
-		btnShowDesktopNotification = new Button(grpBehavior, SWT.CHECK);
-		btnShowDesktopNotification.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent arg0) {
-				setUnsavedChanges(true);
-				settings.setShowDesktopNotification( btnShowDesktopNotification.getSelection() );
-			}
-		});
-		btnShowDesktopNotification.setText(strings
-				.getString("Settings.tab.general.show_desktop_notification"));
 	}
 
 	/**
@@ -238,19 +352,6 @@ public class SettingsShell extends Shell {
 	 */
 	private void setupBtnStartAtSystemStartup(final AppSettings settings,
 			Group grpBehavior) {
-		btnStartAtSystemStartup = new Button(grpBehavior, SWT.CHECK);
-		btnStartAtSystemStartup.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent arg0) {
-				setUnsavedChanges(true);
-				settings.setStartAtSystemStartup( btnStartAtSystemStartup.getSelection() );
-			}
-		});
-		btnStartAtSystemStartup.setToolTipText(strings
-				.getString("com.wlami.mibox.not_implemented_yes"));
-		btnStartAtSystemStartup.setEnabled(false);
-		btnStartAtSystemStartup.setText(strings
-				.getString("Settings.tab.general.start_at_system_startup"));
 	}
 
 	/**
@@ -268,7 +369,7 @@ public class SettingsShell extends Shell {
 		txtUsername.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent arg0) {
 				setUnsavedChanges(true);
-				settings.setUsername( txtUsername.getText() );
+				settings.setUsername(txtUsername.getText());
 			}
 		});
 		txtUsername.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
@@ -290,7 +391,7 @@ public class SettingsShell extends Shell {
 		txtPassword.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent arg0) {
 				setUnsavedChanges(true);
-				settings.setPassword( txtPassword.getText() );
+				settings.setPassword(txtPassword.getText());
 			}
 		});
 		txtPassword.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
@@ -309,12 +410,15 @@ public class SettingsShell extends Shell {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				try {
-					AppSettings.writeAppSettings(settings, MiboxClientApp.getAppProperties().getProperty(APP_SETTINGS));
+					AppSettings.writeAppSettings(
+							settings,
+							MiboxClientApp.getAppProperties().getProperty(
+									AppSettings.APP_SETTINGS));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				setUnsavedChanges( false );
+				setUnsavedChanges(false);
 				shell.close();
 			}
 		});
@@ -353,7 +457,10 @@ public class SettingsShell extends Shell {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				try {
-					AppSettings.writeAppSettings(settings, MiboxClientApp.getAppProperties().getProperty(APP_SETTINGS));
+					AppSettings.writeAppSettings(
+							settings,
+							MiboxClientApp.getAppProperties().getProperty(
+									AppSettings.APP_SETTINGS));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -364,15 +471,22 @@ public class SettingsShell extends Shell {
 		btnApply.setText(strings.getString("Settings.buttons.apply"));
 	}
 
+	/**
+	 * fill the UI with values from appSettings
+	 */
 	private void loadValuesFromSettings() {
-		btnShowDesktopNotification.setSelection(appSettings.isShowDesktopNotification());
-		btnStartAtSystemStartup.setSelection(appSettings.isStartAtSystemStartup());
+		btnShowDesktopNotification.setSelection(appSettings
+				.isShowDesktopNotification());
+		btnStartAtSystemStartup.setSelection(appSettings
+				.isStartAtSystemStartup());
 		txtUsername.setText(appSettings.getUsername());
 		txtPassword.setText(appSettings.getPassword());
+		txtSyncDir.setText(appSettings.getWatchDirectory());
 	}
 
 	/**
-	 * Checks whether there are changes in onClose listener. Asks whether user really wants to quit the settings dialog.
+	 * Checks whether there are changes in onClose listener. Asks whether user
+	 * really wants to quit the settings dialog.
 	 */
 	private void checkSaveBeforeClose() {
 		final SettingsShell shell = this;

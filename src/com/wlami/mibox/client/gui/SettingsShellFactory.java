@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wlami.mibox.client.Gui;
+package com.wlami.mibox.client.gui;
 
 import java.io.IOException;
 
@@ -23,18 +23,19 @@ import org.eclipse.swt.widgets.Display;
 
 /**
  * @author Wladislaw Mitzel
- *
+ * 
  */
 public class SettingsShellFactory {
 
 	static SettingsShell settingsShell;
-	
+
 	/**
 	 * Gets an instance of the settingsShell.
+	 * 
 	 * @return
-	 * @throws IOException 
+	 * @throws IOException
 	 */
-	public static SettingsShell getSettingsShell()  {
+	public static SettingsShell getSettingsShell() {
 		if (settingsShell == null) {
 			Display display = Display.getCurrent();
 			settingsShell = new SettingsShell(display);
@@ -43,7 +44,7 @@ public class SettingsShellFactory {
 		}
 		return settingsShell;
 	}
-	
+
 	/**
 	 * Disposes the Settings shell. Call after the shell has been closed.
 	 */
