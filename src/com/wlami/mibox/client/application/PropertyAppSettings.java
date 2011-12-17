@@ -20,27 +20,26 @@ package com.wlami.mibox.client.application;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  * @author Wladislaw Mitzel
  * 
  */
-public final class PropertyAppSettings {
+@Singleton
+@Named
+public final class PropertyAppSettings implements AppSettings {
 
 	/**
 	 * Constant for accessing the path to the AppSettings properties file.
 	 */
-	public static final String APP_SETTINGS = "app_settings";
-
-	/**
-	 * Private constructor, so that readAppSettings is the only way to get an
-	 * instance of this class.
-	 */
-	private PropertyAppSettings() {
-	}
+	public static final String APP_SETTINGS = "./res/settings.properties";
 
 	/**
 	 * Constant for accessing bool showDesktopNotification.
@@ -88,137 +87,238 @@ public final class PropertyAppSettings {
 	private String watchDirectory;
 
 	/**
-	 * Read the AppSettings properties file and create a new AppSettings
-	 * instance.
-	 * 
-	 * @param settingsFile
-	 *            path to the properties file
-	 * @return returns an Instance of AppSettings
-	 * @throws IOException
-	 *             thrown, if the given path doesn't point to the right file.
+	 * Constant for accessing String language
 	 */
-	public static PropertyAppSettings readAppSettings(final String settingsFile)
-			throws IOException {
+	protected static final String LANGUAGE = "lang";
 
+	/**
+	 * User language.
+	 */
+	private String language;
+
+	/**
+	 * Constant for accessing String country
+	 */
+	protected static final String COUNTRY = "country";
+
+	/**
+	 * User country
+	 */
+	private String country;
+
+	/**
+	 * default constructor. calls the load-method
+	 * 
+	 * @throws IOException
+	 */
+	public PropertyAppSettings() throws IOException {
+		load();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.application.AppSettings1#load()
+	 */
+	@Override
+	public void load() throws FileNotFoundException, IOException {
 		// Read our settings file
 		Properties appSettings = new Properties();
 		BufferedInputStream bufferedInputStream = new BufferedInputStream(
-				new FileInputStream(settingsFile));
+				new FileInputStream(APP_SETTINGS));
 		appSettings.load(bufferedInputStream);
 		bufferedInputStream.close();
 
-		// Create a new instance of AppSettings
-		PropertyAppSettings a = new PropertyAppSettings();
-
 		// Read the properties and fill the variables
-		a.showDesktopNotification = Boolean.parseBoolean(appSettings
+		showDesktopNotification = Boolean.parseBoolean(appSettings
 				.getProperty(SHOW_DESKTOP_NOTIFICATION));
-		a.startAtSystemStartup = Boolean.parseBoolean(appSettings
+		startAtSystemStartup = Boolean.parseBoolean(appSettings
 				.getProperty(START_AT_SYSTEM_STARTUP));
-		a.username = appSettings.getProperty(USERNAME);
-		a.password = appSettings.getProperty(PASSWORD);
-		a.watchDirectory = appSettings.getProperty(WATCH_DIRECTORY);
-
-		return a;
+		username = appSettings.getProperty(USERNAME);
+		password = appSettings.getProperty(PASSWORD);
+		watchDirectory = appSettings.getProperty(WATCH_DIRECTORY);
+		language = appSettings.getProperty(LANGUAGE);
+		country = appSettings.getProperty(COUNTRY);
 	}
 
-	/**
-	 * Writes the given AppSettings to a properties file on disk.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @param appSettings
-	 * @param settingsFile
-	 * @throws IOException
+	 * @see com.wlami.mibox.client.application.AppSettings1#save()
 	 */
-	public static void writeAppSettings(final PropertyAppSettings appSettings,
-			final String settingsFile) throws IOException {
+	@Override
+	public void save() throws IOException {
 
 		Properties props = new Properties();
-		props.setProperty(SHOW_DESKTOP_NOTIFICATION, appSettings
-				.isShowDesktopNotification().toString());
-		props.setProperty(START_AT_SYSTEM_STARTUP, appSettings
-				.isStartAtSystemStartup().toString());
-		props.setProperty(USERNAME, appSettings.getUsername());
-		props.setProperty(PASSWORD, appSettings.getPassword());
-		props.setProperty(WATCH_DIRECTORY, appSettings.getWatchDirectory());
-
+		props.setProperty(SHOW_DESKTOP_NOTIFICATION,
+				showDesktopNotification.toString());
+		props.setProperty(START_AT_SYSTEM_STARTUP,
+				startAtSystemStartup.toString());
+		props.setProperty(USERNAME, username);
+		props.setProperty(PASSWORD, password);
+		props.setProperty(WATCH_DIRECTORY, watchDirectory);
+		props.setProperty(LANGUAGE, language);
+		props.setProperty(COUNTRY, country);
 		FileOutputStream fileOutputStream = new FileOutputStream(new File(
-				settingsFile));
+				APP_SETTINGS));
 		props.store(fileOutputStream, "auto generated settings");
 	}
 
-	/**
-	 * @return the showDesktopNotification
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.application.AppSettings1#setShowDesktopNotification
+	 * (java.lang.Boolean)
 	 */
-	public Boolean isShowDesktopNotification() {
-		return showDesktopNotification;
-	}
-
-	/**
-	 * @param showDesktopNotification
-	 *            the showDesktopNotification to set
-	 */
+	@Override
 	public void setShowDesktopNotification(final Boolean showDesktopNotification) {
 		this.showDesktopNotification = showDesktopNotification;
 	}
 
-	/**
-	 * @return the startAtSystemStartup
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.application.AppSettings1#setStartAtSystemStartup
+	 * (java.lang.Boolean)
 	 */
-	public Boolean isStartAtSystemStartup() {
-		return startAtSystemStartup;
-	}
-
-	/**
-	 * @param startAtSystemStartup
-	 *            the startAtSystemStartup to set
-	 */
+	@Override
 	public void setStartAtSystemStartup(final Boolean startAtSystemStartup) {
 		this.startAtSystemStartup = startAtSystemStartup;
 	}
 
-	/**
-	 * @return the username
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.application.AppSettings1#getUsername()
 	 */
+	@Override
 	public String getUsername() {
 		return username;
 	}
 
-	/**
-	 * @param username
-	 *            the username to set
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.application.AppSettings1#setUsername(java.lang
+	 * .String)
 	 */
+	@Override
 	public void setUsername(final String username) {
 		this.username = username;
 	}
 
-	/**
-	 * @return the password
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.application.AppSettings1#getPassword()
 	 */
+	@Override
 	public String getPassword() {
 		return password;
 	}
 
-	/**
-	 * @param password
-	 *            the password to set
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.application.AppSettings1#setPassword(java.lang
+	 * .String)
 	 */
+	@Override
 	public void setPassword(final String password) {
 		this.password = password;
 	}
 
-	/**
-	 * @return the watchDirectory
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.application.AppSettings1#getWatchDirectory()
 	 */
+	@Override
 	public String getWatchDirectory() {
 		return watchDirectory;
 	}
 
-	/**
-	 * @param watchDirectory
-	 *            the watchDirectory to set
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.application.AppSettings1#setWatchDirectory(java
+	 * .lang.String)
 	 */
+	@Override
 	public void setWatchDirectory(final String watchDirectory) {
 		this.watchDirectory = watchDirectory;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.application.AppSettings1#getLanguage()
+	 */
+	@Override
+	public String getLanguage() {
+		return language;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.application.AppSettings1#setLanguage(java.lang
+	 * .String)
+	 */
+	@Override
+	public void setLanguage(String language) {
+		this.language = language;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.application.AppSettings1#getCountry()
+	 */
+	@Override
+	public String getCountry() {
+		return country;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.application.AppSettings1#setCountry(java.lang.
+	 * String)
+	 */
+	@Override
+	public void setCountry(String country) {
+		this.country = country;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.application.AppSettings1#getShowDesktopNotification
+	 * ()
+	 */
+	@Override
+	public Boolean getShowDesktopNotification() {
+		return showDesktopNotification;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.application.AppSettings1#getStartAtSystemStartup()
+	 */
+	@Override
+	public Boolean getStartAtSystemStartup() {
+		return startAtSystemStartup;
 	}
 
 }

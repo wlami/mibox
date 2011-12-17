@@ -45,8 +45,7 @@ import org.eclipse.wb.swt.SWTResourceManager;
 
 import swing2swt.layout.BorderLayout;
 
-import com.wlami.mibox.client.application.PropertyAppSettings;
-import com.wlami.mibox.client.application.MiboxClientApp;
+import com.wlami.mibox.client.application.AppSettings;
 
 /**
  * This Class represents the settings dialog.
@@ -95,7 +94,12 @@ public class SettingsShell extends Shell {
 	/**
 	 * Reference to the application settings.
 	 */
-	private PropertyAppSettings appSettings;
+	protected final AppSettings appSettings;
+
+	/**
+	 * Reference to singleton langUtils.
+	 */
+	private LangUtils langUtils;
 
 	/**
 	 * Checkbutton for enabling desktop notifications.
@@ -143,19 +147,15 @@ public class SettingsShell extends Shell {
 	 * @param display
 	 * @throws IOException
 	 */
-	public SettingsShell(Display display) {
+	public SettingsShell(Display display, final LangUtils langUtils,
+			final AppSettings appSettings) {
 		super(display, SWT.CLOSE | SWT.TITLE);
-		try {
-			appSettings = PropertyAppSettings.readAppSettings(MiboxClientApp
-					.getAppProperties().getProperty(PropertyAppSettings.APP_SETTINGS));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.langUtils = langUtils;
 		final Shell shell = this;
-		final PropertyAppSettings settings = appSettings;
+
+		this.appSettings = appSettings;
 		checkSaveBeforeClose();
-		strings = LangUtils.getTranslationBundle();
+		strings = langUtils.getTranslationBundle();
 		setImage(SWTResourceManager.getImage(SettingsShell.class,
 				"/icons/TrayLogo.png"));
 		setLayout(new BorderLayout(0, 0));
@@ -179,14 +179,15 @@ public class SettingsShell extends Shell {
 		new Label(grpBehavior, SWT.NONE);
 		new Label(grpBehavior, SWT.NONE);
 
-		setupBtnShowDesktopNotification(settings, grpBehavior);
+		setupBtnShowDesktopNotification(appSettings, grpBehavior);
 		btnShowDesktopNotification = new Button(grpBehavior, SWT.CHECK);
 		btnShowDesktopNotification.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				setUnsavedChanges(true);
-				settings.setShowDesktopNotification(btnShowDesktopNotification
-						.getSelection());
+				appSettings
+						.setShowDesktopNotification(btnShowDesktopNotification
+								.getSelection());
 			}
 		});
 		btnShowDesktopNotification.setText(strings
@@ -194,14 +195,14 @@ public class SettingsShell extends Shell {
 		new Label(grpBehavior, SWT.NONE);
 		new Label(grpBehavior, SWT.NONE);
 
-		setupBtnStartAtSystemStartup(settings, grpBehavior);
+		setupBtnStartAtSystemStartup(appSettings, grpBehavior);
 		new Label(grpBehavior, SWT.NONE);
 		btnStartAtSystemStartup = new Button(grpBehavior, SWT.CHECK);
 		btnStartAtSystemStartup.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				setUnsavedChanges(true);
-				settings.setStartAtSystemStartup(btnStartAtSystemStartup
+				appSettings.setStartAtSystemStartup(btnStartAtSystemStartup
 						.getSelection());
 			}
 		});
@@ -262,14 +263,14 @@ public class SettingsShell extends Shell {
 		new Label(grpAccountInformation, SWT.NONE);
 		new Label(grpAccountInformation, SWT.NONE);
 
-		setupTxtUsername(settings, grpAccountInformation);
+		setupTxtUsername(appSettings, grpAccountInformation);
 		new Label(grpAccountInformation, SWT.NONE);
 		new Label(grpAccountInformation, SWT.NONE);
 		new Label(grpAccountInformation, SWT.NONE);
 		new Label(grpAccountInformation, SWT.NONE);
 		new Label(grpAccountInformation, SWT.NONE);
 
-		setupTxtPassword(settings, grpAccountInformation);
+		setupTxtPassword(appSettings, grpAccountInformation);
 
 		TabItem tbtmBandwith = new TabItem(tabFolder, SWT.NONE);
 		tbtmBandwith.setImage(SWTResourceManager.getImage(SettingsShell.class,
@@ -285,11 +286,11 @@ public class SettingsShell extends Shell {
 		composite.setLayoutData(BorderLayout.SOUTH);
 		composite.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-		setupBtnSave(settings, composite, shell);
+		setupBtnSave(appSettings, composite, shell);
 
 		setupBtnCancel(composite, shell);
 
-		setupBtnApply(settings, composite);
+		setupBtnApply(appSettings, composite);
 
 		createContents();
 		loadValuesFromSettings();
@@ -342,7 +343,7 @@ public class SettingsShell extends Shell {
 	 * @param settings
 	 * @param grpBehavior
 	 */
-	private void setupBtnShowDesktopNotification(final PropertyAppSettings settings,
+	private void setupBtnShowDesktopNotification(final AppSettings settings,
 			Group grpBehavior) {
 	}
 
@@ -350,7 +351,7 @@ public class SettingsShell extends Shell {
 	 * @param settings
 	 * @param grpBehavior
 	 */
-	private void setupBtnStartAtSystemStartup(final PropertyAppSettings settings,
+	private void setupBtnStartAtSystemStartup(final AppSettings settings,
 			Group grpBehavior) {
 	}
 
@@ -358,7 +359,7 @@ public class SettingsShell extends Shell {
 	 * @param settings
 	 * @param grpAccountInformation
 	 */
-	private void setupTxtUsername(final PropertyAppSettings settings,
+	private void setupTxtUsername(final AppSettings settings,
 			Group grpAccountInformation) {
 		Label lblUsername = new Label(grpAccountInformation, SWT.NONE);
 		lblUsername.setText(strings.getString("Settings.tab.account.username")
@@ -380,7 +381,7 @@ public class SettingsShell extends Shell {
 	 * @param settings
 	 * @param grpAccountInformation
 	 */
-	private void setupTxtPassword(final PropertyAppSettings settings,
+	private void setupTxtPassword(final AppSettings settings,
 			Group grpAccountInformation) {
 		Label lblPassword = new Label(grpAccountInformation, SWT.NONE);
 		lblPassword.setText(strings.getString("Settings.tab.account.password")
@@ -403,21 +404,21 @@ public class SettingsShell extends Shell {
 	 * @param composite
 	 * @param shell
 	 */
-	private void setupBtnSave(final PropertyAppSettings settings, Composite composite,
+	private void setupBtnSave(final AppSettings settings, Composite composite,
 			final Shell shell) {
 		btnSave = new Button(composite, SWT.NONE);
 		btnSave.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				try {
-					PropertyAppSettings.writeAppSettings(
-							settings,
-							MiboxClientApp.getAppProperties().getProperty(
-									PropertyAppSettings.APP_SETTINGS));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				// try {
+				// PropertyAppSettings.writeAppSettings(
+				// settings,
+				// MiboxClientApp.getAppProperties().getProperty(
+				// PropertyAppSettings.APP_SETTINGS));
+				// } catch (IOException e) {
+				// // TODO Auto-generated catch block
+				// e.printStackTrace();
+				// }
 				setUnsavedChanges(false);
 				shell.close();
 			}
@@ -448,7 +449,7 @@ public class SettingsShell extends Shell {
 	 * @param settings
 	 * @param composite
 	 */
-	private void setupBtnApply(final PropertyAppSettings settings, Composite composite) {
+	private void setupBtnApply(final AppSettings settings, Composite composite) {
 		btnApply = new Button(composite, SWT.NONE);
 		btnApply.setEnabled(false);
 		btnApply.setImage(SWTResourceManager.getImage(SettingsShell.class,
@@ -456,15 +457,15 @@ public class SettingsShell extends Shell {
 		btnApply.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				try {
-					PropertyAppSettings.writeAppSettings(
-							settings,
-							MiboxClientApp.getAppProperties().getProperty(
-									PropertyAppSettings.APP_SETTINGS));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				// try {
+				// // PropertyAppSettings.writeAppSettings(
+				// // settings,
+				// // MiboxClientApp.getAppProperties().getProperty(
+				// // PropertyAppSettings.APP_SETTINGS));
+				// } catch (IOException e) {
+				// // TODO Auto-generated catch block
+				// e.printStackTrace();
+				// }
 				setUnsavedChanges(false);
 			}
 		});
@@ -476,9 +477,9 @@ public class SettingsShell extends Shell {
 	 */
 	private void loadValuesFromSettings() {
 		btnShowDesktopNotification.setSelection(appSettings
-				.isShowDesktopNotification());
+				.getShowDesktopNotification());
 		btnStartAtSystemStartup.setSelection(appSettings
-				.isStartAtSystemStartup());
+				.getStartAtSystemStartup());
 		txtUsername.setText(appSettings.getUsername());
 		txtPassword.setText(appSettings.getPassword());
 		txtSyncDir.setText(appSettings.getWatchDirectory());

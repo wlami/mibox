@@ -19,6 +19,9 @@ package com.wlami.mibox.client.gui;
 
 import java.util.ResourceBundle;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -30,10 +33,13 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 
+import com.wlami.mibox.client.application.AppSettings;
+
 /**
  * @author Wladislaw Mitzel
  * 
  */
+@Named
 public class MiboxTray {
 
 	/**
@@ -67,13 +73,23 @@ public class MiboxTray {
 	private ResourceBundle strings;
 
 	/**
+	 * Reference to singleton langUtils.
+	 */
+	LangUtils langUtils;
+
+	AppSettings appSettings;
+
+	/**
 	 * Public constructor to create a new MiboxTray. It loads the translated
 	 * strings during creation.
 	 */
-	public MiboxTray() {
+	@Inject
+	public MiboxTray(final LangUtils langUtils, AppSettings appSettings) {
+		this.appSettings = appSettings;
+		this.langUtils = langUtils;
 		new Thread() {
 			public void run() {
-				strings = LangUtils.getTranslationBundle();
+				strings = langUtils.getTranslationBundle();
 				setupTray();
 				show();
 			}
@@ -121,7 +137,7 @@ public class MiboxTray {
 			@Override
 			public void handleEvent(final Event arg0) {
 				SettingsShell settingsShell = SettingsShellFactory
-						.getSettingsShell();
+						.getSettingsShell(langUtils, appSettings);
 				while (!settingsShell.isDisposed()) {
 					if (!display.readAndDispatch()) {
 						display.sleep();

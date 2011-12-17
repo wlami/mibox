@@ -17,13 +17,15 @@
  */
 package com.wlami.mibox.client.application;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Properties;
+
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.wlami.mibox.client.backend.watchdog.DirectoryWatchdog;
 import com.wlami.mibox.client.gui.MiboxTray;
@@ -34,6 +36,7 @@ import com.wlami.mibox.client.gui.MiboxTray;
  * 
  * @author Wladislaw Mitzel
  */
+@Named
 public final class MiboxClientApp {
 
 	/**
@@ -42,23 +45,18 @@ public final class MiboxClientApp {
 	protected static Logger log = LoggerFactory.getLogger(MiboxClientApp.class
 			.getName());
 
+	private ClassPathXmlApplicationContext ctx;
+
 	/**
 	 * hide constructor, because this is an utility class.
 	 */
-	private MiboxClientApp() {
+	@Inject
+	private MiboxClientApp(ClassPathXmlApplicationContext ctx) {
+		this.ctx = ctx;
 	}
 
-	/**
-	 * Constant for accessing the main properties file.
-	 */
-	protected static final String RES_MAIN_PROPERTIES = "res/main.properties";
-
-	/**
-	 * Properties variable of the main properties file.
-	 */
-	private static Properties appProperties;
-
-	private static PropertyAppSettings appSettings;
+	@Inject
+	private AppSettings appSettings;
 
 	/**
 	 * Main entry point for the MiboxClientApplication.
@@ -70,41 +68,19 @@ public final class MiboxClientApp {
 	 */
 	public static void main(final String[] args) throws IOException {
 		log.info("Startup mibox client.");
-		loadAppProperties(); // TODO: Handle exception and show errorDialog
+		ApplicationContext ctx = new ClassPathXmlApplicationContext(
+				"spring.xml");
+		MiboxClientApp miboxClientApp = ctx.getBean("miboxClientApp",
+				MiboxClientApp.class);
+		miboxClientApp.run();
+	}
+
+	private void run() {
 		log.debug("Creating mibox tray");
-		new MiboxTray();
+		ctx.getBean("miboxTray", MiboxTray.class);
 		log.debug("starting watchdog");
 		DirectoryWatchdog directoryWatchdog = new DirectoryWatchdog();
 		directoryWatchdog.setDirectory(appSettings.getWatchDirectory());
 		directoryWatchdog.start();
 	}
-
-	/**
-	 * Loads the main and settings properties files.
-	 * 
-	 * @throws IOException
-	 *             thrown, if there is an error while reading the properties.
-	 */
-	private static void loadAppProperties() throws IOException {
-		log.info("Loading application properties from file");
-		appProperties = new Properties();
-		BufferedInputStream bufferedInputStream = new BufferedInputStream(
-				new FileInputStream(RES_MAIN_PROPERTIES));
-		appProperties.load(bufferedInputStream);
-		bufferedInputStream.close();
-		try {
-			appSettings = PropertyAppSettings.readAppSettings(MiboxClientApp
-					.getAppProperties().getProperty(PropertyAppSettings.APP_SETTINGS));
-		} catch (IOException e) {
-			log.error(e.toString());
-		}
-	}
-
-	/**
-	 * @return the appProperties
-	 */
-	public static Properties getAppProperties() {
-		return appProperties;
-	}
-
 }

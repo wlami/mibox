@@ -21,6 +21,8 @@ import java.io.IOException;
 
 import org.eclipse.swt.widgets.Display;
 
+import com.wlami.mibox.client.application.AppSettings;
+
 /**
  * @author Wladislaw Mitzel
  * 
@@ -35,10 +37,11 @@ public class SettingsShellFactory {
 	 * @return
 	 * @throws IOException
 	 */
-	public static SettingsShell getSettingsShell() {
+	public static SettingsShell getSettingsShell(LangUtils langUtils,
+			AppSettings appSettings) {
 		if (settingsShell == null) {
 			Display display = Display.getCurrent();
-			settingsShell = new SettingsShell(display);
+			settingsShell = new SettingsShell(display, langUtils, appSettings);
 			settingsShell.open();
 			settingsShell.layout();
 		}

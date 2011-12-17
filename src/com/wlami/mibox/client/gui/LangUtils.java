@@ -20,32 +20,44 @@ package com.wlami.mibox.client.gui;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import com.wlami.mibox.client.application.MiboxClientApp;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import com.wlami.mibox.client.application.AppSettings;
 
 /**
  * @author Wladislaw Mitzel
  * 
  */
+@Singleton
+@Named
 public final class LangUtils {
 
 	/**
-	 * Private constructor for utility class.
+	 * Reference to the application settings.
 	 */
-	private LangUtils() {
-		// TODO Auto-generated constructor stub
+
+	AppSettings appSettings;
+
+	/**
+	 * 
+	 */
+	@Inject
+	public LangUtils(AppSettings appSettings) {
+		this.appSettings = appSettings;
 	}
 
 	/**
-	 * Static method for acquiring a Strings ResourceBundle. It contains all
-	 * Strings for the graphical user interface.
+	 * method for acquiring a Strings ResourceBundle. It contains all Strings
+	 * for the graphical user interface.
 	 * 
 	 * @return ResourceBundle with all translations.
 	 */
-	public static ResourceBundle getTranslationBundle() {
+	public ResourceBundle getTranslationBundle() {
 		Locale currentLocale;
-		String language = MiboxClientApp.getAppProperties().getProperty("lang");
-		String country = MiboxClientApp.getAppProperties().getProperty(
-				"country");
+		String language = appSettings.getLanguage();
+		String country = appSettings.getCountry();
 		if (language == null) {
 			currentLocale = new Locale("en", "US");
 		} else {
