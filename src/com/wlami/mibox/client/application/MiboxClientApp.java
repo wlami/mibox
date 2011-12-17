@@ -58,7 +58,7 @@ public final class MiboxClientApp {
 	 */
 	private static Properties appProperties;
 
-	private static AppSettings appSettings;
+	private static PropertyAppSettings appSettings;
 
 	/**
 	 * Main entry point for the MiboxClientApplication.
@@ -93,8 +93,8 @@ public final class MiboxClientApp {
 		appProperties.load(bufferedInputStream);
 		bufferedInputStream.close();
 		try {
-			appSettings = AppSettings.readAppSettings(MiboxClientApp
-					.getAppProperties().getProperty(AppSettings.APP_SETTINGS));
+			appSettings = PropertyAppSettings.readAppSettings(MiboxClientApp
+					.getAppProperties().getProperty(PropertyAppSettings.APP_SETTINGS));
 		} catch (IOException e) {
 			log.error(e.toString());
 		}

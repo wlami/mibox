@@ -45,7 +45,7 @@ import org.eclipse.wb.swt.SWTResourceManager;
 
 import swing2swt.layout.BorderLayout;
 
-import com.wlami.mibox.client.application.AppSettings;
+import com.wlami.mibox.client.application.PropertyAppSettings;
 import com.wlami.mibox.client.application.MiboxClientApp;
 
 /**
@@ -95,7 +95,7 @@ public class SettingsShell extends Shell {
 	/**
 	 * Reference to the application settings.
 	 */
-	private AppSettings appSettings;
+	private PropertyAppSettings appSettings;
 
 	/**
 	 * Checkbutton for enabling desktop notifications.
@@ -146,14 +146,14 @@ public class SettingsShell extends Shell {
 	public SettingsShell(Display display) {
 		super(display, SWT.CLOSE | SWT.TITLE);
 		try {
-			appSettings = AppSettings.readAppSettings(MiboxClientApp
-					.getAppProperties().getProperty(AppSettings.APP_SETTINGS));
+			appSettings = PropertyAppSettings.readAppSettings(MiboxClientApp
+					.getAppProperties().getProperty(PropertyAppSettings.APP_SETTINGS));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		final Shell shell = this;
-		final AppSettings settings = appSettings;
+		final PropertyAppSettings settings = appSettings;
 		checkSaveBeforeClose();
 		strings = LangUtils.getTranslationBundle();
 		setImage(SWTResourceManager.getImage(SettingsShell.class,
@@ -342,7 +342,7 @@ public class SettingsShell extends Shell {
 	 * @param settings
 	 * @param grpBehavior
 	 */
-	private void setupBtnShowDesktopNotification(final AppSettings settings,
+	private void setupBtnShowDesktopNotification(final PropertyAppSettings settings,
 			Group grpBehavior) {
 	}
 
@@ -350,7 +350,7 @@ public class SettingsShell extends Shell {
 	 * @param settings
 	 * @param grpBehavior
 	 */
-	private void setupBtnStartAtSystemStartup(final AppSettings settings,
+	private void setupBtnStartAtSystemStartup(final PropertyAppSettings settings,
 			Group grpBehavior) {
 	}
 
@@ -358,7 +358,7 @@ public class SettingsShell extends Shell {
 	 * @param settings
 	 * @param grpAccountInformation
 	 */
-	private void setupTxtUsername(final AppSettings settings,
+	private void setupTxtUsername(final PropertyAppSettings settings,
 			Group grpAccountInformation) {
 		Label lblUsername = new Label(grpAccountInformation, SWT.NONE);
 		lblUsername.setText(strings.getString("Settings.tab.account.username")
@@ -380,7 +380,7 @@ public class SettingsShell extends Shell {
 	 * @param settings
 	 * @param grpAccountInformation
 	 */
-	private void setupTxtPassword(final AppSettings settings,
+	private void setupTxtPassword(final PropertyAppSettings settings,
 			Group grpAccountInformation) {
 		Label lblPassword = new Label(grpAccountInformation, SWT.NONE);
 		lblPassword.setText(strings.getString("Settings.tab.account.password")
@@ -403,17 +403,17 @@ public class SettingsShell extends Shell {
 	 * @param composite
 	 * @param shell
 	 */
-	private void setupBtnSave(final AppSettings settings, Composite composite,
+	private void setupBtnSave(final PropertyAppSettings settings, Composite composite,
 			final Shell shell) {
 		btnSave = new Button(composite, SWT.NONE);
 		btnSave.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				try {
-					AppSettings.writeAppSettings(
+					PropertyAppSettings.writeAppSettings(
 							settings,
 							MiboxClientApp.getAppProperties().getProperty(
-									AppSettings.APP_SETTINGS));
+									PropertyAppSettings.APP_SETTINGS));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -448,7 +448,7 @@ public class SettingsShell extends Shell {
 	 * @param settings
 	 * @param composite
 	 */
-	private void setupBtnApply(final AppSettings settings, Composite composite) {
+	private void setupBtnApply(final PropertyAppSettings settings, Composite composite) {
 		btnApply = new Button(composite, SWT.NONE);
 		btnApply.setEnabled(false);
 		btnApply.setImage(SWTResourceManager.getImage(SettingsShell.class,
@@ -457,10 +457,10 @@ public class SettingsShell extends Shell {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				try {
-					AppSettings.writeAppSettings(
+					PropertyAppSettings.writeAppSettings(
 							settings,
 							MiboxClientApp.getAppProperties().getProperty(
-									AppSettings.APP_SETTINGS));
+									PropertyAppSettings.APP_SETTINGS));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

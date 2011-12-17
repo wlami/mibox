@@ -28,7 +28,7 @@ import java.util.Properties;
  * @author Wladislaw Mitzel
  * 
  */
-public final class AppSettings {
+public final class PropertyAppSettings {
 
 	/**
 	 * Constant for accessing the path to the AppSettings properties file.
@@ -39,7 +39,7 @@ public final class AppSettings {
 	 * Private constructor, so that readAppSettings is the only way to get an
 	 * instance of this class.
 	 */
-	private AppSettings() {
+	private PropertyAppSettings() {
 	}
 
 	/**
@@ -97,7 +97,7 @@ public final class AppSettings {
 	 * @throws IOException
 	 *             thrown, if the given path doesn't point to the right file.
 	 */
-	public static AppSettings readAppSettings(final String settingsFile)
+	public static PropertyAppSettings readAppSettings(final String settingsFile)
 			throws IOException {
 
 		// Read our settings file
@@ -108,7 +108,7 @@ public final class AppSettings {
 		bufferedInputStream.close();
 
 		// Create a new instance of AppSettings
-		AppSettings a = new AppSettings();
+		PropertyAppSettings a = new PropertyAppSettings();
 
 		// Read the properties and fill the variables
 		a.showDesktopNotification = Boolean.parseBoolean(appSettings
@@ -129,7 +129,7 @@ public final class AppSettings {
 	 * @param settingsFile
 	 * @throws IOException
 	 */
-	public static void writeAppSettings(final AppSettings appSettings,
+	public static void writeAppSettings(final PropertyAppSettings appSettings,
 			final String settingsFile) throws IOException {
 
 		Properties props = new Properties();
