@@ -102,6 +102,8 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 				.getProperty(PropertyAppSettings.PASSWORD));
 		appSettingsTmp.setWatchDirectory(properties
 				.getProperty(PropertyAppSettings.WATCH_DIRECTORY));
+		appSettingsTmp.setMonitoringActive(Boolean.parseBoolean(properties
+				.getProperty(PropertyAppSettings.MONITORING_ACTIVE)));
 		appSettingsTmp.setLanguage(properties
 				.getProperty(PropertyAppSettings.LANGUAGE));
 		appSettingsTmp.setCountry(properties
@@ -144,6 +146,8 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 				pAppSettings.getPassword());
 		props.setProperty(PropertyAppSettings.WATCH_DIRECTORY,
 				pAppSettings.getWatchDirectory());
+		props.setProperty(PropertyAppSettings.MONITORING_ACTIVE, pAppSettings
+				.getMonitoringActive().toString());
 		props.setProperty(PropertyAppSettings.LANGUAGE,
 				pAppSettings.getLanguage());
 		props.setProperty(PropertyAppSettings.COUNTRY,

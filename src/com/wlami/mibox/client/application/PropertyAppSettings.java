@@ -96,6 +96,16 @@ public final class PropertyAppSettings implements AppSettings {
 	private String country;
 
 	/**
+	 * Constant for accessing monitoringActive
+	 */
+	protected static final String MONITORING_ACTIVE = "monitoring.active";
+
+	/**
+	 * indicates whether monitoring is switched on now.
+	 */
+	private Boolean monitoringActive;
+
+	/**
 	 * default constructor. calls the load-method
 	 * 
 	 * @throws IOException
@@ -258,6 +268,21 @@ public final class PropertyAppSettings implements AppSettings {
 	@Override
 	public Boolean getStartAtSystemStartup() {
 		return startAtSystemStartup;
+	}
+
+	/**
+	 * @return the monitoringActive
+	 */
+	public Boolean getMonitoringActive() {
+		return monitoringActive;
+	}
+
+	/**
+	 * @param monitoringActive
+	 *            the monitoringActive to set
+	 */
+	public void setMonitoringActive(boolean monitoringActive) {
+		this.monitoringActive = monitoringActive;
 	}
 
 	/*

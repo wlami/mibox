@@ -78,16 +78,17 @@ public final class MiboxClientApp {
 	private void run() {
 		log.debug("Creating mibox tray");
 		ctx.getBean("miboxTray", MiboxTray.class);
-		log.debug("starting watchdog");
+
 		DirectoryWatchdog directoryWatchdog = ctx.getBean("directoryWatchdog",
 				DirectoryWatchdog.class);
 		try {
-			directoryWatchdog.setDirectory(appSettingsDao.load()
-					.getWatchDirectory());
+			AppSettings appSettings = appSettingsDao.load();
+			directoryWatchdog.setDirectory(appSettings.getWatchDirectory());
+			directoryWatchdog.setActive(appSettings.getMonitoringActive());
+			directoryWatchdog.start();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		directoryWatchdog.start();
 	}
 }

@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.springframework.context.annotation.Lazy;
 
+import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
 
 /**
@@ -45,6 +46,16 @@ import com.wlami.mibox.client.application.AppSettingsDao;
 @Named
 @Lazy
 public class MiboxTray {
+
+	/**
+	 * label for the start menuitem.
+	 */
+	protected static final String TRAY_MENU_START_MONITORING = "Tray.menu.start_monitoring";
+
+	/**
+	 * label for the stop menuitem.
+	 */
+	protected static final String TRAY_MENU_STOP_MONITORING = "Tray.menu.stop_monitoring";
 
 	/**
 	 * Display object to enable access to the tray.
@@ -126,9 +137,61 @@ public class MiboxTray {
 				menu.setVisible(true);
 			}
 		});
+		createStartStopSynchronizationItem();
 		createSettingsItem();
 		createCloseItem();
 
+	}
+
+	/**
+	 * Creates the start/stop menu Item for the right click menu.
+	 */
+	private void createStartStopSynchronizationItem() {
+		final MenuItem menuItem = new MenuItem(menu, SWT.PUSH);
+		try {
+			AppSettings appSettings = appSettingsDao.load();
+			String title = (appSettings.getMonitoringActive() ? strings
+					.getString(TRAY_MENU_STOP_MONITORING) : strings
+					.getString(TRAY_MENU_START_MONITORING));
+			menuItem.setText(title);
+			menuItem.addListener(SWT.Selection,
+					getStartStopSynchronizationListener(menuItem));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * @return
+	 */
+	private Listener getStartStopSynchronizationListener(final MenuItem menuItem) {
+		return new Listener() {
+			@Override
+			public void handleEvent(Event arg0) {
+				AppSettings appSettings;
+				try {
+					appSettings = appSettingsDao.load();
+					if (appSettings.getMonitoringActive()) {
+						// monitoring has been active, now switch it off
+						appSettings.setMonitoringActive(false);
+						appSettingsDao.save(appSettings);
+						// relabel the button to "Start"
+						menuItem.setText(strings
+								.getString(TRAY_MENU_START_MONITORING));
+					} else {
+						// monitoring has been inactive, now switch it on
+						appSettings.setMonitoringActive(true);
+						appSettingsDao.save(appSettings);
+						// relabel the button to "Stop"
+						menuItem.setText(strings
+								.getString(TRAY_MENU_STOP_MONITORING));
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		};
 	}
 
 	/**

@@ -74,8 +74,6 @@ public class DirectoryWatchdog extends Thread {
 	 */
 	@Inject
 	public DirectoryWatchdog(AppSettingsDao appSettingsDao) {
-		active = true;
-		changedDirectory = false;
 		this.appSettingsDao = appSettingsDao;
 		appSettingsDao
 				.registerNewAppSettingsListener(getNewAppSettingsListener());
@@ -97,6 +95,14 @@ public class DirectoryWatchdog extends Thread {
 		this.directory = directory;
 	}
 
+	/**
+	 * @param active
+	 *            the active to set
+	 */
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -104,18 +110,27 @@ public class DirectoryWatchdog extends Thread {
 	 */
 	@Override
 	public void run() {
-		log.info("Starting watchdog thread");
-		while (active) {
-			if (directory != null) {
-				log.info("watching for changes in [" + directory + "]");
-				changedDirectory = false;
-				startObservation();
-			} else {
-				log.warn("directory property is null!");
-				break;
+		while (true) {
+
+			while (active) {
+				log.info("Activating watchdog");
+				if (directory != null) {
+					log.info("watching for changes in [" + directory + "]");
+					changedDirectory = false;
+					startObservation();
+				} else {
+					log.warn("directory property is null!");
+					break;
+				}
+			}
+			log.info("deactivating watchdog");
+			while (!active) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+				}
 			}
 		}
-		log.info("Stopping watchdog thread");
 	}
 
 	/**
@@ -167,8 +182,8 @@ public class DirectoryWatchdog extends Thread {
 	 * @return the event handler
 	 */
 	private NewAppSettingsListener getNewAppSettingsListener() {
+		final DirectoryWatchdog watchdog = this;
 		return new NewAppSettingsListener() {
-
 			@Override
 			public void handleNewAppSettings(AppSettings appSettings) {
 				log.debug("handling new settings");
@@ -178,6 +193,17 @@ public class DirectoryWatchdog extends Thread {
 					directory = appSettings.getWatchDirectory();
 					log.info("detected a new watch directory: " + directory);
 					changedDirectory = true;
+				}
+				if (active != appSettings.getMonitoringActive()) {
+					boolean newActive = appSettings.getMonitoringActive();
+					if (newActive) {
+						// Watchdog has been inactive and shall start now!
+						watchdog.active = true;
+					} else {
+						// Deactive watchdog
+						watchdog.active = false;
+						watchdog.changedDirectory = true; // TODO: rename
+					}
 				}
 			}
 		};

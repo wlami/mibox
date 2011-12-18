@@ -103,6 +103,17 @@ public interface AppSettings extends Cloneable {
 	public abstract Boolean getStartAtSystemStartup();
 
 	/**
+	 * @return the monitoringAvtive
+	 */
+	public abstract Boolean getMonitoringActive();
+
+	/**
+	 * @param synchronizationActive
+	 *            the monitoringActve to set.
+	 */
+	public abstract void setMonitoringActive(boolean monitoringActive);
+
+	/**
 	 * creates a deepCopy of this object.
 	 * 
 	 * @return clone
