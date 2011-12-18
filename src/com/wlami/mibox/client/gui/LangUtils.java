@@ -17,6 +17,7 @@
  */
 package com.wlami.mibox.client.gui;
 
+import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -25,6 +26,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import com.wlami.mibox.client.application.AppSettings;
+import com.wlami.mibox.client.application.AppSettingsDao;
 
 /**
  * @author Wladislaw Mitzel
@@ -38,14 +40,14 @@ public final class LangUtils {
 	 * Reference to the application settings.
 	 */
 
-	AppSettings appSettings;
+	AppSettingsDao appSettingsDao;
 
 	/**
 	 * 
 	 */
 	@Inject
-	public LangUtils(AppSettings appSettings) {
-		this.appSettings = appSettings;
+	public LangUtils(AppSettingsDao appSettingsDao) {
+		this.appSettingsDao = appSettingsDao;
 	}
 
 	/**
@@ -56,8 +58,17 @@ public final class LangUtils {
 	 */
 	public ResourceBundle getTranslationBundle() {
 		Locale currentLocale;
-		String language = appSettings.getLanguage();
-		String country = appSettings.getCountry();
+		String language = null;
+		String country = null;
+		AppSettings appSettings;
+		try {
+			appSettings = appSettingsDao.load();
+			language = appSettings.getLanguage();
+			country = appSettings.getCountry();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if (language == null) {
 			currentLocale = new Locale("en", "US");
 		} else {

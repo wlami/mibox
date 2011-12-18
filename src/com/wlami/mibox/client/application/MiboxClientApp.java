@@ -56,7 +56,7 @@ public final class MiboxClientApp {
 	}
 
 	@Inject
-	private AppSettings appSettings;
+	private AppSettingsDao appSettingsDao;
 
 	/**
 	 * Main entry point for the MiboxClientApplication.
@@ -80,7 +80,13 @@ public final class MiboxClientApp {
 		ctx.getBean("miboxTray", MiboxTray.class);
 		log.debug("starting watchdog");
 		DirectoryWatchdog directoryWatchdog = new DirectoryWatchdog();
-		directoryWatchdog.setDirectory(appSettings.getWatchDirectory());
+		try {
+			directoryWatchdog.setDirectory(appSettingsDao.load()
+					.getWatchDirectory());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		directoryWatchdog.start();
 	}
 }

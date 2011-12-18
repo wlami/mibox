@@ -17,6 +17,8 @@
  */
 package com.wlami.mibox.client.gui;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
@@ -33,7 +35,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 
-import com.wlami.mibox.client.application.AppSettings;
+import com.wlami.mibox.client.application.AppSettingsDao;
 
 /**
  * @author Wladislaw Mitzel
@@ -77,15 +79,15 @@ public class MiboxTray {
 	 */
 	LangUtils langUtils;
 
-	AppSettings appSettings;
+	AppSettingsDao appSettingsDao;
 
 	/**
 	 * Public constructor to create a new MiboxTray. It loads the translated
 	 * strings during creation.
 	 */
 	@Inject
-	public MiboxTray(final LangUtils langUtils, AppSettings appSettings) {
-		this.appSettings = appSettings;
+	public MiboxTray(final LangUtils langUtils, AppSettingsDao appSettingsDao) {
+		this.appSettingsDao = appSettingsDao;
 		this.langUtils = langUtils;
 		new Thread() {
 			public void run() {
@@ -136,14 +138,24 @@ public class MiboxTray {
 		menuItemSettings.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(final Event arg0) {
-				SettingsShell settingsShell = SettingsShellFactory
-						.getSettingsShell(langUtils, appSettings);
-				while (!settingsShell.isDisposed()) {
-					if (!display.readAndDispatch()) {
-						display.sleep();
+				SettingsShell settingsShell;
+				try {
+					settingsShell = SettingsShellFactory.getSettingsShell(
+							langUtils, appSettingsDao);
+					while (!settingsShell.isDisposed()) {
+						if (!display.readAndDispatch()) {
+							display.sleep();
+						}
 					}
+					SettingsShellFactory.invalidateShell();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				SettingsShellFactory.invalidateShell();
+
 			}
 		});
 	}

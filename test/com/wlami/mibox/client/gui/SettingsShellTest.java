@@ -25,7 +25,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.wlami.mibox.client.application.PropertyAppSettings;
+import com.wlami.mibox.client.application.AppSettingsDao;
+import com.wlami.mibox.client.application.AppSettingsDaoProperty;
 
 /**
  * @author Wladislaw Mitzel
@@ -50,8 +51,9 @@ public class SettingsShellTest {
 	@Test
 	public void test() throws IOException {
 
+		AppSettingsDao appSettingsDao = new AppSettingsDaoProperty();
 		Shell sh = new SettingsShell(Display.getCurrent(), new LangUtils(
-				new PropertyAppSettings()), new PropertyAppSettings());
+				appSettingsDao), appSettingsDao);
 		sh.open();
 		sh.layout();
 		while (!sh.isDisposed()) {

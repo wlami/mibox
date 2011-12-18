@@ -17,13 +17,7 @@
  */
 package com.wlami.mibox.client.application;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Properties;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -35,11 +29,6 @@ import javax.inject.Singleton;
 @Singleton
 @Named
 public final class PropertyAppSettings implements AppSettings {
-
-	/**
-	 * Constant for accessing the path to the AppSettings properties file.
-	 */
-	public static final String APP_SETTINGS = "./res/settings.properties";
 
 	/**
 	 * Constant for accessing bool showDesktopNotification.
@@ -111,57 +100,7 @@ public final class PropertyAppSettings implements AppSettings {
 	 * 
 	 * @throws IOException
 	 */
-	public PropertyAppSettings() throws IOException {
-		load();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.wlami.mibox.client.application.AppSettings1#load()
-	 */
-	@Override
-	public void load() throws FileNotFoundException, IOException {
-		// Read our settings file
-		Properties appSettings = new Properties();
-		BufferedInputStream bufferedInputStream = new BufferedInputStream(
-				new FileInputStream(APP_SETTINGS));
-		appSettings.load(bufferedInputStream);
-		bufferedInputStream.close();
-
-		// Read the properties and fill the variables
-		showDesktopNotification = Boolean.parseBoolean(appSettings
-				.getProperty(SHOW_DESKTOP_NOTIFICATION));
-		startAtSystemStartup = Boolean.parseBoolean(appSettings
-				.getProperty(START_AT_SYSTEM_STARTUP));
-		username = appSettings.getProperty(USERNAME);
-		password = appSettings.getProperty(PASSWORD);
-		watchDirectory = appSettings.getProperty(WATCH_DIRECTORY);
-		language = appSettings.getProperty(LANGUAGE);
-		country = appSettings.getProperty(COUNTRY);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.wlami.mibox.client.application.AppSettings1#save()
-	 */
-	@Override
-	public void save() throws IOException {
-
-		Properties props = new Properties();
-		props.setProperty(SHOW_DESKTOP_NOTIFICATION,
-				showDesktopNotification.toString());
-		props.setProperty(START_AT_SYSTEM_STARTUP,
-				startAtSystemStartup.toString());
-		props.setProperty(USERNAME, username);
-		props.setProperty(PASSWORD, password);
-		props.setProperty(WATCH_DIRECTORY, watchDirectory);
-		props.setProperty(LANGUAGE, language);
-		props.setProperty(COUNTRY, country);
-		FileOutputStream fileOutputStream = new FileOutputStream(new File(
-				APP_SETTINGS));
-		props.store(fileOutputStream, "auto generated settings");
+	public PropertyAppSettings() {
 	}
 
 	/*
@@ -319,6 +258,22 @@ public final class PropertyAppSettings implements AppSettings {
 	@Override
 	public Boolean getStartAtSystemStartup() {
 		return startAtSystemStartup;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#clone()
+	 */
+	@Override
+	public AppSettings clone() {
+		try {
+			return (AppSettings) super.clone();
+		} catch (CloneNotSupportedException e) {
+			// This shouldn't be possible!
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }

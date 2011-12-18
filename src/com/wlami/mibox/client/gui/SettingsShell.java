@@ -17,6 +17,7 @@
  */
 package com.wlami.mibox.client.gui;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ResourceBundle;
 
@@ -46,6 +47,7 @@ import org.eclipse.wb.swt.SWTResourceManager;
 import swing2swt.layout.BorderLayout;
 
 import com.wlami.mibox.client.application.AppSettings;
+import com.wlami.mibox.client.application.AppSettingsDao;
 
 /**
  * This Class represents the settings dialog.
@@ -94,6 +96,8 @@ public class SettingsShell extends Shell {
 	/**
 	 * Reference to the application settings.
 	 */
+	protected final AppSettingsDao appSettingsDao;
+
 	protected final AppSettings appSettings;
 
 	/**
@@ -145,15 +149,17 @@ public class SettingsShell extends Shell {
 	 * Create the shell. Auto-generated code.
 	 * 
 	 * @param display
+	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
 	public SettingsShell(Display display, final LangUtils langUtils,
-			final AppSettings appSettings) {
+			final AppSettingsDao appSettingsDao) throws FileNotFoundException,
+			IOException {
 		super(display, SWT.CLOSE | SWT.TITLE);
 		this.langUtils = langUtils;
 		final Shell shell = this;
-
-		this.appSettings = appSettings;
+		this.appSettingsDao = appSettingsDao;
+		appSettings = appSettingsDao.load();
 		checkSaveBeforeClose();
 		strings = langUtils.getTranslationBundle();
 		setImage(SWTResourceManager.getImage(SettingsShell.class,
@@ -410,15 +416,12 @@ public class SettingsShell extends Shell {
 		btnSave.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				// try {
-				// PropertyAppSettings.writeAppSettings(
-				// settings,
-				// MiboxClientApp.getAppProperties().getProperty(
-				// PropertyAppSettings.APP_SETTINGS));
-				// } catch (IOException e) {
-				// // TODO Auto-generated catch block
-				// e.printStackTrace();
-				// }
+				try {
+					appSettingsDao.save(settings);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				setUnsavedChanges(false);
 				shell.close();
 			}
@@ -457,15 +460,12 @@ public class SettingsShell extends Shell {
 		btnApply.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				// try {
-				// // PropertyAppSettings.writeAppSettings(
-				// // settings,
-				// // MiboxClientApp.getAppProperties().getProperty(
-				// // PropertyAppSettings.APP_SETTINGS));
-				// } catch (IOException e) {
-				// // TODO Auto-generated catch block
-				// e.printStackTrace();
-				// }
+				try {
+					appSettingsDao.save(settings);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				setUnsavedChanges(false);
 			}
 		});

@@ -17,11 +17,12 @@
  */
 package com.wlami.mibox.client.gui;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.eclipse.swt.widgets.Display;
 
-import com.wlami.mibox.client.application.AppSettings;
+import com.wlami.mibox.client.application.AppSettingsDao;
 
 /**
  * @author Wladislaw Mitzel
@@ -35,13 +36,16 @@ public class SettingsShellFactory {
 	 * Gets an instance of the settingsShell.
 	 * 
 	 * @return
+	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
 	public static SettingsShell getSettingsShell(LangUtils langUtils,
-			AppSettings appSettings) {
+			AppSettingsDao appSettingsDao) throws FileNotFoundException,
+			IOException {
 		if (settingsShell == null) {
 			Display display = Display.getCurrent();
-			settingsShell = new SettingsShell(display, langUtils, appSettings);
+			settingsShell = new SettingsShell(display, langUtils,
+					appSettingsDao);
 			settingsShell.open();
 			settingsShell.layout();
 		}

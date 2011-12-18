@@ -17,30 +17,11 @@
  */
 package com.wlami.mibox.client.application;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 /**
  * @author Wladislaw Mitzel
- *
+ * 
  */
-public interface AppSettings {
-
-	/**
-	 * populates the object with data from properties file.
-	 * 
-	 * @throws FileNotFoundException
-	 * @throws IOException
-	 */
-	public abstract void load() throws FileNotFoundException, IOException;
-
-	/**
-	 * Writes the given AppSettings to a properties file on disk.
-	 * 
-	 * @throws IOException
-	 *             thrown if an error occurs during writing of the file
-	 */
-	public abstract void save() throws IOException;
+public interface AppSettings extends Cloneable {
 
 	/**
 	 * @param showDesktopNotification
@@ -120,5 +101,12 @@ public interface AppSettings {
 	 * @return the startAtSystemStartup
 	 */
 	public abstract Boolean getStartAtSystemStartup();
+
+	/**
+	 * creates a deepCopy of this object.
+	 * 
+	 * @return clone
+	 */
+	public AppSettings clone();
 
 }
