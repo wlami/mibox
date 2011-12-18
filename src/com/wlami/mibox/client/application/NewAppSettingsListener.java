@@ -17,35 +17,17 @@
  */
 package com.wlami.mibox.client.application;
 
-import java.io.IOException;
-
 /**
  * @author Wladislaw Mitzel
  * 
  */
-public interface AppSettingsDao {
+public interface NewAppSettingsListener {
 
 	/**
-	 * loads the current available application settings.
-	 * 
-	 * @return current Settings
-	 */
-	public AppSettings load() throws IOException;
-
-	/**
-	 * persists the given Settings.
+	 * defines an event handler for the case of a new AppSetting
 	 * 
 	 * @param appSettings
-	 *            settings to persist.
 	 */
-	public void save(AppSettings appSettings) throws IOException;
+	public void handleNewAppSettings(AppSettings appSettings);
 
-	/**
-	 * allows to register a NewAppSettingsListener which gets notified as soon
-	 * as a new AppSetting is available.
-	 * 
-	 * @param newAppSettingsListener
-	 */
-	public void registerNewAppSettingsListener(
-			NewAppSettingsListener newAppSettingsListener);
 }

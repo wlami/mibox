@@ -79,7 +79,8 @@ public final class MiboxClientApp {
 		log.debug("Creating mibox tray");
 		ctx.getBean("miboxTray", MiboxTray.class);
 		log.debug("starting watchdog");
-		DirectoryWatchdog directoryWatchdog = new DirectoryWatchdog();
+		DirectoryWatchdog directoryWatchdog = ctx.getBean("directoryWatchdog",
+				DirectoryWatchdog.class);
 		try {
 			directoryWatchdog.setDirectory(appSettingsDao.load()
 					.getWatchDirectory());

@@ -23,8 +23,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.inject.Named;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Wladislaw Mitzel
@@ -32,6 +36,12 @@ import javax.inject.Named;
  */
 @Named
 public class AppSettingsDaoProperty implements AppSettingsDao {
+
+	/**
+	 * internal logging object.
+	 */
+	protected static Logger log = LoggerFactory
+			.getLogger(AppSettingsDaoProperty.class.getName());
 
 	/**
 	 * Constant for accessing the path to the AppSettings properties file.
@@ -42,6 +52,15 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 	 * current valid application settings.
 	 */
 	AppSettings appSettings;
+
+	CopyOnWriteArrayList<NewAppSettingsListener> appSettingsListeners;
+
+	/**
+	 * default constructor.
+	 */
+	public AppSettingsDaoProperty() {
+		appSettingsListeners = new CopyOnWriteArrayList<NewAppSettingsListener>();
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -61,12 +80,14 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 	 * @throws IOException
 	 */
 	private AppSettings loadFromPropertyFile() throws IOException {
+		log.info("Loading application settings from properties file.");
 		AppSettings appSettingsTmp = new PropertyAppSettings();
 		// Read our settings file
 		Properties properties = new Properties();
 		BufferedInputStream bufferedInputStream = new BufferedInputStream(
 				new FileInputStream(APP_SETTINGS));
 		properties.load(bufferedInputStream);
+		log.debug("Loaded AppSettings: " + properties.toString());
 		bufferedInputStream.close();
 
 		// Read the properties and fill the variables
@@ -97,9 +118,13 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 	 */
 	@Override
 	public void save(AppSettings appSettings) throws IOException {
+		log.debug("persisting application settings");
 		saveToPropertyFile(appSettings);
-		this.appSettings = appSettings;
-		// TODO: trigger listener
+		this.appSettings = appSettings.clone();
+		// notify each listener
+		for (NewAppSettingsListener listener : appSettingsListeners) {
+			listener.handleNewAppSettings(appSettings);
+		}
 	}
 
 	/**
@@ -123,9 +148,23 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 				pAppSettings.getLanguage());
 		props.setProperty(PropertyAppSettings.COUNTRY,
 				pAppSettings.getCountry());
+		log.debug("Persisting AppSettings: " + props.toString());
 		FileOutputStream fileOutputStream = new FileOutputStream(new File(
 				APP_SETTINGS));
 		props.store(fileOutputStream, "auto generated settings");
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.application.AppSettingsDao#
+	 * registerNewAppSettingsListener
+	 * (com.wlami.mibox.client.application.NewAppSettingsListener)
+	 */
+	@Override
+	public void registerNewAppSettingsListener(
+			NewAppSettingsListener newAppSettingsListener) {
+		appSettingsListeners.add(newAppSettingsListener);
 	}
 
 }
