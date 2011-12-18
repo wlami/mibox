@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
+import org.springframework.context.annotation.Lazy;
 
 import com.wlami.mibox.client.application.AppSettingsDao;
 
@@ -42,6 +43,7 @@ import com.wlami.mibox.client.application.AppSettingsDao;
  * 
  */
 @Named
+@Lazy
 public class MiboxTray {
 
 	/**
