@@ -23,11 +23,17 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.concurrent.TimeUnit;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -53,6 +59,9 @@ public class DirectoryWatchdog extends Thread {
 	 */
 	private String directory;
 
+	private WatchService watchService;
+
+	private Map<WatchKey, Path> keyMap;
 	/**
 	 * determines whether the watchdog shall watch currently.
 	 */
@@ -75,6 +84,7 @@ public class DirectoryWatchdog extends Thread {
 	@Inject
 	public DirectoryWatchdog(AppSettingsDao appSettingsDao) {
 		this.appSettingsDao = appSettingsDao;
+		this.keyMap = new HashMap<WatchKey, Path>();
 		appSettingsDao
 				.registerNewAppSettingsListener(getNewAppSettingsListener());
 	}
@@ -115,8 +125,22 @@ public class DirectoryWatchdog extends Thread {
 			while (active) {
 				log.info("Activating watchdog");
 				if (directory != null) {
-					log.info("watching for changes in [" + directory + "]");
 					changedDirectory = false;
+					try {
+						Path dir = Paths.get(directory);
+						if (dir.normalize().getParent() == null) {
+							log.warn("Watching an root directory is not allowed! ["
+									+ dir.toString() + "]");
+							AppSettings appSettings = appSettingsDao.load();
+							appSettings.setMonitoringActive(false);
+							appSettingsDao.save(appSettings);
+							active = false;
+							continue;
+						}
+					} catch (IOException e) {
+						log.error(e.getMessage());
+					}
+					log.info("watching for changes in [" + directory + "]");
 					startObservation();
 				} else {
 					log.warn("directory property is null!");
@@ -134,16 +158,17 @@ public class DirectoryWatchdog extends Thread {
 	}
 
 	/**
-	 * 
+	 * Starts the directory observation. Registers it at a WatchService and
+	 * checks for new Events.
 	 */
 	protected void startObservation() {
 		try {
-			WatchService ws = FileSystems.getDefault().newWatchService();
-			WatchKey wk = Paths.get(directory).register(ws, ENTRY_CREATE,
-					ENTRY_DELETE, ENTRY_MODIFY);
+			watchService = FileSystems.getDefault().newWatchService();
+			registerDirectory();
 			log.debug("Waiting for keys");
+			WatchKey wk;
 			while (!changedDirectory) {
-				wk = ws.poll(1L, TimeUnit.SECONDS);
+				wk = watchService.take();
 				if (wk != null) {
 					for (WatchEvent<?> watchEvent : wk.pollEvents()) {
 						WatchEvent.Kind<?> kind = watchEvent.kind();
@@ -166,13 +191,34 @@ public class DirectoryWatchdog extends Thread {
 					wk.reset();
 				}
 			}
-			ws.close();
+			watchService.close();
 		} catch (IOException e) {
 			log.error(e.toString());
 		} catch (InterruptedException e) {
 			log.error(e.toString());
 		}
 
+	}
+
+	/**
+	 * Traverses a directory and registers all subdirectories at the
+	 * watchservice.
+	 * 
+	 * @throws IOException
+	 */
+	protected void registerDirectory() throws IOException {
+		Path rootDir = Paths.get(getDirectory());
+		Files.walkFileTree(rootDir, new SimpleFileVisitor<Path>() {
+			@Override
+			public FileVisitResult preVisitDirectory(Path dir,
+					BasicFileAttributes attrs) throws IOException {
+				log.debug("Registering at watchService: " + dir.toString());
+				WatchKey watchKey = dir.register(watchService, ENTRY_CREATE,
+						ENTRY_MODIFY, ENTRY_DELETE);
+				keyMap.put(watchKey, dir);
+				return FileVisitResult.CONTINUE;
+			};
+		});
 	}
 
 	/**
