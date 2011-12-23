@@ -34,6 +34,7 @@ import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -154,7 +155,7 @@ public class DirectoryWatchdog extends Thread {
 			log.debug("Waiting for keys");
 			WatchKey wk;
 			while (!changedDirectory) {
-				wk = watchService.take();
+				wk = watchService.poll(250L, TimeUnit.MILLISECONDS);
 				if (wk != null) {
 					for (WatchEvent<?> watchEvent : wk.pollEvents()) {
 						WatchEvent.Kind<?> kind = watchEvent.kind();
@@ -178,6 +179,8 @@ public class DirectoryWatchdog extends Thread {
 				}
 			}
 			watchService.close();
+			keyMap.clear();
+			watchService = null;
 		} catch (IOException e) {
 			log.error(e.toString());
 		} catch (InterruptedException e) {
