@@ -17,7 +17,11 @@
  */
 package com.wlami.mibox.client.metadata;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import org.codehaus.jackson.annotate.JsonBackReference;
+import org.codehaus.jackson.annotate.JsonManagedReference;
 
 /**
  * @author Wladislaw Mitzel
@@ -31,14 +35,21 @@ public class MFile {
 	protected static final long DEFAULT_CHUNK_SIZE = 1024L * 1024L;
 
 	/**
+	 * file name.
+	 */
+	private String name;
+
+	/**
 	 * Defines the folder in which this file is contained.
 	 */
+	@JsonBackReference
 	private MFolder folder;
 
 	/**
 	 * Contains a ordered list of file chunks.
 	 */
-	private List<MChunk> chunks;
+	@JsonManagedReference
+	private List<MChunk> chunks = new ArrayList<MChunk>();
 
 	/**
 	 * This is the hash-value of the non-encrypted file. It is used for
@@ -74,14 +85,6 @@ public class MFile {
 	}
 
 	/**
-	 * @param chunks
-	 *            the chunks to set
-	 */
-	public void setChunks(List<MChunk> chunks) {
-		this.chunks = chunks;
-	}
-
-	/**
 	 * @return the fileHash
 	 */
 	public String getFileHash() {
@@ -101,6 +104,21 @@ public class MFile {
 	 */
 	public long getChunkSize() {
 		return chunkSize;
+	}
+
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @param name
+	 *            the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }
