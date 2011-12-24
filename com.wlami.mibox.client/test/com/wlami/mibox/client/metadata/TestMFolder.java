@@ -45,7 +45,7 @@ public class TestMFolder {
 		folder.setName("hans");
 		subfolder = new MFolder(folder);
 		subfolder.setName("subfolder");
-		folder.getSubfolders().add(subfolder);
+		folder.getSubfolders().put(subfolder.getName(), subfolder);
 		MFile file1 = new MFile();
 		file1.setFolder(folder);
 		file1.setName("file1");
@@ -57,7 +57,7 @@ public class TestMFolder {
 		chunk1.setLastSync(new Date());
 		file1.getChunks().add(chunk1);
 		file1.getChunks().add(chunk1);
-		folder.getFiles().add(file1);
+		folder.getFiles().put(file1.getName(), file1);
 
 	}
 
@@ -74,6 +74,12 @@ public class TestMFolder {
 		System.out.println("");
 		mapper.writeValue(System.out, readFolder);
 		System.out.flush();
+	}
+
+	@Test
+	public void testHashtable() {
+		MFolder retrievedFolder = folder.getSubfolders().get("subfolder");
+		assert (retrievedFolder != null);
 	}
 
 }

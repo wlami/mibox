@@ -17,8 +17,7 @@
  */
 package com.wlami.mibox.client.metadata;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Hashtable;
 
 import org.codehaus.jackson.annotate.JsonBackReference;
 import org.codehaus.jackson.annotate.JsonManagedReference;
@@ -45,13 +44,13 @@ public class MFolder {
 	 * Contains a set of subfolders.
 	 */
 	@JsonManagedReference
-	private Set<MFolder> subfolders;
+	private Hashtable<String, MFolder> subfolders;
 
 	/**
 	 * Contains a set of all files in this folder.
 	 */
 	@JsonManagedReference
-	private Set<MFile> files;
+	private Hashtable<String, MFile> files;
 
 	/**
 	 * 
@@ -69,21 +68,21 @@ public class MFolder {
 	 */
 	public MFolder(MFolder parent) {
 		this.parentFolder = parent;
-		files = new HashSet<MFile>();
-		subfolders = new HashSet<MFolder>();
+		files = new Hashtable<String, MFile>();
+		subfolders = new Hashtable<String, MFolder>();
 	}
 
 	/**
 	 * @return the subfolder
 	 */
-	public Set<MFolder> getSubfolders() {
+	public Hashtable<String, MFolder> getSubfolders() {
 		return subfolders;
 	}
 
 	/**
 	 * @return the files
 	 */
-	public Set<MFile> getFiles() {
+	public Hashtable<String, MFile> getFiles() {
 		return files;
 	}
 
@@ -115,6 +114,16 @@ public class MFolder {
 	 */
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return name;
 	}
 
 }

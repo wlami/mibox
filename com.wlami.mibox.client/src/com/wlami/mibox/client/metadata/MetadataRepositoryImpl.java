@@ -21,12 +21,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.inject.Inject;
@@ -146,6 +140,12 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 		/** the internal file structure stored as an {@link MFolder} instance. */
 		private MFolder rootFolder;
 
+		/** JSON Object mapper for persistence. */
+		private ObjectMapper objectMapper = new ObjectMapper();
+
+		/** File instance of json persistence file. */
+		File metadataFile = new File(METADATA_DEFAULT_FILENAME);
+
 		/**
 		 * 
 		 */
@@ -153,9 +153,7 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 			AppSettings appSetting;
 			try {
 				appSetting = appSettingsDao.load();
-				ObjectMapper objectMapper = new ObjectMapper();
-				File metadataFile = new File(METADATA_DEFAULT_FILENAME) {
-				};
+				;
 				if (metadataFile.exists()) {
 					// read the metadata from disk
 					rootFolder = objectMapper.readValue(new BufferedReader(
@@ -174,42 +172,76 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 
 		}
 
-		protected void synchronizeMetadata() throws IOException {
+		/**
+		 * Synchronizes the metadata and the state of the file system. For this
+		 * purpose the following algorithm is used:
+		 * <ol>
+		 * <li>update the root node to match the {@link AppSettings}
+		 * .watchDirectory</li>
+		 * <li>traverse the file system recursively
+		 * <ol>
+		 * <li>add non existing {@link MFolder}s</li>
+		 * <li>add non existing {@link MFile}s or update them if they exist</li>
+		 * </ol>
+		 * </li>
+		 * </ol>
+		 * 
+		 * @throws IOException
+		 */
+		private void synchronizeMetadata() throws IOException {
 			AppSettings appSettings = appSettingsDao.load();
 			String watchDir = appSettings.getWatchDirectory();
-			Files.walkFileTree(Paths.get(watchDir),
-					new SimpleFileVisitor<Path>() {
+			traverseFileSystem(new File(watchDir), rootFolder);
+			objectMapper.writeValue(metadataFile, rootFolder);
+		}
 
-						/*
-						 * (non-Javadoc)
-						 * 
-						 * @see
-						 * java.nio.file.SimpleFileVisitor#preVisitDirectory
-						 * (java.lang.Object,
-						 * java.nio.file.attribute.BasicFileAttributes)
-						 */
-						@Override
-						public FileVisitResult preVisitDirectory(Path dir,
-								BasicFileAttributes attrs) throws IOException {
-							// TODO Auto-generated method stub
-							return super.preVisitDirectory(dir, attrs);
-						}
-
-						/*
-						 * (non-Javadoc)
-						 * 
-						 * @see
-						 * java.nio.file.SimpleFileVisitor#visitFile(java.lang
-						 * .Object, java.nio.file.attribute.BasicFileAttributes)
-						 */
-						@Override
-						public FileVisitResult visitFile(Path file,
-								BasicFileAttributes attrs) throws IOException {
-							// TODO Auto-generated method stub
-							return super.visitFile(file, attrs);
-						}
-
-					});
+		/**
+		 * Helper-method of synchronizeMetadata. Algorithm is described there.
+		 * 
+		 * @param filesystemFolder
+		 *            {@link File} instance which shall be synchronized in this
+		 *            recursion step.
+		 * @param mFolder
+		 *            {@link MFolder} instance which shall contain the metadata.
+		 */
+		private void traverseFileSystem(File filesystemFolder, MFolder mFolder) {
+			for (File f : filesystemFolder.listFiles()) {
+				if (f.isDirectory()) {
+					// We got a folder and have to recurse again.
+					MFolder subFolder;
+					if (mFolder.getSubfolders().containsKey(f.getName())) {
+						// There is a matching MFolder so we use it.
+						subFolder = mFolder.getSubfolders().get(f.getName());
+					} else {
+						// We did not find a matching MFolder so we create it!
+						subFolder = new MFolder();
+						subFolder.setName(f.getName());
+						subFolder.setParentFolder(mFolder);
+						mFolder.getSubfolders().put(subFolder.getName(),
+								subFolder);
+					}
+					traverseFileSystem(f, subFolder);
+				} else if (f.isFile()) {
+					MFile mFile;
+					if (mFolder.getFiles().containsKey(f.getName())) {
+						// There is a matching MFile.
+						mFile = mFolder.getFiles().get(f.getName());
+					} else {
+						// There is no matching file, so we create it first
+						mFile = new MFile();
+						mFile.setFolder(mFolder);
+						mFile.setName(f.getName());
+						// TODO set hash
+						mFile.setFileHash("1234567890abcdef");
+						mFolder.getFiles().put(mFile.getName(), mFile);
+					}
+					// TODO inspect file here!
+				} else {
+					// What do we have over here, not a file and not a dir?!
+					log.error("wtf? " + f.getName());
+				}
+				System.out.println("File: " + f.toString());
+			}
 		}
 
 		/*
