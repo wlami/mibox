@@ -19,6 +19,8 @@ package com.wlami.mibox.client.metadata;
 
 import java.util.Date;
 
+import org.codehaus.jackson.annotate.JsonBackReference;
+
 /**
  * This class represents the metadata of a file chunk.
  * 
@@ -30,6 +32,7 @@ public class MChunk {
 	/**
 	 * The file this chunk belongs to.
 	 */
+	@JsonBackReference
 	private MFile file;
 
 	/**

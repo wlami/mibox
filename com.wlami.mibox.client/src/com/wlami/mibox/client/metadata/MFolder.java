@@ -17,7 +17,11 @@
  */
 package com.wlami.mibox.client.metadata;
 
+import java.util.HashSet;
 import java.util.Set;
+
+import org.codehaus.jackson.annotate.JsonBackReference;
+import org.codehaus.jackson.annotate.JsonManagedReference;
 
 /**
  * @author Wladislaw Mitzel
@@ -26,34 +30,54 @@ import java.util.Set;
 public class MFolder {
 
 	/**
+	 * Folder name.
+	 */
+	private String name;
+
+	/**
 	 * Defines the folder in which this folder is contained. <code>null</code>
 	 * if this is the root folder.
 	 */
+	@JsonBackReference
 	private MFolder parentFolder;
 
 	/**
 	 * Contains a set of subfolders.
 	 */
-	private Set<MFolder> subfolder;
+	@JsonManagedReference
+	private Set<MFolder> subfolders;
 
 	/**
 	 * Contains a set of all files in this folder.
 	 */
+	@JsonManagedReference
 	private Set<MFile> files;
+
+	/**
+	 * 
+	 */
+	public MFolder() {
+		this(null);
+	}
+
+	/**
+	 * Default constructor.
+	 * 
+	 * @param parent
+	 *            the parent folder. Use <code>null</code> if this is the root
+	 *            folder.
+	 */
+	public MFolder(MFolder parent) {
+		this.parentFolder = parent;
+		files = new HashSet<MFile>();
+		subfolders = new HashSet<MFolder>();
+	}
 
 	/**
 	 * @return the subfolder
 	 */
-	public Set<MFolder> getSubfolder() {
-		return subfolder;
-	}
-
-	/**
-	 * @param subfolder
-	 *            the subfolder to set
-	 */
-	public void setSubfolder(Set<MFolder> subfolder) {
-		this.subfolder = subfolder;
+	public Set<MFolder> getSubfolders() {
+		return subfolders;
 	}
 
 	/**
@@ -61,14 +85,6 @@ public class MFolder {
 	 */
 	public Set<MFile> getFiles() {
 		return files;
-	}
-
-	/**
-	 * @param files
-	 *            the files to set
-	 */
-	public void setFiles(Set<MFile> files) {
-		this.files = files;
 	}
 
 	/**
@@ -84,6 +100,21 @@ public class MFolder {
 	 */
 	public void setParentFolder(MFolder parentFolder) {
 		this.parentFolder = parentFolder;
+	}
+
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @param name
+	 *            the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }

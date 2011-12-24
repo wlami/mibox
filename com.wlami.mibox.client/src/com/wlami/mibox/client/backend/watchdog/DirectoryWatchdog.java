@@ -21,6 +21,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -45,6 +46,8 @@ import org.slf4j.LoggerFactory;
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.client.application.NewAppSettingsListener;
+import com.wlami.mibox.client.metadata.MetadataRepository;
+import com.wlami.mibox.client.metadata.ObservedFilesystemEvent;
 
 /**
  * @author Wladislaw Mitzel
@@ -80,11 +83,18 @@ public class DirectoryWatchdog extends Thread {
 	private AppSettingsDao appSettingsDao;
 
 	/**
+	 * reference to a {@link MetadataRepository}.
+	 */
+	private MetadataRepository metadataRepository;
+
+	/**
 	 * default constructor.
 	 */
 	@Inject
-	public DirectoryWatchdog(AppSettingsDao appSettingsDao) {
+	public DirectoryWatchdog(AppSettingsDao appSettingsDao,
+			MetadataRepository metadataRepository) {
 		this.appSettingsDao = appSettingsDao;
+		this.metadataRepository = metadataRepository;
 		this.keyMap = new HashMap<WatchKey, Path>();
 		appSettingsDao
 				.registerNewAppSettingsListener(getNewAppSettingsListener());
@@ -158,22 +168,17 @@ public class DirectoryWatchdog extends Thread {
 				wk = watchService.poll(250L, TimeUnit.MILLISECONDS);
 				if (wk != null) {
 					for (WatchEvent<?> watchEvent : wk.pollEvents()) {
-						WatchEvent.Kind<?> kind = watchEvent.kind();
-						if (kind.equals(ENTRY_CREATE)) {
-							log.debug("Observed an create event. ["
-									+ watchEvent.context() + "]");
+						WatchEvent.Kind<Path> kind = (WatchEvent.Kind<Path>) watchEvent
+								.kind();
+						Path currentPath = keyMap.get(wk);
+						ObservedFilesystemEvent ofe = new ObservedFilesystemEvent();
+						ofe.setFilename(new File(currentPath.toString(),
+								watchEvent.context().toString())
+								.getAbsolutePath());
+						ofe.setEventKind(kind);
+						metadataRepository.addEvent(ofe);
+						log.debug("Observed filesystem event: " + ofe);
 
-						} else if (kind.equals(ENTRY_MODIFY)) {
-							log.debug("Observed an modify event. ["
-									+ watchEvent.context() + "]");
-
-						} else if (kind.equals(ENTRY_DELETE)) {
-							log.debug("Observed an delete event. ["
-									+ watchEvent.context() + "]");
-
-						} else {
-
-						}
 					}
 					wk.reset();
 				}
@@ -207,7 +212,7 @@ public class DirectoryWatchdog extends Thread {
 								+ dir.toString());
 						WatchKey watchKey = dir.register(watchService,
 								ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
-						keyMap.put(watchKey, dir);
+						keyMap.put(watchKey, dir.normalize());
 					} catch (Exception e) {
 						log.warn("Did not register " + dir.toString() + "\n"
 								+ e.toString());
