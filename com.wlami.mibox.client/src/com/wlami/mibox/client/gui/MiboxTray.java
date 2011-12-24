@@ -25,7 +25,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -140,6 +143,22 @@ public class MiboxTray {
 		createStartStopSynchronizationItem();
 		createSettingsItem();
 		createCloseItem();
+		
+		trayItem.addSelectionListener(new SelectionAdapter() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.swt.events.SelectionAdapter#widgetDefaultSelected(org.eclipse.swt.events.SelectionEvent)
+			 */
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				super.widgetDefaultSelected(arg0);
+				try {
+					Program.launch(appSettingsDao.load().getWatchDirectory());
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
 
 	}
 
