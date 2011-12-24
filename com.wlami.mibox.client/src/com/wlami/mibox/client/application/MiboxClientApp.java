@@ -29,6 +29,8 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.wlami.mibox.client.backend.watchdog.DirectoryWatchdog;
 import com.wlami.mibox.client.gui.MiboxTray;
+import com.wlami.mibox.client.metadata.MetadataRepository;
+import com.wlami.mibox.client.metadata.MetadataRepositoryImpl;
 
 /**
  * Main class for the MiboxClient. Serves as the coupling point between the GUI
@@ -77,8 +79,22 @@ public final class MiboxClientApp {
 
 	private void run() {
 		log.debug("Creating mibox tray");
+		// Start tray
 		ctx.getBean("miboxTray", MiboxTray.class);
 
+		// start the metadatarepo
+		MetadataRepository mp = ctx.getBean("metadataRepositoryImpl",
+				MetadataRepositoryImpl.class);
+		mp.startProcessing();
+
+		// start the watchdog
+		startWatchdog();
+	}
+
+	/**
+	 * 
+	 */
+	protected void startWatchdog() {
 		DirectoryWatchdog directoryWatchdog = ctx.getBean("directoryWatchdog",
 				DirectoryWatchdog.class);
 		try {
