@@ -25,29 +25,29 @@ package com.wlami.mibox.client.metadata;
  * <li>files</li>
  * <li>file chunks</li>
  * </ul>
- * 
+ *
  * @author Wladislaw Mitzel
- * 
+ *
  */
 public interface MetadataRepository {
 
 	/**
 	 * Start the repository. It runs in a separate thread.
 	 */
-	public abstract void startProcessing();
+	void startProcessing();
 
 	/**
 	 * Stop the repository.
 	 */
-	public abstract void stopProcessing();
+	void stopProcessing();
 
 	/**
 	 * Notify the repository of changes in the filesystem.
-	 * 
+	 *
 	 * @param observedFilesystemEvent
 	 *            the observed event.
 	 */
-	public abstract void addEvent(
+	void addEvent(
 			ObservedFilesystemEvent observedFilesystemEvent);
 
 }

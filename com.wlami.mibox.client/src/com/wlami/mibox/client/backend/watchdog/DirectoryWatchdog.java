@@ -172,11 +172,19 @@ public class DirectoryWatchdog extends Thread {
 								.kind();
 						Path currentPath = keyMap.get(wk);
 						ObservedFilesystemEvent ofe = new ObservedFilesystemEvent();
-						ofe.setFilename(new File(currentPath.toString(),
-								watchEvent.context().toString())
-								.getAbsolutePath());
+						File file = new File(currentPath.toString(), watchEvent
+								.context().toString());
+
+						ofe.setFilename(file.getAbsolutePath());
 						ofe.setEventKind(kind);
 						metadataRepository.addEvent(ofe);
+
+						// When directory is created, a watchservice for this
+						// new directory should be created as well
+						if (kind == ENTRY_CREATE && file.isDirectory()) {
+							registerWatchService(file.toPath());
+						}
+
 						log.debug("Observed filesystem event: " + ofe);
 
 					}
@@ -207,22 +215,27 @@ public class DirectoryWatchdog extends Thread {
 				@Override
 				public FileVisitResult preVisitDirectory(Path dir,
 						BasicFileAttributes attrs) {
-					try {
-						log.debug("Registering at watchService: "
-								+ dir.toString());
-						WatchKey watchKey = dir.register(watchService,
-								ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
-						keyMap.put(watchKey, dir.normalize());
-					} catch (Exception e) {
-						log.warn("Did not register " + dir.toString() + "\n"
-								+ e.toString());
-					}
+					registerWatchService(dir);
 					return FileVisitResult.CONTINUE;
-				};
+				}
 			});
 		} catch (IOException e) {
 			log.warn(e.toString());
 			// TODO: Tell user something terrible happened!
+		}
+	}
+
+	/**
+	 * @param dir
+	 */
+	private void registerWatchService(Path dir) {
+		try {
+			log.debug("Registering at watchService: " + dir.toString());
+			WatchKey watchKey = dir.register(watchService, ENTRY_CREATE,
+					ENTRY_MODIFY, ENTRY_DELETE);
+			keyMap.put(watchKey, dir.normalize());
+		} catch (Exception e) {
+			log.warn("Did not register " + dir.toString() + "\n" + e.toString());
 		}
 	}
 
