@@ -116,4 +116,19 @@ public class MChunk {
 		this.decryptedChunkHash = decryptedChunkHash;
 	}
 
+	/**
+	 * @return the file
+	 */
+	public MFile getFile() {
+		return file;
+	}
+
+	/**
+	 * @param file
+	 *            the file to set
+	 */
+	public void setFile(MFile file) {
+		this.file = file;
+	}
+
 }

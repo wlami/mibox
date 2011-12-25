@@ -32,7 +32,7 @@ public class MFile {
 	/**
 	 * Default size of chunks.
 	 */
-	protected static final long DEFAULT_CHUNK_SIZE = 1024L * 1024L;
+	protected static final int DEFAULT_CHUNK_SIZE = 1024 * 1024;
 
 	/**
 	 * file name.
@@ -60,7 +60,7 @@ public class MFile {
 	/**
 	 * Determines the size of the file chunks. Measured in byte.
 	 */
-	private long chunkSize = DEFAULT_CHUNK_SIZE;
+	private int chunkSize = DEFAULT_CHUNK_SIZE;
 
 	/**
 	 * @return the folder
@@ -102,7 +102,7 @@ public class MFile {
 	/**
 	 * @return the chunkSize
 	 */
-	public long getChunkSize() {
+	public int getChunkSize() {
 		return chunkSize;
 	}
 
