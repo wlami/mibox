@@ -27,7 +27,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Formatter;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.inject.Inject;
@@ -42,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import com.wlami.mibox.client.application.AppFolders;
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
+import com.wlami.mibox.core.util.HashUtil;
 
 /**
  * @author Wladislaw Mitzel
@@ -124,20 +124,6 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 		if (!incomingEvents.add(observedFilesystemEvent)) {
 			log.debug("ObservedFilesystemEvent not added - already existing");
 		}
-	}
-
-	/**
-	 * Creates a String from a MessageDigest result.
-	 * 
-	 * @param input
-	 * @return
-	 */
-	private static String digestToString(byte[] input) {
-		Formatter formatter = new Formatter();
-		for (byte b : input) {
-			formatter.format("%02x", b);
-		}
-		return formatter.toString();
 	}
 
 	/**
@@ -365,8 +351,8 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 							mFile.getChunks().add(chunk);
 							chunk.setFile(mFile);
 						}
-						String newChunkHash = digestToString(chunkDigest
-								.digest());
+						String newChunkHash = HashUtil
+								.digestToString(chunkDigest.digest());
 						if (!newChunkHash.equals(chunk.getDecryptedChunkHash())) {
 							chunk.setLastChange(new Date());
 							chunk.setDecryptedChunkHash(newChunkHash);
@@ -375,7 +361,8 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 						log.debug("Neu Chunk " + currentChunk
 								+ " finished with hash " + newChunkHash);
 					}
-					mFile.setFileHash(digestToString(fileDigest.digest()));
+					mFile.setFileHash(HashUtil.digestToString(fileDigest
+							.digest()));
 					mFile.setLastModified(filesystemLastModified);
 
 					// if a certain amount of time has elapsed persist
