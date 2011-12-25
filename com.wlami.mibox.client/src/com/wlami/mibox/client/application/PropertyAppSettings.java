@@ -301,4 +301,6 @@ public final class PropertyAppSettings implements AppSettings {
 		return null;
 	}
 
+	// TODO: if app settings are not available then persist default settings
+
 }

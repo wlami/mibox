@@ -30,6 +30,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.wlami.mibox.client.application.AppFolders;
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
 
@@ -128,7 +129,7 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 		/**
 		 * 
 		 */
-		private static final String METADATA_DEFAULT_FILENAME = ".mibox";
+		private static final String METADATA_DEFAULT_FILENAME = ".usermetadata";
 
 		private final Logger log = LoggerFactory
 				.getLogger(MetadataWorker.class);
@@ -144,7 +145,8 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 		private ObjectMapper objectMapper = new ObjectMapper();
 
 		/** File instance of json persistence file. */
-		File metadataFile = new File(METADATA_DEFAULT_FILENAME);
+		private File metadataFile = new File(AppFolders.getConfigFolder(),
+				METADATA_DEFAULT_FILENAME);
 
 		/**
 		 * 
@@ -153,7 +155,6 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 			AppSettings appSetting;
 			try {
 				appSetting = appSettingsDao.load();
-				;
 				if (metadataFile.exists()) {
 					// read the metadata from disk
 					rootFolder = objectMapper.readValue(new BufferedReader(
@@ -186,6 +187,7 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 		 * </ol>
 		 * 
 		 * @throws IOException
+		 *             Thrown on io errors.
 		 */
 		private void synchronizeMetadata() throws IOException {
 			log.debug("Synchronizing metadata with filesystem");
