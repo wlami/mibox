@@ -39,4 +39,21 @@ public class HashUtil {
 		return formatter.toString();
 	}
 
+	/**
+	 * Creates a byte array from a hex string.
+	 * 
+	 * @param input
+	 *            hex string
+	 * @return a byte array
+	 */
+	public static byte[] stringToDigest(String input) {
+		int length = input.length();
+		byte[] digest = new byte[length / 2];
+		for (int i = 0; i < length; i += 2) {
+			digest[i / 2] = (byte) ((Character.digit(input.charAt(i), 16) << 4) + Character
+					.digit(input.charAt(i + 1), 16));
+		}
+		return digest;
+	}
+
 }
