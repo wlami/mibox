@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Formatter;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -32,6 +33,8 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,27 +149,30 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	 */
 	class MetadataWorker extends Thread {
 
-		/**
-		 * 
-		 */
+		/** Defines the period between writes of metadata in seconds. */
+		protected static final int WRITE_PERIOD_SECONDS = 60;
+
+		/** Constant for accessing the SHA1 algorithm. */
 		private static final String SHA_1_MESSAGE_DIGEST = "SHA1";
 
-		/**
-		 * 
-		 */
+		/** Constant for accessing the SHA256 algorithm. */
 		protected static final String SHA_256_MESSAGE_DIGEST = "SHA-256";
 
-		/**
-		 * 
-		 */
+		/** Constant for accessing the metadata file on disk. */
 		private static final String METADATA_DEFAULT_FILENAME = ".usermetadata";
 
+		/** internal logger. */
 		private final Logger log = LoggerFactory
 				.getLogger(MetadataWorker.class);
 
+		/**
+		 * Defines the current state. Thread runs until active is set to false.
+		 * Then the thread dies and a new Worker has to be created.
+		 */
 		private boolean active = true;
 
-		private static final long DEFAULT_SLEEP_TIME = 250L;
+		/** Time period between checking the incoming set. */
+		private static final long DEFAULT_SLEEP_TIME_MILLIS = 250L;
 
 		/** the internal file structure stored as an {@link MFolder} instance. */
 		private MFolder rootFolder;
@@ -178,8 +184,15 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 		private File metadataFile = new File(AppFolders.getConfigFolder(),
 				METADATA_DEFAULT_FILENAME);
 
+		/** Next time the metadata shall be written to disk */
+		private Date nextWrite;
+
+		/** Used for time calculations */
+		private Calendar calendar = Calendar.getInstance();
+
 		/**
-		 * 
+		 * Default constructor. Loads appSettings from {@link AppSettingsDao}
+		 * and the metadata from disk.
 		 */
 		public MetadataWorker() {
 			AppSettings appSetting;
@@ -195,11 +208,11 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 					rootFolder.setName("/");
 					objectMapper.writeValue(metadataFile, rootFolder);
 				}
+				writeMetadata(false);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
 		}
 
 		/**
@@ -224,7 +237,32 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 			AppSettings appSettings = appSettingsDao.load();
 			String watchDir = appSettings.getWatchDirectory();
 			traverseFileSystem(new File(watchDir), rootFolder);
-			objectMapper.writeValue(metadataFile, rootFolder);
+			writeMetadata(true);
+		}
+
+		/**
+		 * Writes the metadata to the filesystem.
+		 * 
+		 * @param write
+		 *            If <code>true</code> the metadata really gets written.<br/>
+		 *            If <code>false</code> only the next write time will be
+		 *            calculated.
+		 * @throws IOException
+		 *             Thrown on IO-Exceptions: noe permissions, etc.
+		 * @throws JsonGenerationException
+		 * @throws JsonMappingException
+		 */
+		protected void writeMetadata(boolean write) throws IOException,
+				JsonGenerationException, JsonMappingException {
+			calendar.setTime(new Date());
+			calendar.add(Calendar.SECOND, WRITE_PERIOD_SECONDS);
+			nextWrite = calendar.getTime();
+			if (write) {
+				objectMapper.writeValue(metadataFile, rootFolder);
+				log.info("Written metadata. Next write will probably be "
+						+ nextWrite.toString());
+			}
+
 		}
 
 		/**
@@ -339,6 +377,12 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 					}
 					mFile.setFileHash(digestToString(fileDigest.digest()));
 					mFile.setLastModified(filesystemLastModified);
+
+					// if a certain amount of time has elapsed persist
+					if (new Date().after(nextWrite)) {
+						writeMetadata(true);
+					}
+
 				} catch (NoSuchAlgorithmException e) {
 					log.error("No SHA availabe", e);
 				} catch (IOException | NoSuchProviderException e) {
@@ -367,7 +411,7 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 						incomingEvents.remove(ofe);
 					}
 					try {
-						Thread.sleep(DEFAULT_SLEEP_TIME);
+						Thread.sleep(DEFAULT_SLEEP_TIME_MILLIS);
 					} catch (InterruptedException e) {
 					}
 				}
