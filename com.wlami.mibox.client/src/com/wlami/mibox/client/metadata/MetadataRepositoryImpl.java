@@ -294,14 +294,14 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 						SHA_1_MESSAGE_DIGEST, "BC");
 				FileInputStream fileInputStream = new FileInputStream(f);
 				int currentByte;
-				long readBytes = 0;
+				int readBytes = 0;
 				int currentChunk = 0;
 				int chunkSize = mFile.getChunkSize();
 				// Read the file until EOF == -1
 				byte[] currentBytes = new byte[chunkSize];
-				while (fileInputStream.read(currentBytes) != -1) {
-					fileDigest.update(currentBytes);
-					chunkDigest.update(currentBytes);
+				while ((readBytes = fileInputStream.read(currentBytes)) != -1) {
+					fileDigest.update(currentBytes, 0, readBytes);
+					chunkDigest.update(currentBytes, 0, readBytes);
 					// If we have finished the chunk
 					MChunk chunk;
 					// Check whether we have the chunk data already
@@ -322,36 +322,6 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 					currentChunk++;
 					log.debug("Neu Chunk " + currentChunk
 							+ " finished with hash " + newChunkHash);
-				}
-				currentChunk = 0;
-				fileInputStream = new FileInputStream(f);
-				while ((currentByte = fileInputStream.read()) != -1) {
-					if (readBytes % chunkSize == 0) {
-						// If we have finished the chunk
-						MChunk chunk;
-						// Check whether we have the chunk data already
-						if (mFile.getChunks().size() > currentChunk) {
-							// We found the chunk
-							chunk = mFile.getChunks().get(currentChunk);
-						} else {
-							// There is no chunk and we create a new one.
-							chunk = new MChunk();
-							mFile.getChunks().add(chunk);
-							chunk.setFile(mFile);
-						}
-						String newChunkHash = digestToString(chunkDigest
-								.digest());
-						if (!newChunkHash.equals(chunk.getDecryptedChunkHash())) {
-							chunk.setLastChange(new Date());
-							chunk.setDecryptedChunkHash(newChunkHash);
-						}
-						currentChunk++;
-						log.debug("Chunk " + currentChunk
-								+ " finished with hash " + newChunkHash);
-					}
-					fileDigest.update((byte) currentByte);
-					chunkDigest.update((byte) currentByte);
-					readBytes++;
 				}
 				mFile.setFileHash(digestToString(fileDigest.digest()));
 			} catch (NoSuchAlgorithmException e) {
