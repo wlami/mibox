@@ -280,54 +280,73 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 		}
 
 		/**
+		 * Synchronizes the file system state with the metadata.<br/>
+		 * <br/>
+		 * First checks whether file system lastModified date is later than the
+		 * metadata. In this case the hashes are updated.
+		 * 
 		 * @param f
+		 *            Referende to the filesystem file.
 		 * @param mFile
+		 *            Reference to the metadata file.
 		 */
 		private void synchronizeFileMetadata(File f, MFile mFile) {
-			log.debug("Calculating file and chunk hashes for " + f.getName());
-			try {
-				// create two digests. One is for the whole file. The other is
-				// for the chunks and gets reseted after each chunk.
-				MessageDigest fileDigest = MessageDigest.getInstance(
-						SHA_1_MESSAGE_DIGEST, "BC");
-				MessageDigest chunkDigest = MessageDigest.getInstance(
-						SHA_1_MESSAGE_DIGEST, "BC");
-				FileInputStream fileInputStream = new FileInputStream(f);
-				int currentByte;
-				int readBytes = 0;
-				int currentChunk = 0;
-				int chunkSize = mFile.getChunkSize();
-				// Read the file until EOF == -1
-				byte[] currentBytes = new byte[chunkSize];
-				while ((readBytes = fileInputStream.read(currentBytes)) != -1) {
-					fileDigest.update(currentBytes, 0, readBytes);
-					chunkDigest.update(currentBytes, 0, readBytes);
-					// If we have finished the chunk
-					MChunk chunk;
-					// Check whether we have the chunk data already
-					if (mFile.getChunks().size() > currentChunk) {
-						// We found the chunk
-						chunk = mFile.getChunks().get(currentChunk);
-					} else {
-						// There is no chunk and we create a new one.
-						chunk = new MChunk();
-						mFile.getChunks().add(chunk);
-						chunk.setFile(mFile);
+			// Check whether the file has been modified since the last meta sync
+			Date filesystemLastModified = new Date(f.lastModified());
+			if ((mFile.getLastModified() == null)
+					|| (filesystemLastModified.after(mFile.getLastModified()))) {
+				// The file has been modified, so we have to update metadata
+				log.debug("Calculating file and chunk hashes for "
+						+ f.getName());
+				try {
+					// create two digests. One is for the whole file. The other
+					// is for the chunks and gets reseted after each chunk.
+					MessageDigest fileDigest = MessageDigest.getInstance(
+							SHA_1_MESSAGE_DIGEST, "BC");
+					MessageDigest chunkDigest = MessageDigest.getInstance(
+							SHA_1_MESSAGE_DIGEST, "BC");
+					FileInputStream fileInputStream = new FileInputStream(f);
+					int currentByte;
+					int readBytes = 0;
+					int currentChunk = 0;
+					int chunkSize = mFile.getChunkSize();
+					// Read the file until EOF == -1
+					byte[] currentBytes = new byte[chunkSize];
+					while ((readBytes = fileInputStream.read(currentBytes)) != -1) {
+						fileDigest.update(currentBytes, 0, readBytes);
+						chunkDigest.update(currentBytes, 0, readBytes);
+						// If we have finished the chunk
+						MChunk chunk;
+						// Check whether we have the chunk data already
+						if (mFile.getChunks().size() > currentChunk) {
+							// We found the chunk
+							chunk = mFile.getChunks().get(currentChunk);
+						} else {
+							// There is no chunk and we create a new one.
+							chunk = new MChunk();
+							mFile.getChunks().add(chunk);
+							chunk.setFile(mFile);
+						}
+						String newChunkHash = digestToString(chunkDigest
+								.digest());
+						if (!newChunkHash.equals(chunk.getDecryptedChunkHash())) {
+							chunk.setLastChange(new Date());
+							chunk.setDecryptedChunkHash(newChunkHash);
+						}
+						currentChunk++;
+						log.debug("Neu Chunk " + currentChunk
+								+ " finished with hash " + newChunkHash);
 					}
-					String newChunkHash = digestToString(chunkDigest.digest());
-					if (!newChunkHash.equals(chunk.getDecryptedChunkHash())) {
-						chunk.setLastChange(new Date());
-						chunk.setDecryptedChunkHash(newChunkHash);
-					}
-					currentChunk++;
-					log.debug("Neu Chunk " + currentChunk
-							+ " finished with hash " + newChunkHash);
+					mFile.setFileHash(digestToString(fileDigest.digest()));
+					mFile.setLastModified(filesystemLastModified);
+				} catch (NoSuchAlgorithmException e) {
+					log.error("No SHA availabe", e);
+				} catch (IOException | NoSuchProviderException e) {
+					log.error("", e);
 				}
-				mFile.setFileHash(digestToString(fileDigest.digest()));
-			} catch (NoSuchAlgorithmException e) {
-				log.error("No SHA availabe", e);
-			} catch (IOException | NoSuchProviderException e) {
-				log.error("", e);
+			} else {
+				log.debug("The file has not been modified "
+						+ f.getAbsolutePath());
 			}
 		}
 

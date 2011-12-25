@@ -18,6 +18,7 @@
 package com.wlami.mibox.client.metadata;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonBackReference;
@@ -61,6 +62,12 @@ public class MFile {
 	 * Determines the size of the file chunks. Measured in byte.
 	 */
 	private int chunkSize = DEFAULT_CHUNK_SIZE;
+
+	/**
+	 * Defines the last time the file got modified. The same as the file system
+	 * change date of the file.
+	 */
+	private Date lastModified;
 
 	/**
 	 * @return the folder
@@ -119,6 +126,21 @@ public class MFile {
 	 */
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	/**
+	 * @return the lastModified
+	 */
+	public Date getLastModified() {
+		return lastModified;
+	}
+
+	/**
+	 * @param lastModified
+	 *            the lastModified to set
+	 */
+	public void setLastModified(Date lastModified) {
+		this.lastModified = lastModified;
 	}
 
 }
