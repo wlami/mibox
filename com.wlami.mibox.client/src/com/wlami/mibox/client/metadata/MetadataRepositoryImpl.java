@@ -164,7 +164,6 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 					rootFolder.setName("/");
 					objectMapper.writeValue(metadataFile, rootFolder);
 				}
-				synchronizeMetadata();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -189,6 +188,7 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 		 * @throws IOException
 		 */
 		private void synchronizeMetadata() throws IOException {
+			log.debug("Synchronizing metadata with filesystem");
 			AppSettings appSettings = appSettingsDao.load();
 			String watchDir = appSettings.getWatchDirectory();
 			traverseFileSystem(new File(watchDir), rootFolder);
@@ -205,6 +205,7 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 		 *            {@link MFolder} instance which shall contain the metadata.
 		 */
 		private void traverseFileSystem(File filesystemFolder, MFolder mFolder) {
+			log.debug("traversing " + filesystemFolder.getAbsolutePath());
 			for (File f : filesystemFolder.listFiles()) {
 				if (f.isDirectory()) {
 					// We got a folder and have to recurse again.
@@ -226,6 +227,7 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 					if (mFolder.getFiles().containsKey(f.getName())) {
 						// There is a matching MFile.
 						mFile = mFolder.getFiles().get(f.getName());
+						log.debug("Found file in metadata. " + f.getName());
 					} else {
 						// There is no matching file, so we create it first
 						mFile = new MFile();
@@ -234,13 +236,14 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 						// TODO set hash
 						mFile.setFileHash("1234567890abcdef");
 						mFolder.getFiles().put(mFile.getName(), mFile);
+						log.debug("Creating a new MFile in metadata for "
+								+ f.getName());
 					}
 					// TODO inspect file here!
 				} else {
 					// What do we have over here, not a file and not a dir?!
 					log.error("wtf? " + f.getName());
 				}
-				System.out.println("File: " + f.toString());
 			}
 		}
 
@@ -252,20 +255,23 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 		@Override
 		public void run() {
 			log.debug("Starting");
-			while (active) {
-				try {
+			try {
+				synchronizeMetadata();
+				while (active) {
 					for (ObservedFilesystemEvent ofe : incomingEvents) {
 						log.debug("Processing event " + ofe);
 						// TODO: process the event!
 						incomingEvents.remove(ofe);
 					}
-					Thread.sleep(DEFAULT_SLEEP_TIME);
-				} catch (InterruptedException e) {
+					try {
+						Thread.sleep(DEFAULT_SLEEP_TIME);
+					} catch (InterruptedException e) {
+					}
 				}
-
+			} catch (IOException e) {
+				log.error("Cannot load Appsettings - MetadataRepository cannot be started!");
 			}
 		}
-
 	}
 
 }
