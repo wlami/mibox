@@ -17,7 +17,6 @@
  */
 package com.wlami.mibox.server.services;
 
-import java.io.File;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -27,6 +26,7 @@ import javax.persistence.Query;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import com.wlami.mibox.server.data.User;
 
@@ -47,9 +47,8 @@ public class UserManager {
 	}
 
 	@GET
-	@Produces("application/json")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
 	public List<User> listUser() {
-		System.out.println(new File("test").getAbsolutePath());
 		Query q = em.createQuery("SELECT u from User u");
 		return q.getResultList();
 	}

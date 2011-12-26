@@ -31,6 +31,7 @@ import java.util.UUID;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
@@ -68,11 +69,17 @@ public class ChunkManager {
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response loadChunk(@PathParam("id") String id)
 			throws FileNotFoundException {
-
 		// Get the filename from db
-		ChunkHddMapping chunkHddMapping = (ChunkHddMapping) em
-				.createQuery("SELECT c from ChunkHddMapping c WHERE c.id = :id")
-				.setParameter("id", id).getSingleResult();
+		ChunkHddMapping chunkHddMapping;
+		try {
+			// Get the filename from db
+			chunkHddMapping = (ChunkHddMapping) em
+					.createQuery(
+							"SELECT c from ChunkHddMapping c WHERE c.id = :id")
+					.setParameter("id", id).getSingleResult();
+		} catch (NoResultException e) {
+			return Response.status(Status.NOT_FOUND).build();
+		}
 
 		// Get the file
 		final String storagePath = context
