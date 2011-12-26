@@ -5,9 +5,14 @@
 	<persistence-unit name="com.wlami.mibox.server" transaction-type="RESOURCE_LOCAL">
 		<class>com.wlami.mibox.server.data.User</class>
 		<class>com.wlami.mibox.server.data.ChunkHddMapping</class>
+		<class>com.wlami.mibox.server.data.Groups</class>
+		<class>com.wlami.mibox.server.data.GroupsPK</class>
 		<properties>
-			 <property name="eclipselink.ddl-generation" value="drop-and-create-tables"/>
-			<property name="eclipselink.ddl-generation.output-mode" value="database"/>
+			<property name="eclipselink.ddl-generation" value="drop-and-create-tables"/> 
+			<property name="eclipselink.ddl-generation.output-mode" value="sql-script"/>
+			<property name="eclipselink.create-ddl-jdbc-file-name" value="create.sql"/>
+			<property name="eclipselink.drop-ddl-jdbc-file-name" value="drop.sql"/>
+			<property name="eclipselink.application-location" value="C:\\mibox-ddl"/>
 		 	<property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/mibox"/>
 			<property name="javax.persistence.jdbc.user" value="root"/>
 			<property name="javax.persistence.jdbc.password" value=""/>
