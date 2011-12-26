@@ -17,10 +17,13 @@
  */
 package com.wlami.mibox.client.metadata;
 
+import java.io.File;
 import java.util.Hashtable;
 
 import org.codehaus.jackson.annotate.JsonBackReference;
 import org.codehaus.jackson.annotate.JsonManagedReference;
+
+import com.wlami.mibox.client.application.AppSettings;
 
 /**
  * @author Wladislaw Mitzel
@@ -124,6 +127,22 @@ public class MFolder {
 	@Override
 	public String toString() {
 		return name;
+	}
+
+	/**
+	 * Returns a {@link File} instance which can be used to access the folder
+	 * behind this metadata.
+	 * 
+	 * @param settings
+	 *            {@link AppSettings} instance to resolve the rootDirectory.
+	 * @return
+	 */
+	public File getFile(AppSettings settings) {
+		if (parentFolder != null) {
+			return new File(parentFolder.getFile(settings), name);
+		} else {
+			return new File(settings.getWatchDirectory(), name);
+		}
 	}
 
 }

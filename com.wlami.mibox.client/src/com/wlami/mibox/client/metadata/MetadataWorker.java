@@ -47,16 +47,10 @@ import com.wlami.mibox.core.util.HashUtil;
  * @author Wladislaw Mitzel
  * 
  */
-class MetadataWorker extends Thread {
+public class MetadataWorker extends Thread {
 
 	/** Defines the period between writes of metadata in seconds. */
 	protected static final int WRITE_PERIOD_SECONDS = 60;
-
-	/** Constant for accessing the SHA1 algorithm. */
-	private static final String SHA_1_MESSAGE_DIGEST = "SHA1";
-
-	/** Constant for accessing the SHA256 algorithm. */
-	protected static final String SHA_256_MESSAGE_DIGEST = "SHA-256";
 
 	/** Constant for accessing the metadata file on disk. */
 	private static final String METADATA_DEFAULT_FILENAME = ".usermetadata";
@@ -244,7 +238,7 @@ class MetadataWorker extends Thread {
 	 * @param mFile
 	 *            Reference to the metadata file.
 	 */
-	private void synchronizeFileMetadata(File f, MFile mFile) {
+	public void synchronizeFileMetadata(File f, MFile mFile) {
 		// Check whether the file has been modified since the last meta sync
 		Date filesystemLastModified = new Date(f.lastModified());
 		if ((mFile.getLastModified() == null)
@@ -255,9 +249,9 @@ class MetadataWorker extends Thread {
 				// create two digests. One is for the whole file. The other
 				// is for the chunks and gets reseted after each chunk.
 				MessageDigest fileDigest = MessageDigest.getInstance(
-						SHA_1_MESSAGE_DIGEST, "BC");
+						HashUtil.SHA_256_MESSAGE_DIGEST, "BC");
 				MessageDigest chunkDigest = MessageDigest.getInstance(
-						SHA_1_MESSAGE_DIGEST, "BC");
+						HashUtil.SHA_256_MESSAGE_DIGEST, "BC");
 				FileInputStream fileInputStream = new FileInputStream(f);
 				int readBytes = 0;
 				int currentChunk = 0;
@@ -275,9 +269,9 @@ class MetadataWorker extends Thread {
 						chunk = mFile.getChunks().get(currentChunk);
 					} else {
 						// There is no chunk and we create a new one.
-						chunk = new MChunk();
+						chunk = new MChunk(currentChunk);
 						mFile.getChunks().add(chunk);
-						chunk.setFile(mFile);
+						chunk.setMFile(mFile);
 					}
 					String newChunkHash = HashUtil.digestToString(chunkDigest
 							.digest());

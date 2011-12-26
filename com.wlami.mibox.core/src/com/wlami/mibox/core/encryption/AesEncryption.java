@@ -18,8 +18,7 @@
 package com.wlami.mibox.core.encryption;
 
 import org.bouncycastle.crypto.BlockCipher;
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
@@ -53,7 +52,7 @@ public class AesEncryption {
 	 * @return Returns the enrypted byte array.
 	 */
 	public static byte[] encrypt(byte[] plain, String keyString,
-			Integer initVector) {
+			Integer initVector) throws CryptoException {
 		return crypt(plain, keyString, initVector, true);
 	}
 
@@ -70,12 +69,12 @@ public class AesEncryption {
 	 * @return Returns the decrypted byte array.
 	 */
 	public static byte[] decrypt(byte[] ciphertext, String keyString,
-			Integer initVector) {
+			Integer initVector) throws CryptoException {
 		return crypt(ciphertext, keyString, initVector, false);
 	}
 
 	private static byte[] crypt(byte[] ciphertext, String keyString,
-			Integer initVector, boolean encrypt) {
+			Integer initVector, boolean encrypt) throws CryptoException {
 		byte[] key = HashUtil.stringToDigest(keyString);
 		BlockCipher engine = new AESEngine();
 		PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
@@ -85,20 +84,14 @@ public class AesEncryption {
 		byte[] cipherArray = new byte[cipher.getOutputSize(ciphertext.length)];
 		int outputByteCount = cipher.processBytes(ciphertext, 0,
 				ciphertext.length, cipherArray, 0);
-		try {
-			outputByteCount += cipher.doFinal(cipherArray, outputByteCount);
-			if (!encrypt) {
-				// Don't return the padding bytes if you are decrypting
-				byte[] result = new byte[outputByteCount];
-				System.arraycopy(cipherArray, 0, result, 0, outputByteCount);
-				return result;
-			}
-			return cipherArray;
-		} catch (DataLengthException | IllegalStateException
-				| InvalidCipherTextException e) {
-			log.error("", e);
+		outputByteCount += cipher.doFinal(cipherArray, outputByteCount);
+		if (!encrypt) {
+			// Don't return the padding bytes if you are decrypting
+			byte[] result = new byte[outputByteCount];
+			System.arraycopy(cipherArray, 0, result, 0, outputByteCount);
+			return result;
 		}
-		return null;
+		return cipherArray;
 	}
 
 }

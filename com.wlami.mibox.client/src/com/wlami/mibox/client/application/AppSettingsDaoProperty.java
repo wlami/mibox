@@ -100,6 +100,8 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 				.getProperty(PropertyAppSettings.USERNAME));
 		appSettingsTmp.setPassword(properties
 				.getProperty(PropertyAppSettings.PASSWORD));
+		appSettingsTmp.setServerUrl(properties
+				.getProperty(PropertyAppSettings.SERVER_URL));
 		appSettingsTmp.setWatchDirectory(properties
 				.getProperty(PropertyAppSettings.WATCH_DIRECTORY));
 		appSettingsTmp.setMonitoringActive(Boolean.parseBoolean(properties
@@ -144,6 +146,8 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 				pAppSettings.getUsername());
 		props.setProperty(PropertyAppSettings.PASSWORD,
 				pAppSettings.getPassword());
+		props.setProperty(PropertyAppSettings.SERVER_URL,
+				pAppSettings.getServerUrl());
 		props.setProperty(PropertyAppSettings.WATCH_DIRECTORY,
 				pAppSettings.getWatchDirectory());
 		props.setProperty(PropertyAppSettings.MONITORING_ACTIVE, pAppSettings

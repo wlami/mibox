@@ -17,12 +17,15 @@
  */
 package com.wlami.mibox.client.metadata;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonBackReference;
 import org.codehaus.jackson.annotate.JsonManagedReference;
+
+import com.wlami.mibox.client.application.AppSettings;
 
 /**
  * @author Wladislaw Mitzel
@@ -143,4 +146,13 @@ public class MFile {
 		this.lastModified = lastModified;
 	}
 
+	/**
+	 * Returns a {@link File} instance which can be used to access the file
+	 * behind this metadata.
+	 * 
+	 * @return File instance behind this metadata.
+	 */
+	public File getFile(AppSettings settings) {
+		return new File(folder.getFile(settings), name);
+	}
 }

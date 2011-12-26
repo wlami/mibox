@@ -57,6 +57,28 @@ public class MChunk {
 	private String decryptedChunkHash;
 
 	/**
+	 * Defines the position of this chunk in the file.
+	 */
+	private int position;
+
+	/**
+	 * Default constructor.
+	 * 
+	 * @param position
+	 *            The position of this chunk in the file.
+	 */
+	public MChunk(int position) {
+		this.position = position;
+	}
+
+	/**
+	 * undocumented.
+	 */
+	public MChunk() {
+		this(0);
+	}
+
+	/**
 	 * @return the encryptedChunkHash
 	 */
 	public String getEncryptedChunkHash() {
@@ -119,7 +141,7 @@ public class MChunk {
 	/**
 	 * @return the file
 	 */
-	public MFile getFile() {
+	public MFile getMFile() {
 		return file;
 	}
 
@@ -127,8 +149,23 @@ public class MChunk {
 	 * @param file
 	 *            the file to set
 	 */
-	public void setFile(MFile file) {
+	public void setMFile(MFile file) {
 		this.file = file;
+	}
+
+	/**
+	 * @return the position
+	 */
+	public int getPosition() {
+		return position;
+	}
+
+	/**
+	 * @param position
+	 *            the position to set
+	 */
+	public void setPosition(int position) {
+		this.position = position;
 	}
 
 }

@@ -18,12 +18,61 @@
 package com.wlami.mibox.core.util;
 
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Formatter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  */
 public class HashUtil {
+
+	/** internal logger. */
+	private static Logger log = LoggerFactory.getLogger(HashUtil.class);
+
+	/** reference to a {@link MessageDigest} */
+	private static MessageDigest messageDigest;
+
+	/** Constant for accessing the SHA256 algorithm. */
+	public static final String SHA_256_MESSAGE_DIGEST = "SHA-256";
+
+	/** get a {@link MessageDigest} implementation */
+	static {
+		try {
+			messageDigest = MessageDigest.getInstance(SHA_256_MESSAGE_DIGEST);
+		} catch (NoSuchAlgorithmException e) {
+			log.error("", e);
+			// TODO Tell the user something is terribly wrong!
+		}
+	}
+
+	/**
+	 * calculates the SHA256 hash value of an byte array.
+	 * 
+	 * @param input
+	 *            input array to be hashed.
+	 * @return returns the hash as String.
+	 */
+	public static String calculateSha256(byte[] input) {
+		return calculateHash(input, SHA_256_MESSAGE_DIGEST);
+	}
+
+	/**
+	 * internal hash calulcator. can be called with differen digest algorithms.
+	 * 
+	 * @param input
+	 *            input array to be hashed.
+	 * @param digest
+	 *            name of the hash algorithm.
+	 * @return returns the hash as String
+	 */
+	private static String calculateHash(byte[] input, String digest) {
+		messageDigest.update(input, 0, input.length);
+		return digestToString(messageDigest.digest());
+	}
 
 	/**
 	 * Creates a String from a MessageDigest result.

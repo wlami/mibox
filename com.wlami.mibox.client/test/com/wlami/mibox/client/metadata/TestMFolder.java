@@ -50,7 +50,7 @@ public class TestMFolder {
 		file1.setFolder(folder);
 		file1.setName("file1");
 		file1.setFileHash("affecaffebabe");
-		MChunk chunk1 = new MChunk();
+		MChunk chunk1 = new MChunk(0);
 		chunk1.setDecryptedChunkHash("decryptedHASH");
 		chunk1.setEncryptedChunkHash("encryptedHaSH");
 		chunk1.setLastChange(new Date());

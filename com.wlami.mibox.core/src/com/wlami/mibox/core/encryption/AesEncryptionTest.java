@@ -17,6 +17,7 @@
  */
 package com.wlami.mibox.core.encryption;
 
+import org.bouncycastle.crypto.CryptoException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +37,7 @@ public class AesEncryptionTest {
 	}
 
 	@Test
-	public void test() {
+	public void test() throws CryptoException {
 		String hashKey = "f6952d6eef555ddd87aca66e56b91530222d6e318414816f3ba7cf5bf694bf0f";
 		String plaintext = "AAAA";
 		byte[] encrypted = AesEncryption.encrypt(plaintext.getBytes(), hashKey,

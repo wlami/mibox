@@ -38,6 +38,18 @@ public interface AppSettings extends Cloneable {
 			final Boolean startAtSystemStartup);
 
 	/**
+	 * @return the serverUrl
+	 */
+	public abstract String getServerUrl();
+
+	/**
+	 * 
+	 * @param url
+	 *            the serverUrl to set
+	 */
+	public abstract void setServerUrl(String url);
+
+	/**
 	 * @return the username
 	 */
 	public abstract String getUsername();

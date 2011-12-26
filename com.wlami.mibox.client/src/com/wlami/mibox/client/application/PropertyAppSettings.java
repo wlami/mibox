@@ -40,6 +40,16 @@ public final class PropertyAppSettings implements AppSettings {
 	private Boolean showDesktopNotification;
 
 	/**
+	 * Constant for accessing the server url.
+	 */
+	protected static final String SERVER_URL = "server.url";
+
+	/**
+	 * Url of server side.
+	 */
+	private String serverUrl;
+
+	/**
 	 * Constant for accessing bool startAtSystemStartup.
 	 */
 	protected static final String START_AT_SYSTEM_STARTUP = "behavior.start_at_system_startup";
@@ -283,6 +293,21 @@ public final class PropertyAppSettings implements AppSettings {
 	 */
 	public void setMonitoringActive(boolean monitoringActive) {
 		this.monitoringActive = monitoringActive;
+	}
+
+	/**
+	 * @return the serverUrl
+	 */
+	public String getServerUrl() {
+		return serverUrl;
+	}
+
+	/**
+	 * @param serverUrl
+	 *            the serverUrl to set
+	 */
+	public void setServerUrl(String serverUrl) {
+		this.serverUrl = serverUrl;
 	}
 
 	/*
