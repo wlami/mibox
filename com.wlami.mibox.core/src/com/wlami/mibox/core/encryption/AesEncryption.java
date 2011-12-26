@@ -54,25 +54,7 @@ public class AesEncryption {
 	 */
 	public static byte[] encrypt(byte[] plain, String keyString,
 			Integer initVector) {
-		byte[] key = HashUtil.stringToDigest(keyString);
-		BlockCipher enigine = new AESEngine();
-		PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
-				new CBCBlockCipher(enigine));
-		cipher.init(
-				true,
-				new ParametersWithIV(new KeyParameter(key), HashUtil
-						.intToByteArray(initVector)));
-		byte[] cipherArray = new byte[cipher.getOutputSize(plain.length)];
-		int outputByteCount = cipher.processBytes(plain, 0, plain.length,
-				cipherArray, 0);
-		try {
-			outputByteCount += cipher.doFinal(cipherArray, outputByteCount);
-			return cipherArray;
-		} catch (DataLengthException | IllegalStateException
-				| InvalidCipherTextException e) {
-			log.error("", e);
-		}
-		return null;
+		return crypt(plain, keyString, initVector, true);
 	}
 
 	/**
@@ -89,27 +71,34 @@ public class AesEncryption {
 	 */
 	public static byte[] decrypt(byte[] ciphertext, String keyString,
 			Integer initVector) {
+		return crypt(ciphertext, keyString, initVector, false);
+	}
+
+	private static byte[] crypt(byte[] ciphertext, String keyString,
+			Integer initVector, boolean encrypt) {
 		byte[] key = HashUtil.stringToDigest(keyString);
 		BlockCipher engine = new AESEngine();
 		PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
 				new CBCBlockCipher(engine));
-		cipher.init(
-				false,
-				new ParametersWithIV(new KeyParameter(key), HashUtil
-						.intToByteArray(initVector)));
+		cipher.init(encrypt, new ParametersWithIV(new KeyParameter(key),
+				HashUtil.intToByteArray(initVector)));
 		byte[] cipherArray = new byte[cipher.getOutputSize(ciphertext.length)];
 		int outputByteCount = cipher.processBytes(ciphertext, 0,
 				ciphertext.length, cipherArray, 0);
 		try {
 			outputByteCount += cipher.doFinal(cipherArray, outputByteCount);
-			byte[] result = new byte[outputByteCount];
-			// Don't return the padding bytes!
-			System.arraycopy(cipherArray, 0, result, 0, outputByteCount);
-			return result;
+			if (!encrypt) {
+				// Don't return the padding bytes if you are decrypting
+				byte[] result = new byte[outputByteCount];
+				System.arraycopy(cipherArray, 0, result, 0, outputByteCount);
+				return result;
+			}
+			return cipherArray;
 		} catch (DataLengthException | IllegalStateException
 				| InvalidCipherTextException e) {
 			log.error("", e);
 		}
 		return null;
 	}
+
 }
