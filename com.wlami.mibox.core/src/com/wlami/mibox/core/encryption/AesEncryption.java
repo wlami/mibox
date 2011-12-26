@@ -31,6 +31,14 @@ import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.bouncycastle.crypto.BlockCipher;
+import org.bouncycastle.crypto.BufferedBlockCipher;
+import org.bouncycastle.crypto.DataLengthException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.engines.AESEngine;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +85,26 @@ public class AesEncryption {
 				| InvalidKeyException | InvalidAlgorithmParameterException
 				| ShortBufferException | IllegalBlockSizeException
 				| BadPaddingException | NoSuchProviderException e) {
+			log.error("", e);
+		}
+		return null;
+	}
+
+	public static byte[] encryptBc(byte[] plain, String keyString,
+			Integer initVector) {
+		byte[] key = HashUtil.stringToDigest(keyString);
+		BlockCipher enigine = new AESEngine();
+		BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
+				new CBCBlockCipher(enigine));
+		cipher.init(true, new KeyParameter(key));
+		byte[] cipherArray = new byte[cipher.getOutputSize(plain.length)];
+		int outputByteCount = cipher.processBytes(plain, 0, plain.length,
+				cipherArray, 0);
+		try {
+			cipher.doFinal(cipherArray, outputByteCount);
+			return cipherArray;
+		} catch (DataLengthException | IllegalStateException
+				| InvalidCipherTextException e) {
 			log.error("", e);
 		}
 		return null;

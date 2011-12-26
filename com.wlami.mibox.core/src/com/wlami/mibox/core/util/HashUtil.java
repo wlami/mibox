@@ -66,7 +66,7 @@ public class HashUtil {
 	 * @return the resulting byte array.
 	 */
 	public static byte[] intToByteArray(Integer i) {
-		return ByteBuffer.allocate(4).putInt(i).array();
+		return ByteBuffer.allocate(16).putInt(i).array();
 	}
 
 }

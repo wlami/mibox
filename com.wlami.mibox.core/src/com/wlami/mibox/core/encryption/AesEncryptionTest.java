@@ -40,7 +40,10 @@ public class AesEncryptionTest {
 		String plaintext = "Our plaintext is very nice!";
 		byte[] encrypted = AesEncryption.encrypt(plaintext.getBytes(), hashKey,
 				0);
+		byte[] encryptedBc = AesEncryption.encryptBc(plaintext.getBytes(),
+				hashKey, 0);
 		System.out.println(HashUtil.digestToString(encrypted));
+		System.out.println(HashUtil.digestToString(encryptedBc));
 	}
 
 }
