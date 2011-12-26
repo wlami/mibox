@@ -18,11 +18,9 @@
 package com.wlami.mibox.client.networking.synchronization;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.io.IOException;
 import java.security.Security;
 
@@ -84,23 +82,27 @@ public class UserDataChunkTransporterTest {
 		file.getChunks().add(chunk);
 
 		assertEquals(
-				"11b4161b312680802418c39160235921e5bfff3d36626915dac271f520192c7c",
-				userDataChunkTransporter.encryptAndUploadChunk(file.getChunks().get(0)));
+				"7cce494647e022c65d5b17db7cf3657d86f71538e7bbb9a4d1e36febee88ec8d",
+				userDataChunkTransporter.encryptAndUploadChunk(file.getChunks()
+						.get(0)));
 	}
 
 	/**
 	 * Test method for
 	 * {@link com.wlami.mibox.client.networking.synchronization.UserDataChunkTransporter#downloadAndDecryptChunk(com.wlami.mibox.client.metadata.MChunk)}
 	 * .
-	 * @throws IOException 
-	 * @throws CryptoException 
+	 * 
+	 * @throws IOException
+	 * @throws CryptoException
 	 */
 	@Test
-	public void testDownloadAndDecryptChunk() throws IOException, CryptoException {
+	public void testDownloadAndDecryptChunk() throws IOException,
+			CryptoException {
 		MChunk mChunk = new MChunk();
-		mChunk.setEncryptedChunkHash("11b4161b312680802418c39160235921e5bfff3d36626915dac271f520192c7c");
+		mChunk.setEncryptedChunkHash("7cce494647e022c65d5b17db7cf3657d86f71538e7bbb9a4d1e36febee88ec8d");
 		mChunk.setDecryptedChunkHash("753692ec36adb4c794c973945eb2a99c1649703ea6f76bf259abb4fb838e013e");
-		byte[] decrypted = userDataChunkTransporter.downloadAndDecryptChunk(mChunk);
+		byte[] decrypted = userDataChunkTransporter
+				.downloadAndDecryptChunk(mChunk);
 		System.out.println(new String(decrypted));
 
 	}

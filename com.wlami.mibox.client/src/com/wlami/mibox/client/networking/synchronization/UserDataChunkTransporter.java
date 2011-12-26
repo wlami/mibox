@@ -76,10 +76,20 @@ public class UserDataChunkTransporter implements Transporter {
 		FileInputStream fis = new FileInputStream(file);
 		int chunkSize = chunk.getMFile().getChunkSize();
 		// encrypt it
-		byte[] plainChunkData = new byte[chunkSize];
-		fis.read(plainChunkData, chunk.getPosition() * chunkSize, chunkSize);
+		int fileChunkCount = chunk.getMFile().getChunks().size();
+		int chunkPosition = chunk.getPosition();
+		int arraySize;
+
+		if (chunkPosition + 1 < fileChunkCount) {
+			arraySize = chunk.getMFile().getChunkSize();
+		} else {
+			arraySize = (int) (file.length() % chunkSize);
+		}
+
+		byte[] plainChunkData = new byte[arraySize];
+		fis.read(plainChunkData, chunkPosition * chunkSize, arraySize);
 		byte[] encryptedChunkData = AesEncryption.encrypt(plainChunkData,
-				chunk.getDecryptedChunkHash(), chunk.getPosition());
+				chunk.getDecryptedChunkHash(), chunkPosition);
 		// calculate the encrypted hash
 		String encryptedHash = HashUtil.calculateSha256(encryptedChunkData);
 		// upload it
@@ -95,12 +105,15 @@ public class UserDataChunkTransporter implements Transporter {
 	 * downloadAndDecryptChunk(com.wlami.mibox.client.metadata.MChunk)
 	 */
 	@Override
-	public byte[] downloadAndDecryptChunk(MChunk chunk) throws IOException, CryptoException {
+	public byte[] downloadAndDecryptChunk(MChunk chunk) throws IOException,
+			CryptoException {
 		// get appsetting to retrieve the current watch dir AND MORE
 		AppSettings appSettings = appSettingsDao.load();
-		WebResource webResource = getWebResource(appSettings, chunk.getEncryptedChunkHash());
+		WebResource webResource = getWebResource(appSettings,
+				chunk.getEncryptedChunkHash());
 		byte[] encryptedChunk = webResource.get(byte[].class);
-		return AesEncryption.decrypt(encryptedChunk, chunk.getDecryptedChunkHash(), chunk.getPosition());
+		return AesEncryption.decrypt(encryptedChunk,
+				chunk.getDecryptedChunkHash(), chunk.getPosition());
 	}
 
 	/**
