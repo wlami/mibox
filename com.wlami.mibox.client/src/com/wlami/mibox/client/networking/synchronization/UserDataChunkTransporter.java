@@ -70,8 +70,7 @@ public class UserDataChunkTransporter implements Transporter {
 	public String encryptAndUploadChunk(MChunk chunk) throws CryptoException,
 			IOException {
 		// get appsetting to retrieve the current watch dir
-		AppSettings appSettings;
-		appSettings = appSettingsDao.load();
+		AppSettings appSettings = appSettingsDao.load();
 		// read the chunk
 		File file = chunk.getMFile().getFile(appSettings);
 		FileInputStream fis = new FileInputStream(file);
@@ -84,6 +83,35 @@ public class UserDataChunkTransporter implements Transporter {
 		// calculate the encrypted hash
 		String encryptedHash = HashUtil.calculateSha256(encryptedChunkData);
 		// upload it
+		WebResource webResource = getWebResource(appSettings, encryptedHash);
+		webResource.put(encryptedChunkData);
+		return encryptedHash;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.networking.synchronization.Transporter#
+	 * downloadAndDecryptChunk(com.wlami.mibox.client.metadata.MChunk)
+	 */
+	@Override
+	public byte[] downloadAndDecryptChunk(MChunk chunk) throws IOException, CryptoException {
+		// get appsetting to retrieve the current watch dir AND MORE
+		AppSettings appSettings = appSettingsDao.load();
+		WebResource webResource = getWebResource(appSettings, chunk.getEncryptedChunkHash());
+		byte[] encryptedChunk = webResource.get(byte[].class);
+		return AesEncryption.decrypt(encryptedChunk, chunk.getDecryptedChunkHash(), chunk.getPosition());
+	}
+
+	/**
+	 * creates a rest client and builds uri. Furthermore http-auth is used
+	 * 
+	 * @param appSettings
+	 * @param encryptedHash
+	 * @return
+	 */
+	private WebResource getWebResource(AppSettings appSettings,
+			String encryptedHash) {
 		ClientConfig clientConfig = new DefaultClientConfig();
 		Client client = Client.create(clientConfig);
 		client.addFilter(new HTTPBasicAuthFilter("user", "user"));
@@ -96,20 +124,7 @@ public class UserDataChunkTransporter implements Transporter {
 			log.error("", e);
 		}
 		WebResource webResource = client.resource(uri);
-		webResource.put(encryptedChunkData);
-		return encryptedHash;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.wlami.mibox.client.networking.synchronization.Transporter#
-	 * downloadAndDecryptChunk(com.wlami.mibox.client.metadata.MChunk)
-	 */
-	@Override
-	public byte[] downloadAndDecryptChunk(MChunk chunk) {
-		// TODO Auto-generated method stub
-		return null;
+		return webResource;
 	}
 
 }

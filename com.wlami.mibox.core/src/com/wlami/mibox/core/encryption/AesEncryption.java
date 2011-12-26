@@ -85,7 +85,7 @@ public class AesEncryption {
 		int outputByteCount = cipher.processBytes(ciphertext, 0,
 				ciphertext.length, cipherArray, 0);
 		outputByteCount += cipher.doFinal(cipherArray, outputByteCount);
-		if (!encrypt) {
+		if (true) {
 			// Don't return the padding bytes if you are decrypting
 			byte[] result = new byte[outputByteCount];
 			System.arraycopy(cipherArray, 0, result, 0, outputByteCount);

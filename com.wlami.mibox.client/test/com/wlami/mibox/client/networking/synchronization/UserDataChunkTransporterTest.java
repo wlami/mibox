@@ -44,11 +44,23 @@ import com.wlami.mibox.client.metadata.MFolder;
  */
 public class UserDataChunkTransporterTest {
 
+	AppSettings appSettings;
+	UserDataChunkTransporter userDataChunkTransporter;
+
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
+		Security.addProvider(new BouncyCastleProvider());
+		appSettings = new PropertyAppSettings();
+		appSettings
+				.setServerUrl("http://localhost:8080/com.wlami.mibox.server/");
+		appSettings.setWatchDirectory("test/data");
+
+		AppSettingsDao appSettingsDao = mock(AppSettingsDao.class);
+		when(appSettingsDao.load()).thenReturn(appSettings);
+		userDataChunkTransporter = new UserDataChunkTransporter(appSettingsDao);
 	}
 
 	/**
@@ -61,12 +73,6 @@ public class UserDataChunkTransporterTest {
 	 */
 	@Test
 	public void testEncryptAndUploadChunk() throws CryptoException, IOException {
-		Security.addProvider(new BouncyCastleProvider());
-		AppSettings appSettings = new PropertyAppSettings();
-		appSettings
-				.setServerUrl("http://localhost:8080/com.wlami.mibox.server/");
-		appSettings.setWatchDirectory("test/data");
-
 		MFolder root = new MFolder(null);
 		root.setName("/");
 		MFile file = new MFile();
@@ -77,23 +83,26 @@ public class UserDataChunkTransporterTest {
 		chunk.setMFile(file);
 		file.getChunks().add(chunk);
 
-		AppSettingsDao appSettingsDao = mock(AppSettingsDao.class);
-		when(appSettingsDao.load()).thenReturn(appSettings);
-		UserDataChunkTransporter u = new UserDataChunkTransporter(
-				appSettingsDao);
 		assertEquals(
 				"11b4161b312680802418c39160235921e5bfff3d36626915dac271f520192c7c",
-				u.encryptAndUploadChunk(file.getChunks().get(0)));
+				userDataChunkTransporter.encryptAndUploadChunk(file.getChunks().get(0)));
 	}
 
 	/**
 	 * Test method for
 	 * {@link com.wlami.mibox.client.networking.synchronization.UserDataChunkTransporter#downloadAndDecryptChunk(com.wlami.mibox.client.metadata.MChunk)}
 	 * .
+	 * @throws IOException 
+	 * @throws CryptoException 
 	 */
 	@Test
-	public void testDownloadAndDecryptChunk() {
-		fail("Not yet implemented");
+	public void testDownloadAndDecryptChunk() throws IOException, CryptoException {
+		MChunk mChunk = new MChunk();
+		mChunk.setEncryptedChunkHash("11b4161b312680802418c39160235921e5bfff3d36626915dac271f520192c7c");
+		mChunk.setDecryptedChunkHash("753692ec36adb4c794c973945eb2a99c1649703ea6f76bf259abb4fb838e013e");
+		byte[] decrypted = userDataChunkTransporter.downloadAndDecryptChunk(mChunk);
+		System.out.println(new String(decrypted));
+
 	}
 
 }
