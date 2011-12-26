@@ -17,6 +17,7 @@
  */
 package com.wlami.mibox.core.util;
 
+import java.nio.ByteBuffer;
 import java.util.Formatter;
 
 /**
@@ -54,6 +55,18 @@ public class HashUtil {
 					.digit(input.charAt(i + 1), 16));
 		}
 		return digest;
+	}
+
+	/**
+	 * Splits the int into 4 bytes and returns them as a <code>byte</code>
+	 * array.
+	 * 
+	 * @param i
+	 *            the int to be converted.
+	 * @return the resulting byte array.
+	 */
+	public static byte[] intToByteArray(Integer i) {
+		return ByteBuffer.allocate(4).putInt(i).array();
 	}
 
 }
