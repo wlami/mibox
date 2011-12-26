@@ -47,7 +47,7 @@ import com.wlami.mibox.core.util.HashUtil;
  * @author Wladislaw Mitzel
  * 
  */
-public class MetadataWorker extends Thread {
+class MetadataWorker extends Thread {
 
 	/** Defines the period between writes of metadata in seconds. */
 	protected static final int WRITE_PERIOD_SECONDS = 60;
@@ -238,7 +238,7 @@ public class MetadataWorker extends Thread {
 	 * @param mFile
 	 *            Reference to the metadata file.
 	 */
-	public void synchronizeFileMetadata(File f, MFile mFile) {
+	private void synchronizeFileMetadata(File f, MFile mFile) {
 		// Check whether the file has been modified since the last meta sync
 		Date filesystemLastModified = new Date(f.lastModified());
 		if ((mFile.getLastModified() == null)

@@ -17,8 +17,12 @@
  */
 package com.wlami.mibox.client.networking.synchronization;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.Security;
 
@@ -29,11 +33,10 @@ import org.junit.Test;
 
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
-import com.wlami.mibox.client.application.AppSettingsDaoProperty;
 import com.wlami.mibox.client.application.PropertyAppSettings;
+import com.wlami.mibox.client.metadata.MChunk;
 import com.wlami.mibox.client.metadata.MFile;
 import com.wlami.mibox.client.metadata.MFolder;
-import com.wlami.mibox.client.metadata.MetadataWorker;
 
 /**
  * @author Wladislaw Mitzel
@@ -62,18 +65,25 @@ public class UserDataChunkTransporterTest {
 		AppSettings appSettings = new PropertyAppSettings();
 		appSettings
 				.setServerUrl("http://localhost:8080/com.wlami.mibox.server/");
-		appSettings.setWatchDirectory("C:/Temp/test");
+		appSettings.setWatchDirectory("test/data");
+
 		MFolder root = new MFolder(null);
 		root.setName("/");
 		MFile file = new MFile();
 		file.setFolder(root);
-		file.setName("data.txt");
-		MetadataWorker w = new MetadataWorker(null, null);
-		w.synchronizeFileMetadata(file.getFile(appSettings), file);
-		AppSettingsDao appSettingsDao = new AppSettingsDaoProperty();
+		file.setName("hallo.txt");
+		MChunk chunk = new MChunk(0);
+		chunk.setDecryptedChunkHash("753692ec36adb4c794c973945eb2a99c1649703ea6f76bf259abb4fb838e013e");
+		chunk.setMFile(file);
+		file.getChunks().add(chunk);
+
+		AppSettingsDao appSettingsDao = mock(AppSettingsDao.class);
+		when(appSettingsDao.load()).thenReturn(appSettings);
 		UserDataChunkTransporter u = new UserDataChunkTransporter(
 				appSettingsDao);
-		u.encryptAndUploadChunk(file.getChunks().get(0));
+		assertEquals(
+				"11b4161b312680802418c39160235921e5bfff3d36626915dac271f520192c7c",
+				u.encryptAndUploadChunk(file.getChunks().get(0)));
 	}
 
 	/**
