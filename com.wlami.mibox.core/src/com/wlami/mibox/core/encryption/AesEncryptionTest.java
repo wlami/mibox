@@ -17,6 +17,7 @@
  */
 package com.wlami.mibox.core.encryption;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,13 +38,13 @@ public class AesEncryptionTest {
 	@Test
 	public void test() {
 		String hashKey = "f6952d6eef555ddd87aca66e56b91530222d6e318414816f3ba7cf5bf694bf0f";
-		String plaintext = "Our plaintext is very nice!";
+		String plaintext = "AAAA";
 		byte[] encrypted = AesEncryption.encrypt(plaintext.getBytes(), hashKey,
-				0);
-		byte[] encryptedBc = AesEncryption.encryptBc(plaintext.getBytes(),
-				hashKey, 0);
+				1);
 		System.out.println(HashUtil.digestToString(encrypted));
-		System.out.println(HashUtil.digestToString(encryptedBc));
+		byte[] decrypted = AesEncryption.decrypt(encrypted, hashKey, 1);
+		System.out.println(new String(decrypted));
+		Assert.assertEquals(plaintext, new String(decrypted));
 	}
 
 }

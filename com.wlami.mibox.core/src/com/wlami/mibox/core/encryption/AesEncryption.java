@@ -17,29 +17,14 @@
  */
 package com.wlami.mibox.core.encryption;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.Security;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.ShortBufferException;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-
 import org.bouncycastle.crypto.BlockCipher;
-import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,57 +36,37 @@ import com.wlami.mibox.core.util.HashUtil;
  */
 public class AesEncryption {
 
-	static {
-		Security.addProvider(new BouncyCastleProvider());
-	}
-
 	/** internal logger */
 	private static final Logger log = LoggerFactory
 			.getLogger(AesEncryption.class);
 
 	/**
 	 * Encrypts the plain byte array (the chunk) with the given key.
+	 * Bouncycastle specific implementation.
 	 * 
 	 * @param plain
-	 * @param key
+	 *            plain text to be encrypted.
+	 * @param keyString
+	 *            The key to use for encryption
 	 * @param initVector
-	 * @return
+	 *            IV for encryption
+	 * @return Returns the enrypted byte array.
 	 */
 	public static byte[] encrypt(byte[] plain, String keyString,
 			Integer initVector) {
-		SecretKeySpec key = new SecretKeySpec(
-				HashUtil.stringToDigest(keyString), 0, 32, "AES");
-		try {
-			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding", "BC");
-			IvParameterSpec iv = new IvParameterSpec(
-					HashUtil.intToByteArray(initVector));
-			cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-			byte[] cipherArray = new byte[cipher.getOutputSize(plain.length)];
-			int outputByteCount = cipher.update(plain, 0, plain.length,
-					cipherArray, 0);
-			outputByteCount += cipher.doFinal(cipherArray, outputByteCount);
-			return cipherArray;
-		} catch (NoSuchAlgorithmException | NoSuchPaddingException
-				| InvalidKeyException | InvalidAlgorithmParameterException
-				| ShortBufferException | IllegalBlockSizeException
-				| BadPaddingException | NoSuchProviderException e) {
-			log.error("", e);
-		}
-		return null;
-	}
-
-	public static byte[] encryptBc(byte[] plain, String keyString,
-			Integer initVector) {
 		byte[] key = HashUtil.stringToDigest(keyString);
 		BlockCipher enigine = new AESEngine();
-		BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
+		PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
 				new CBCBlockCipher(enigine));
-		cipher.init(true, new KeyParameter(key));
+		cipher.init(
+				true,
+				new ParametersWithIV(new KeyParameter(key), HashUtil
+						.intToByteArray(initVector)));
 		byte[] cipherArray = new byte[cipher.getOutputSize(plain.length)];
 		int outputByteCount = cipher.processBytes(plain, 0, plain.length,
 				cipherArray, 0);
 		try {
-			cipher.doFinal(cipherArray, outputByteCount);
+			outputByteCount += cipher.doFinal(cipherArray, outputByteCount);
 			return cipherArray;
 		} catch (DataLengthException | IllegalStateException
 				| InvalidCipherTextException e) {
@@ -111,13 +76,40 @@ public class AesEncryption {
 	}
 
 	/**
-	 * Decrypts the encrypted byte array (the chunk) with the given key.
+	 * Decrypts the plain byte array (the chunk) with the given key.
+	 * Bouncycastle specific implementation.
 	 * 
-	 * @param encrypted
-	 * @param key
-	 * @return
+	 * @param ciphertext
+	 *            cipher text to be decrypted.
+	 * @param keyString
+	 *            The key to use for decryption
+	 * @param initVector
+	 *            IV for encryption
+	 * @return Returns the decrypted byte array.
 	 */
-	public static byte[] decrypt(byte[] encrypted, String key) {
+	public static byte[] decrypt(byte[] ciphertext, String keyString,
+			Integer initVector) {
+		byte[] key = HashUtil.stringToDigest(keyString);
+		BlockCipher engine = new AESEngine();
+		PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
+				new CBCBlockCipher(engine));
+		cipher.init(
+				false,
+				new ParametersWithIV(new KeyParameter(key), HashUtil
+						.intToByteArray(initVector)));
+		byte[] cipherArray = new byte[cipher.getOutputSize(ciphertext.length)];
+		int outputByteCount = cipher.processBytes(ciphertext, 0,
+				ciphertext.length, cipherArray, 0);
+		try {
+			outputByteCount += cipher.doFinal(cipherArray, outputByteCount);
+			byte[] result = new byte[outputByteCount];
+			// Don't return the padding bytes!
+			System.arraycopy(cipherArray, 0, result, 0, outputByteCount);
+			return result;
+		} catch (DataLengthException | IllegalStateException
+				| InvalidCipherTextException e) {
+			log.error("", e);
+		}
 		return null;
 	}
 }
