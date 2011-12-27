@@ -33,6 +33,8 @@ import com.wlami.mibox.client.backend.watchdog.DirectoryWatchdog;
 import com.wlami.mibox.client.gui.MiboxTray;
 import com.wlami.mibox.client.metadata.MetadataRepository;
 import com.wlami.mibox.client.metadata.MetadataRepositoryImpl;
+import com.wlami.mibox.client.networking.synchronization.TransportProvider;
+import com.wlami.mibox.client.networking.synchronization.TransportProviderSingleThread;
 
 /**
  * Main class for the MiboxClient. Serves as the coupling point between the GUI
@@ -89,6 +91,11 @@ public final class MiboxClientApp {
 		MetadataRepository mp = ctx.getBean("metadataRepositoryImpl",
 				MetadataRepositoryImpl.class);
 		mp.startProcessing();
+
+		// start TransportProvider
+		TransportProvider tp = ctx.getBean("transportProviderSingleThread",
+				TransportProviderSingleThread.class);
+		tp.startProcessing();
 
 		// start the watchdog
 		startWatchdog();

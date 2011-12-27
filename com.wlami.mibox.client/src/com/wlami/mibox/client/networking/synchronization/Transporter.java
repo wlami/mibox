@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.bouncycastle.crypto.CryptoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.metadata.MChunk;
 
@@ -30,8 +32,11 @@ import com.wlami.mibox.client.metadata.MChunk;
  */
 public abstract class Transporter extends Thread {
 
+	/** internal logger */
+	Logger log = LoggerFactory.getLogger(getClass());
+
 	/** if set to false this thread stops. */
-	private boolean active;
+	private boolean active = true;
 
 	/** Time period between checking the buffers. */
 	protected static final long DEFAULT_SLEEP_TIME_MILLIS = 250L;
@@ -75,9 +80,10 @@ public abstract class Transporter extends Thread {
 	/* (non-Javadoc) @see java.lang.Thread#run() */
 	@Override
 	public final void run() {
+		log.info("Start Transporter");
 		while (active) {
 			threadMainMethod();
 		}
+		log.info("Stopped Transporter");
 	}
-
 }

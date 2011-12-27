@@ -26,7 +26,7 @@ import com.wlami.mibox.client.metadata.MChunk;
  * @author Wladislaw Mitzel
  * 
  */
-public class MChunkUpload {
+public class MChunkUpload implements Comparable<MChunkUpload> {
 
 	/**
 	 * the MChunk to be uploaded,
@@ -66,6 +66,29 @@ public class MChunkUpload {
 	 */
 	public void setUploadCallback(UploadCallback uploadCallback) {
 		this.uploadCallback = uploadCallback;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(MChunkUpload o) {
+		return mChunk.getEncryptedChunkHash().compareTo(
+				o.getMChunk().getEncryptedChunkHash());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		MChunkUpload o = (MChunkUpload) obj;
+		return mChunk.getEncryptedChunkHash().equals(
+				o.getMChunk().getEncryptedChunkHash());
 	}
 
 }

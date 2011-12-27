@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.application.AppSettingsDao;
+import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 
 /**
  * @author Wladislaw Mitzel
@@ -38,10 +39,11 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	private static final Logger log = LoggerFactory
 			.getLogger(MetadataRepositoryImpl.class);
 
-	/**
-	 * Reference to the {@link AppSettingsDao} bean.
-	 */
-	AppSettingsDao appSettingsDao;
+	/** Reference to the {@link AppSettingsDao} bean. */
+	private AppSettingsDao appSettingsDao;
+
+	/** Reference to the {@link TransportProvider} bean. */
+	private TransportProvider transportProvider;
 
 	/**
 	 * reference to a {@link MetadataWorker} instance which handles the file
@@ -59,8 +61,10 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	 * default constructor.
 	 */
 	@Inject
-	public MetadataRepositoryImpl(AppSettingsDao appSettingsDao) {
+	public MetadataRepositoryImpl(AppSettingsDao appSettingsDao,
+			TransportProvider transportProvider) {
 		this.appSettingsDao = appSettingsDao;
+		this.transportProvider = transportProvider;
 	}
 
 	/*
@@ -71,7 +75,8 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	@Override
 	public void startProcessing() {
 		if (worker == null) {
-			worker = new MetadataWorker(appSettingsDao, incomingEvents);
+			worker = new MetadataWorker(appSettingsDao, transportProvider,
+					incomingEvents);
 			worker.start();
 			log.info("Starting MetadataRepository");
 		} else {

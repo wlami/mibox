@@ -165,8 +165,9 @@ public class UserDataChunkTransporter extends Transporter {
 		for (Object upload : uploads) {
 			MChunkUpload mChunkUpload = (MChunkUpload) upload;
 			try {
-				String result = encryptAndUploadChunk(mChunkUpload.getMChunk());
-				mChunkUpload.getUploadCallback().uploadCallback(result);
+				MChunk chunk = mChunkUpload.getMChunk();
+				String result = encryptAndUploadChunk(chunk);
+				mChunkUpload.getUploadCallback().uploadCallback(chunk, result);
 			} catch (CryptoException e) {
 				log.error("There has been en error while encrypting the chunk",
 						e);

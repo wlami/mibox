@@ -17,6 +17,8 @@
  */
 package com.wlami.mibox.client.networking.synchronization;
 
+import com.wlami.mibox.client.metadata.MChunk;
+
 /**
  * This callback interfaces defines a processing method which is called when the
  * upload process is finished.
@@ -27,7 +29,12 @@ public interface UploadCallback {
 
 	/**
 	 * This method gets called when the upload method has finished.
+	 * 
+	 * @param mChunk
+	 *            the chunk which got uploaded.
+	 * @param result
+	 *            the hash result from encrypted file.
 	 */
-	public void uploadCallback(String result);
+	public void uploadCallback(MChunk mChunk, String result);
 
 }

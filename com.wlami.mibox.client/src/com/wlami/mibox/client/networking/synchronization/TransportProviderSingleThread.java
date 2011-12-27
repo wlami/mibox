@@ -20,6 +20,7 @@ package com.wlami.mibox.client.networking.synchronization;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ import com.wlami.mibox.client.metadata.MChunk;
  * @author Wladislaw Mitzel
  * 
  */
+@Named
 public class TransportProviderSingleThread implements TransportProvider {
 
 	/** internal logger. */
@@ -105,7 +107,7 @@ public class TransportProviderSingleThread implements TransportProvider {
 	 */
 	@Override
 	public void addChunkUpload(MChunkUpload mChunkUpload) {
-		if (mChunkUploads.add(mChunkUpload)) {
+		if (!mChunkUploads.add(mChunkUpload)) {
 			log.debug("Upload task not added. Alread existing.");
 		}
 

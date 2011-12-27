@@ -38,6 +38,9 @@ import org.slf4j.LoggerFactory;
 import com.wlami.mibox.client.application.AppFolders;
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
+import com.wlami.mibox.client.networking.synchronization.MChunkUpload;
+import com.wlami.mibox.client.networking.synchronization.TransportProvider;
+import com.wlami.mibox.client.networking.synchronization.UploadCallback;
 import com.wlami.mibox.core.util.HashUtil;
 
 /**
@@ -89,10 +92,11 @@ class MetadataWorker extends Thread {
 	 */
 	private ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents = new ConcurrentSkipListSet<ObservedFilesystemEvent>();
 
-	/**
-	 * Reference to the {@link AppSettingsDao} bean.
-	 */
+	/** Reference to the {@link AppSettingsDao} bean. */
 	AppSettingsDao appSettingsDao;
+
+	/** Reference to the {@link TransportProvider} bean. */
+	TransportProvider transportProvider;
 
 	/**
 	 * @param active
@@ -107,9 +111,11 @@ class MetadataWorker extends Thread {
 	 * the metadata from disk.
 	 */
 	public MetadataWorker(AppSettingsDao appSettingsDao,
+			TransportProvider transportProvider,
 			ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents) {
 		this.incomingEvents = incomingEvents;
 		this.appSettingsDao = appSettingsDao;
+		this.transportProvider = transportProvider;
 		try {
 			if (metadataFile.exists()) {
 				// read the metadata from disk
@@ -282,6 +288,9 @@ class MetadataWorker extends Thread {
 					currentChunk++;
 					log.debug("Neu Chunk " + currentChunk
 							+ " finished with hash " + newChunkHash);
+
+					// Create Upload request
+					createUploadRequest(chunk);
 				}
 				mFile.setFileHash(HashUtil.digestToString(fileDigest.digest()));
 				mFile.setLastModified(filesystemLastModified);
@@ -299,6 +308,32 @@ class MetadataWorker extends Thread {
 		} else {
 			log.debug("The file has not been modified " + f.getAbsolutePath());
 		}
+	}
+
+	/**
+	 * Creates a {@link MChunkUpload} object and turns it over to the
+	 * {@link TransportProvider}. Persists the metadata to disk.
+	 * 
+	 * @param chunk
+	 *            the chunk which shall be uploaded.
+	 */
+	protected void createUploadRequest(MChunk chunk) {
+		MChunkUpload mChunkUpload = new MChunkUpload();
+		mChunkUpload.setMChunk(chunk);
+		mChunkUpload.setUploadCallback(new UploadCallback() {
+			public void uploadCallback(MChunk mChunk, String result) {
+				mChunk.setEncryptedChunkHash(result);
+				mChunk.setLastSync(new Date());
+				try {
+					writeMetadata(true);
+				} catch (IOException e) {
+					log.error(
+							"Could not persist metadata. Maybe you have to toggle this process manually.",
+							e);
+				}
+			}
+		});
+		transportProvider.addChunkUpload(mChunkUpload);
 	}
 
 	/*
