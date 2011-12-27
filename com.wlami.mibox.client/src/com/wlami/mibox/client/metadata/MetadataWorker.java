@@ -171,8 +171,8 @@ class MetadataWorker extends Thread {
 	 * @throws JsonGenerationException
 	 * @throws JsonMappingException
 	 */
-	protected void writeMetadata(boolean write) throws IOException,
-			JsonGenerationException, JsonMappingException {
+	protected synchronized void writeMetadata(boolean write)
+			throws IOException, JsonGenerationException, JsonMappingException {
 		calendar.setTime(new Date());
 		calendar.add(Calendar.SECOND, WRITE_PERIOD_SECONDS);
 		nextWrite = calendar.getTime();
