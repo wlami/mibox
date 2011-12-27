@@ -87,7 +87,10 @@ public class UserDataChunkTransporter implements Transporter {
 		}
 
 		byte[] plainChunkData = new byte[arraySize];
-		fis.read(plainChunkData, chunkPosition * chunkSize, arraySize);
+		// Skip bytes if we dont have the first chunk
+		fis.skip(chunkPosition * chunkSize);
+		// read the chunk data
+		fis.read(plainChunkData, 0, arraySize);
 		byte[] encryptedChunkData = AesEncryption.encrypt(plainChunkData,
 				chunk.getDecryptedChunkHash(), chunkPosition);
 		// calculate the encrypted hash

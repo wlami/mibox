@@ -74,6 +74,7 @@ public class MChunk {
 	/**
 	 * undocumented.
 	 */
+	@Deprecated
 	public MChunk() {
 		this(0);
 	}

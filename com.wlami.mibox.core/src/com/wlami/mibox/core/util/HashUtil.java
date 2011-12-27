@@ -50,14 +50,28 @@ public class HashUtil {
 	}
 
 	/**
-	 * calculates the SHA256 hash value of an byte array.
+	 * calculates the SHA256 hash value of an byte array. It uses all of the
+	 * bytes.
 	 * 
 	 * @param input
 	 *            input array to be hashed.
 	 * @return returns the hash as String.
 	 */
 	public static String calculateSha256(byte[] input) {
-		return calculateHash(input, SHA_256_MESSAGE_DIGEST);
+		return calculateHash(input, input.length, SHA_256_MESSAGE_DIGEST);
+	}
+
+	/**
+	 * calculates the SHA256 hash value of the first length bytes of the array.
+	 * 
+	 * @param input
+	 *            input array to be hashed.
+	 * @param length
+	 *            number of bytes to be used for calculation.
+	 * @return returns the hash as String.
+	 */
+	public static String calculateSha256(byte[] input, int length) {
+		return calculateHash(input, length, SHA_256_MESSAGE_DIGEST);
 	}
 
 	/**
@@ -69,8 +83,8 @@ public class HashUtil {
 	 *            name of the hash algorithm.
 	 * @return returns the hash as String
 	 */
-	private static String calculateHash(byte[] input, String digest) {
-		messageDigest.update(input, 0, input.length);
+	private static String calculateHash(byte[] input, int length, String digest) {
+		messageDigest.update(input, 0, length);
 		return digestToString(messageDigest.digest());
 	}
 

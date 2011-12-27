@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.Security;
 
@@ -35,6 +37,7 @@ import com.wlami.mibox.client.application.PropertyAppSettings;
 import com.wlami.mibox.client.metadata.MChunk;
 import com.wlami.mibox.client.metadata.MFile;
 import com.wlami.mibox.client.metadata.MFolder;
+import com.wlami.mibox.core.util.HashUtil;
 
 /**
  * @author Wladislaw Mitzel
@@ -69,7 +72,7 @@ public class UserDataChunkTransporterTest {
 	 * @throws IOException
 	 * @throws CryptoException
 	 */
-	@Test
+
 	public void testEncryptAndUploadChunk() throws CryptoException, IOException {
 		MFolder root = new MFolder(null);
 		root.setName("/");
@@ -95,7 +98,7 @@ public class UserDataChunkTransporterTest {
 	 * @throws IOException
 	 * @throws CryptoException
 	 */
-	@Test
+
 	public void testDownloadAndDecryptChunk() throws IOException,
 			CryptoException {
 		MChunk mChunk = new MChunk();
@@ -105,6 +108,64 @@ public class UserDataChunkTransporterTest {
 				.downloadAndDecryptChunk(mChunk);
 		System.out.println(new String(decrypted));
 
+	}
+
+	public void testEncryptAndUploadChunk1_4_MB() throws CryptoException,
+			IOException {
+		MFolder root = new MFolder(null);
+		root.setName("/");
+		MFile file = new MFile();
+		file.setFolder(root);
+		file.setName("1_400_000B.input");
+		MChunk chunk1 = new MChunk(0);
+		chunk1.setDecryptedChunkHash("e28f41c7c362ba70c4143082bdc24a6655686bdc9ced9050af4da9423f6279a6");
+		chunk1.setMFile(file);
+		file.getChunks().add(chunk1);
+		MChunk chunk2 = new MChunk(1);
+		chunk2.setDecryptedChunkHash("18e1cc7633d6a7936338ed908ef4eb8092204fa871264d0efff71672d9aa5b1a");
+		chunk2.setMFile(file);
+		file.getChunks().add(chunk2);
+
+		assertEquals(
+				"cc0f4a05fd6c6eafb8435ec0538a4730e4755154ca929fef45c953f6b4b133e5",
+				userDataChunkTransporter.encryptAndUploadChunk(file.getChunks()
+						.get(0)));
+		assertEquals(
+				"4e019fc9c3b39505d984749014d513637857b829ccb007f43239675260a97d46",
+				userDataChunkTransporter.encryptAndUploadChunk(file.getChunks()
+						.get(1)));
+	}
+
+	@Test
+	public void testDownloadAndDecryptChunk1_4_MB() throws IOException,
+			CryptoException {
+		MChunk mChunk1 = new MChunk(0);
+		mChunk1.setEncryptedChunkHash("cc0f4a05fd6c6eafb8435ec0538a4730e4755154ca929fef45c953f6b4b133e5");
+		mChunk1.setDecryptedChunkHash("e28f41c7c362ba70c4143082bdc24a6655686bdc9ced9050af4da9423f6279a6");
+		byte[] decrypted = userDataChunkTransporter
+				.downloadAndDecryptChunk(mChunk1);
+		System.out.println(new String(decrypted));
+		System.out.println(HashUtil.calculateSha256(decrypted));
+
+		MChunk mChunk2 = new MChunk(1);
+		mChunk2.setEncryptedChunkHash("4e019fc9c3b39505d984749014d513637857b829ccb007f43239675260a97d46");
+		mChunk2.setDecryptedChunkHash("18e1cc7633d6a7936338ed908ef4eb8092204fa871264d0efff71672d9aa5b1a");
+		byte[] decrypted2 = userDataChunkTransporter
+				.downloadAndDecryptChunk(mChunk2);
+		System.out.println(new String(decrypted2));
+		System.out.println(HashUtil.calculateSha256(decrypted2));
+
+		MFolder root = new MFolder(null);
+		root.setName("/");
+		MFile outputMFile = new MFile();
+		outputMFile.setName("decrypted");
+		outputMFile.setFolder(root);
+		File f = outputMFile.getFile(appSettings);
+		FileOutputStream oStream = new FileOutputStream(f);
+		oStream.write(decrypted);
+		oStream.write(decrypted2);
+		oStream.flush();
+		oStream.close();
 	}
 
 }
