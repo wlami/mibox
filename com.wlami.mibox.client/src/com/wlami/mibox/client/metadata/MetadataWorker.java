@@ -20,6 +20,7 @@ package com.wlami.mibox.client.metadata;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -28,6 +29,8 @@ import java.security.NoSuchProviderException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -177,9 +180,14 @@ class MetadataWorker extends Thread {
 		calendar.add(Calendar.SECOND, WRITE_PERIOD_SECONDS);
 		nextWrite = calendar.getTime();
 		if (write) {
-			objectMapper.writeValue(metadataFile, rootFolder);
+			ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(
+					metadataFile));
+			zip.putNextEntry(new ZipEntry(METADATA_DEFAULT_FILENAME));
+			objectMapper.writeValue(zip, rootFolder);
 			log.info("Written metadata. Next write will probably be "
 					+ nextWrite.toString());
+			zip.close();
+			zip = null;
 		}
 
 	}
