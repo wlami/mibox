@@ -33,7 +33,7 @@ public interface UploadCallback {
 	 * @param mChunk
 	 *            the chunk which got uploaded.
 	 * @param result
-	 *            the hash result from encrypted file.
+	 *            the hash result from encrypted chunk.
 	 */
 	public void uploadCallback(MChunk mChunk, String result);
 

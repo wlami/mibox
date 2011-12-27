@@ -44,7 +44,7 @@ import com.wlami.mibox.core.util.HashUtil;
  * @author Wladislaw Mitzel
  * 
  */
-public class UserDataChunkTransporter extends Transporter {
+public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(this.getClass());
@@ -162,8 +162,7 @@ public class UserDataChunkTransporter extends Transporter {
 	@Override
 	public void threadMainMethod() {
 		// Process the upload requests
-		for (Object upload : uploads) {
-			MChunkUpload mChunkUpload = (MChunkUpload) upload;
+		for (MChunkUpload mChunkUpload : uploads) {
 			try {
 				MChunk chunk = mChunkUpload.getMChunk();
 				String result = encryptAndUploadChunk(chunk);
