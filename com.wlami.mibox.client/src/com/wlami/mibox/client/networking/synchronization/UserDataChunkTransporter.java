@@ -21,8 +21,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.ConcurrentSkipListSet;
 
-import javax.inject.Inject;
 import javax.ws.rs.core.UriBuilder;
 
 import org.bouncycastle.crypto.CryptoException;
@@ -44,7 +44,7 @@ import com.wlami.mibox.core.util.HashUtil;
  * @author Wladislaw Mitzel
  * 
  */
-public class UserDataChunkTransporter implements Transporter {
+public class UserDataChunkTransporter extends Transporter {
 
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(this.getClass());
@@ -54,9 +54,19 @@ public class UserDataChunkTransporter implements Transporter {
 	 */
 	AppSettingsDao appSettingsDao;
 
-	/** default constructor. */
-	@Inject
-	public UserDataChunkTransporter(AppSettingsDao appSettingsDao) {
+	/**
+	 * default constructor.
+	 * 
+	 * @param appSettingsDao
+	 *            instance of {@link AppSettingsDao} for retrieval of current
+	 *            settings.
+	 * @param uploads
+	 *            reference to a {@link ConcurrentSkipListSet} with
+	 *            {@link MChunk}s to be uploaded.
+	 */
+	public UserDataChunkTransporter(AppSettingsDao appSettingsDao,
+			ConcurrentSkipListSet<MChunkUpload> uploads) {
+		this.uploads = uploads;
 		this.appSettingsDao = appSettingsDao;
 	}
 
@@ -143,4 +153,39 @@ public class UserDataChunkTransporter implements Transporter {
 		return webResource;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.networking.synchronization.Transporter#
+	 * threadMainMethod()
+	 */
+	@Override
+	public void threadMainMethod() {
+		// Process the upload requests
+		for (Object upload : uploads) {
+			MChunkUpload mChunkUpload = (MChunkUpload) upload;
+			try {
+				String result = encryptAndUploadChunk(mChunkUpload.getMChunk());
+				mChunkUpload.getUploadCallback().uploadCallback(result);
+			} catch (CryptoException e) {
+				log.error("There has been en error while encrypting the chunk",
+						e);
+				// TODO tell the user about this problem.
+			} catch (IOException e) {
+				log.error("There has been an error while reading the chunk", e);
+				// TODO tell the user about this problem.
+			}
+			uploads.remove(mChunkUpload);
+			// TODO implement "retry later" logic: add to retry collection
+		}
+
+		// TODO Process the download requests
+
+		// Sleep before next iteration
+		try {
+			Thread.sleep(DEFAULT_SLEEP_TIME_MILLIS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 }

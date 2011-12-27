@@ -323,7 +323,9 @@ class MetadataWorker extends Thread {
 				}
 			}
 		} catch (IOException e) {
-			log.error("Cannot load Appsettings - MetadataRepository cannot be started!");
+			log.error(
+					"Cannot load Appsettings - MetadataRepository cannot be started!",
+					e);
 		}
 	}
 }

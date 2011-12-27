@@ -61,7 +61,8 @@ public class UserDataChunkTransporterTest {
 
 		AppSettingsDao appSettingsDao = mock(AppSettingsDao.class);
 		when(appSettingsDao.load()).thenReturn(appSettings);
-		userDataChunkTransporter = new UserDataChunkTransporter(appSettingsDao);
+		userDataChunkTransporter = new UserDataChunkTransporter(appSettingsDao,
+				null);
 	}
 
 	/**
@@ -101,7 +102,7 @@ public class UserDataChunkTransporterTest {
 
 	public void testDownloadAndDecryptChunk() throws IOException,
 			CryptoException {
-		MChunk mChunk = new MChunk();
+		MChunk mChunk = new MChunk(0);
 		mChunk.setEncryptedChunkHash("7cce494647e022c65d5b17db7cf3657d86f71538e7bbb9a4d1e36febee88ec8d");
 		mChunk.setDecryptedChunkHash("753692ec36adb4c794c973945eb2a99c1649703ea6f76bf259abb4fb838e013e");
 		byte[] decrypted = userDataChunkTransporter

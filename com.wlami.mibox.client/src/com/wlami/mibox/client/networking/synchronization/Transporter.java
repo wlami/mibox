@@ -18,6 +18,7 @@
 package com.wlami.mibox.client.networking.synchronization;
 
 import java.io.IOException;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.bouncycastle.crypto.CryptoException;
 
@@ -27,7 +28,23 @@ import com.wlami.mibox.client.metadata.MChunk;
  * This interface describes classes which can be used to transport encrypted
  * data to the server and from it.
  */
-public interface Transporter {
+public abstract class Transporter extends Thread {
+
+	/** if set to false this thread stops. */
+	private boolean active;
+
+	/** Time period between checking the buffers. */
+	protected static final long DEFAULT_SLEEP_TIME_MILLIS = 250L;
+
+	/**
+	 * set of upload tasks.
+	 */
+	protected ConcurrentSkipListSet<?> uploads;
+
+	/** stops the processing. */
+	public void stopProcessing() {
+		this.active = false;
+	}
 
 	/**
 	 * Uploads a chunk to the server.
@@ -36,8 +53,8 @@ public interface Transporter {
 	 *            Chunk to be uploaded.
 	 * @return the hash of the encrypted chunk
 	 */
-	public String encryptAndUploadChunk(MChunk chunk) throws CryptoException,
-			IOException;
+	public abstract String encryptAndUploadChunk(MChunk chunk)
+			throws CryptoException, IOException;
 
 	/**
 	 * Downloads a chunk and decrypts it afterwards.
@@ -46,7 +63,21 @@ public interface Transporter {
 	 *            Metadata of the chunk to be downloaded.
 	 * @return byte array with the decrypted data.
 	 */
-	public byte[] downloadAndDecryptChunk(MChunk chunk) throws CryptoException,
-			IOException;
+	public abstract byte[] downloadAndDecryptChunk(MChunk chunk)
+			throws CryptoException, IOException;
+
+	/**
+	 * This method represents this thread's main method. It is executed in a
+	 * loop.
+	 */
+	protected abstract void threadMainMethod();
+
+	/* (non-Javadoc) @see java.lang.Thread#run() */
+	@Override
+	public final void run() {
+		while (active) {
+			threadMainMethod();
+		}
+	}
 
 }
