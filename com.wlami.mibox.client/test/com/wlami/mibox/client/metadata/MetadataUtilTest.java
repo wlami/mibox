@@ -17,12 +17,8 @@
  */
 package com.wlami.mibox.client.metadata;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import static org.junit.Assert.assertNotNull;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,39 +26,43 @@ import org.junit.Test;
  * @author Wladislaw Mitzel
  * 
  */
-public class TestMFolder {
+public class MetadataUtilTest {
 
-	MFolder folder;
-	MFolder subfolder;
+	MFolder root;
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
-		folder = TestUtil.getSimpleMetadata();
+		root = TestUtil.getSimpleMetadata();
+	}
 
+	/**
+	 * Test method for
+	 * {@link com.wlami.mibox.client.metadata.MetadataUtil#locateMFile(com.wlami.mibox.client.metadata.MFolder, java.lang.String)}
+	 * .
+	 */
+	@Test
+	public void testLocateMFile() {
+		assertNotNull(MetadataUtil.locateMFile(root, "/file1"));
 	}
 
 	@Test
-	public void testJson() throws JsonGenerationException,
-			JsonMappingException, IOException {
-		ObjectMapper mapper = new ObjectMapper();
-		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		mapper.writeValue(System.out, folder);
-		mapper.writeValue(bout, folder);
-
-		MFolder readFolder = mapper
-				.readValue(bout.toByteArray(), MFolder.class);
-		System.out.println("");
-		mapper.writeValue(System.out, readFolder);
-		System.out.flush();
+	public void testLocateMFile2() {
+		String filepath2 = "/subfolder/file2";
+		assertNotNull(MetadataUtil.locateMFile(root, filepath2));
 	}
 
 	@Test
-	public void testHashtable() {
-		MFolder retrievedFolder = folder.getSubfolders().get("subfolder");
-		assert (retrievedFolder != null);
+	public void testLocateMFile3() {
+		String filepath3 = "/subfolder/subfolder2/file3";
+		assertNotNull(MetadataUtil.locateMFile(root, filepath3));
 	}
 
+	@Test
+	public void testLocateMFile4() {
+		String filepath4 = "/subfolder/subfoldebukkr2/file3";
+		assertNotNull(MetadataUtil.locateMFile(root, filepath4));
+	}
 }

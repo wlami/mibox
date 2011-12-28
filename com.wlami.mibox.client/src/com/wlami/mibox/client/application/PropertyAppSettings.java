@@ -22,6 +22,8 @@ import java.io.IOException;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.io.FilenameUtils;
+
 /**
  * @author Wladislaw Mitzel
  * 
@@ -210,7 +212,7 @@ public final class PropertyAppSettings implements AppSettings {
 	 */
 	@Override
 	public void setWatchDirectory(final String watchDirectory) {
-		this.watchDirectory = watchDirectory;
+		this.watchDirectory = FilenameUtils.separatorsToUnix(watchDirectory);
 	}
 
 	/*

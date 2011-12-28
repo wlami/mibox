@@ -29,6 +29,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -284,13 +286,13 @@ class MetadataWorker extends Thread {
 					if (!newChunkHash.equals(chunk.getDecryptedChunkHash())) {
 						chunk.setLastChange(new Date());
 						chunk.setDecryptedChunkHash(newChunkHash);
+						log.debug("Neu Chunk " + currentChunk
+								+ " finished with hash " + newChunkHash);
+						// Create Upload request
+						createUploadRequest(chunk);
 					}
 					currentChunk++;
-					log.debug("Neu Chunk " + currentChunk
-							+ " finished with hash " + newChunkHash);
 
-					// Create Upload request
-					createUploadRequest(chunk);
 				}
 				mFile.setFileHash(HashUtil.digestToString(fileDigest.digest()));
 				mFile.setLastModified(filesystemLastModified);
@@ -346,10 +348,22 @@ class MetadataWorker extends Thread {
 		log.debug("Starting");
 		try {
 			synchronizeMetadata();
+			AppSettings appSettings = appSettingsDao.load();
 			while (active) {
 				for (ObservedFilesystemEvent ofe : incomingEvents) {
 					log.debug("Processing event " + ofe);
-					// TODO: process the event!
+					File f = new File(ofe.getFilename());
+					if (f.isFile()) {
+						String relativePath = StringUtils.substringAfter(
+								FilenameUtils.separatorsToUnix(ofe
+										.getFilename()), appSettings
+										.getWatchDirectory());
+						System.out.println(relativePath);
+						MFile mFile = MetadataUtil.locateMFile(rootFolder,
+								relativePath);
+						synchronizeFileMetadata(f, mFile);
+					}
+
 					incomingEvents.remove(ofe);
 				}
 				try {
