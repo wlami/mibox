@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Formatter;
+import java.util.Date;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
@@ -36,21 +36,20 @@ import javax.persistence.Persistence;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
-import com.wlami.mibox.server.data.ChunkHddMapping;
+import com.wlami.mibox.core.util.HashUtil;
+import com.wlami.mibox.server.data.Chunk;
 
-@Path("/chunkmanager/{id}")
+@Path("/chunkmanager/{hash}")
 public class ChunkManager {
 
 	private static final String PERSISTENCE_UNIT_NAME = "com.wlami.mibox.server";
@@ -67,16 +66,13 @@ public class ChunkManager {
 
 	@GET
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response loadChunk(@PathParam("id") String id)
+	public Response loadChunk(@PathParam("hash") String hash)
 			throws FileNotFoundException {
-		// Get the filename from db
-		ChunkHddMapping chunkHddMapping;
+		Chunk chunk;
 		try {
-			// Get the filename from db
-			chunkHddMapping = (ChunkHddMapping) em
-					.createQuery(
-							"SELECT c from ChunkHddMapping c WHERE c.id = :id")
-					.setParameter("id", id).getSingleResult();
+			chunk = (Chunk) em
+					.createQuery("SELECT c from Chunk c WHERE c.hash = :hash")
+					.setParameter("hash", hash).getSingleResult();
 		} catch (NoResultException e) {
 			return Response.status(Status.NOT_FOUND).build();
 		}
@@ -84,13 +80,12 @@ public class ChunkManager {
 		// Get the file
 		final String storagePath = context
 				.getInitParameter("chunk-storage-path");
-		File file = new File(storagePath, chunkHddMapping.getValue());
+		File file = new File(storagePath, chunk.getHash());
 
 		// return 404 if file doesn't exist
 		if (!file.exists()) {
 			return Response.serverError().status(Status.NOT_FOUND).build();
 		}
-		System.out.println(file.getAbsolutePath());
 
 		// return the file
 		ResponseBuilder responseBuilder = Response.ok();
@@ -102,10 +97,9 @@ public class ChunkManager {
 
 	@PUT
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
-	public Response saveChunk(final InputStream inputStream,
-			@HeaderParam(HttpHeaders.CONTENT_LENGTH) final long contentLength)
-			throws IOException, NoSuchAlgorithmException {
-		System.out.print("New Message. Length [" + contentLength + "] => ");
+	public Response saveChunk(@PathParam("hash") String hash,
+			final InputStream inputStream) throws IOException,
+			NoSuchAlgorithmException {
 
 		// Get path for output file
 		final String storagePath = context
@@ -124,35 +118,27 @@ public class ChunkManager {
 		out.flush();
 		out.close();
 
-		// get the file hash
-		byte[] digest = messageDigest.digest();
-		String hash = digestToString(digest);
-		System.out.println(out.toString() + "\n hash : " + hash);
+		String newHash = HashUtil.digestToString(messageDigest.digest());
+		System.out.println(out.toString() + "\n hash : " + newHash);
 
-		// persist the chunk-mapping to db
+		if (!hash.equals(newHash)) {
+			Response.status(Status.BAD_REQUEST).build();
+		}
+
+		Chunk chunk = (Chunk) em
+				.createQuery("SELECT c from Chunk c WHERE c.hash = :hash")
+				.setParameter("hash", hash).getSingleResult();
+
 		em.getTransaction().begin();
-		ChunkHddMapping chunkHddMapping = new ChunkHddMapping();
-		chunkHddMapping.setId(hash);
-		chunkHddMapping.setValue(uuid.toString());
-		em.persist(chunkHddMapping);
+		if (chunk == null) {
+			chunk = new Chunk(newHash);
+		} else {
+			chunk.setLastAccessed(new Date());
+		}
+		em.persist(chunk);
 		em.getTransaction().commit();
 
 		// respond with the hash of the created file
-		ResponseBuilder responseBuilder = Response.ok();
-		return responseBuilder.entity(hash).build();
-	}
-
-	/**
-	 * Creates a String from a MessageDigest result.
-	 * 
-	 * @param input
-	 * @return
-	 */
-	private static String digestToString(byte[] input) {
-		Formatter formatter = new Formatter();
-		for (byte b : input) {
-			formatter.format("%02x", b);
-		}
-		return formatter.toString();
+		return Response.ok().build();
 	}
 }
