@@ -49,6 +49,7 @@ import javax.ws.rs.core.Response.Status;
 
 import com.wlami.mibox.core.util.HashUtil;
 import com.wlami.mibox.server.data.Chunk;
+import com.wlami.mibox.server.data.User;
 import com.wlami.mibox.server.util.HttpHeaderUtil;
 
 @Path("/chunkmanager/{hash}")
@@ -68,13 +69,22 @@ public class ChunkManager {
 
 	@GET
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response loadChunk(@PathParam("hash") String hash)
-			throws FileNotFoundException {
+	public Response loadChunk(@PathParam("hash") String hash,
+			@Context HttpHeaders headers) throws FileNotFoundException {
+
+		User user = getUserFromHttpHeaders(headers);
+		if (user == null) {
+			return Response.status(Status.UNAUTHORIZED).build();
+		}
+
 		Chunk chunk;
 		try {
 			chunk = (Chunk) em
 					.createQuery("SELECT c from Chunk c WHERE c.hash = :hash")
 					.setParameter("hash", hash).getSingleResult();
+			if (!user.getChunks().contains(chunk)) {
+				return Response.status(Status.NOT_FOUND).build();
+			}
 		} catch (NoResultException e) {
 			return Response.status(Status.NOT_FOUND).build();
 		}
@@ -102,9 +112,11 @@ public class ChunkManager {
 	public Response saveChunk(@PathParam("hash") String hash,
 			@Context HttpHeaders headers, final InputStream inputStream)
 			throws IOException, NoSuchAlgorithmException {
-		System.out.println("TEST: Request from "
-				+ HttpHeaderUtil.getAuthorization(headers)[0]);
-
+		User user = getUserFromHttpHeaders(headers);
+		if (user == null) {
+			return Response.status(Status.UNAUTHORIZED).build();
+		}
+		System.out.println(user.getUsername());
 		// Get path for output file
 		final String storagePath = context
 				.getInitParameter("chunk-storage-path");
@@ -141,13 +153,34 @@ public class ChunkManager {
 		if (chunk == null) {
 			chunk = new Chunk(newHash);
 			outputFile.renameTo(new File(storagePath, newHash));
+			// Associate chunk with user
+
 		} else {
 			chunk.setLastAccessed(new Date());
+		}
+		if (!user.getChunks().contains(chunk)) {
+			user.getChunks().add(chunk);
 		}
 		em.persist(chunk);
 		em.getTransaction().commit();
 
-		// respond with the hash of the created file
 		return Response.ok().build();
+	}
+
+	/**
+	 * @param headers
+	 * @return
+	 */
+	protected User getUserFromHttpHeaders(HttpHeaders headers) {
+		try {
+			return (User) em
+					.createQuery(
+							"SELECT u from User u WHERE u.username = :username")
+					.setParameter("username",
+							HttpHeaderUtil.getAuthorization(headers)[0])
+					.getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
 	}
 }

@@ -9,7 +9,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 @Entity
-public class Chunk {
+public class Chunk implements Comparable<Chunk> {
 
 	@Id
 	@Column(nullable = false, columnDefinition = "char(64)")
@@ -60,6 +60,22 @@ public class Chunk {
 	 */
 	public void setLastAccessed(Date lastAccessed) {
 		this.lastAccessed = lastAccessed;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		} else if (!(obj instanceof Chunk)) {
+			return false;
+		} else {
+			return hash.equals(((Chunk) obj).getHash());
+		}
+	}
+
+	@Override
+	public int compareTo(Chunk o) {
+		return hash.compareTo(o.getHash());
 	}
 
 }
