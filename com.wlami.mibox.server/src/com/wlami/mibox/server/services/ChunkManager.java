@@ -41,6 +41,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -48,6 +49,7 @@ import javax.ws.rs.core.Response.Status;
 
 import com.wlami.mibox.core.util.HashUtil;
 import com.wlami.mibox.server.data.Chunk;
+import com.wlami.mibox.server.util.HttpHeaderUtil;
 
 @Path("/chunkmanager/{hash}")
 public class ChunkManager {
@@ -98,8 +100,10 @@ public class ChunkManager {
 	@PUT
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	public Response saveChunk(@PathParam("hash") String hash,
-			final InputStream inputStream) throws IOException,
-			NoSuchAlgorithmException {
+			@Context HttpHeaders headers, final InputStream inputStream)
+			throws IOException, NoSuchAlgorithmException {
+		System.out.println("TEST: Request from "
+				+ HttpHeaderUtil.getAuthorization(headers)[0]);
 
 		// Get path for output file
 		final String storagePath = context
