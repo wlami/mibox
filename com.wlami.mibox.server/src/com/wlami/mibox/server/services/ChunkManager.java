@@ -105,8 +105,8 @@ public class ChunkManager {
 		final String storagePath = context
 				.getInitParameter("chunk-storage-path");
 		UUID uuid = UUID.randomUUID();
-		FileOutputStream out = new FileOutputStream(new File(storagePath,
-				uuid.toString()));
+		File outputFile = new File(storagePath, uuid.toString());
+		FileOutputStream out = new FileOutputStream(outputFile);
 		int receivedByte;
 		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
 
@@ -122,16 +122,21 @@ public class ChunkManager {
 		System.out.println(out.toString() + "\n hash : " + newHash);
 
 		if (!hash.equals(newHash)) {
-			Response.status(Status.BAD_REQUEST).build();
+			return Response.status(Status.BAD_REQUEST).build();
 		}
-
-		Chunk chunk = (Chunk) em
-				.createQuery("SELECT c from Chunk c WHERE c.hash = :hash")
-				.setParameter("hash", hash).getSingleResult();
+		Chunk chunk;
+		try {
+			chunk = (Chunk) em
+					.createQuery("SELECT c from Chunk c WHERE c.hash = :hash")
+					.setParameter("hash", hash).getSingleResult();
+		} catch (NoResultException e) {
+			chunk = null;
+		}
 
 		em.getTransaction().begin();
 		if (chunk == null) {
 			chunk = new Chunk(newHash);
+			outputFile.renameTo(new File(storagePath, newHash));
 		} else {
 			chunk.setLastAccessed(new Date());
 		}

@@ -3,6 +3,7 @@
 	<name>com.wlami.mibox.server</name>
 	<comment></comment>
 	<projects>
+		<project>com.wlami.mibox.core</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
