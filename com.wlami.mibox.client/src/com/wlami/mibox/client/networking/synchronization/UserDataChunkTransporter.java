@@ -30,6 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -95,18 +97,22 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 		} else {
 			arraySize = (int) (file.length() % chunkSize);
 		}
-
+		log.debug("Encrypting chunk. Using arraySize of " + arraySize);
 		byte[] plainChunkData = new byte[arraySize];
 		// Skip bytes if we dont have the first chunk
 		fis.skip(chunkPosition * chunkSize);
 		// read the chunk data
 		fis.read(plainChunkData, 0, arraySize);
+		log.debug("Starting encryption");
 		byte[] encryptedChunkData = AesEncryption.encrypt(plainChunkData,
 				chunk.getDecryptedChunkHash(), chunkPosition);
+		log.debug("Finished encryption");
 		// calculate the encrypted hash
 		String encryptedHash = HashUtil.calculateSha256(encryptedChunkData);
+		log.debug("Calculate Encrypted Hash: " + encryptedHash);
 		// upload it
 		WebResource webResource = getWebResource(appSettings, encryptedHash);
+		log.debug("Execute the HTTP PUT: " + webResource.getURI().toString());
 		webResource.put(encryptedChunkData);
 		return encryptedHash;
 	}
@@ -163,13 +169,19 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 	public void threadMainMethod() {
 		// Process the upload requests
 		for (MChunkUpload mChunkUpload : uploads) {
+			log.debug("Processing MChunkUpload for file "
+					+ mChunkUpload.getMChunk().getMFile().getName());
 			try {
 				MChunk chunk = mChunkUpload.getMChunk();
 				String result = encryptAndUploadChunk(chunk);
 				mChunkUpload.getUploadCallback().uploadCallback(chunk, result);
+				log.debug("Processing of MChunkUpload successfully.");
 			} catch (CryptoException e) {
 				log.error("There has been en error while encrypting the chunk",
 						e);
+				// TODO tell the user about this problem.
+			} catch (UniformInterfaceException | ClientHandlerException e) {
+				log.warn("Error on putting chunk", e);
 				// TODO tell the user about this problem.
 			} catch (IOException e) {
 				log.error("There has been an error while reading the chunk", e);
