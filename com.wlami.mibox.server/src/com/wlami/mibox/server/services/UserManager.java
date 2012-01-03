@@ -29,6 +29,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.wlami.mibox.server.data.User;
+import com.wlami.mibox.server.util.PersistenceUtil;
 
 /**
  * @author Wladislaw Mitzel
@@ -37,12 +38,12 @@ import com.wlami.mibox.server.data.User;
 @Path("/usermanager")
 public class UserManager {
 
-	private static final String PERSISTENCE_UNIT_NAME = "com.wlami.mibox.server";
 	EntityManagerFactory emf;
 	EntityManager em;
 
 	public UserManager() {
-		emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+		emf = Persistence.createEntityManagerFactory(PersistenceUtil
+				.getPersistenceUnitName());
 		em = emf.createEntityManager();
 	}
 

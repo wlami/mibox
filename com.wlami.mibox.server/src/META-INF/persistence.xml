@@ -21,5 +21,22 @@
 		</properties>
 
 	</persistence-unit>
+	
+		<persistence-unit name="test" transaction-type="RESOURCE_LOCAL">
+	<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+		<class>com.wlami.mibox.server.data.User</class>
+		<class>com.wlami.mibox.server.data.Groups</class>
+		<class>com.wlami.mibox.server.data.GroupsPK</class>
+		<class>com.wlami.mibox.server.data.Chunk</class>
+		<properties>
+			<property name="eclipselink.logging.level" value="FINE"/>
+			<property name="eclipselink.ddl-generation" value="drop-and-create-tables"/> 
+			<property name="eclipselink.ddl-generation.output-mode" value="database"/>
+		 	<property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"/>
+			<property name="javax.persistence.jdbc.password" value=""/>
+			<property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
+		</properties>
+
+	</persistence-unit>
 
 </persistence>

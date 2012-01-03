@@ -3,6 +3,7 @@
     <wb-module deploy-name="com.wlami.mibox.server">
         <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/test"/>
         <dependent-module archiveName="com.wlami.mibox.core.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/com.wlami.mibox.core/com.wlami.mibox.core">
             <dependency-type>uses</dependency-type>
         </dependent-module>

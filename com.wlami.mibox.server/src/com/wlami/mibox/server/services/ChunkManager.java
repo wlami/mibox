@@ -51,11 +51,11 @@ import com.wlami.mibox.core.util.HashUtil;
 import com.wlami.mibox.server.data.Chunk;
 import com.wlami.mibox.server.data.User;
 import com.wlami.mibox.server.util.HttpHeaderUtil;
+import com.wlami.mibox.server.util.PersistenceUtil;
 
 @Path("/chunkmanager/{hash}")
 public class ChunkManager {
 
-	private static final String PERSISTENCE_UNIT_NAME = "com.wlami.mibox.server";
 	EntityManagerFactory emf;
 	EntityManager em;
 
@@ -63,7 +63,8 @@ public class ChunkManager {
 	ServletContext context;
 
 	public ChunkManager() {
-		emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+		String pu = PersistenceUtil.getPersistenceUnitName();
+		emf = Persistence.createEntityManagerFactory(pu);
 		em = emf.createEntityManager();
 	}
 
