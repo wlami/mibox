@@ -20,10 +20,6 @@
 	<servlet>
 		<servlet-name>Jersey REST Service</servlet-name>
 		<servlet-class>com.sun.jersey.spi.spring.container.servlet.SpringServlet</servlet-class>
-		<init-param>
-			<param-name>com.sun.jersey.config.property.packages</param-name>
-			<param-value>com.wlami.mibox.server.services</param-value>
-		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 
@@ -32,13 +28,6 @@
 		<servlet-name>Jersey REST Service</servlet-name>
 		<url-pattern>/rest/*</url-pattern>
 	</servlet-mapping>
-	
-	<!-- Define the storage path. TODO: Should not be in web.xml -->
-	<context-param>
-		<description>This parameter describes where the server shall store the data chunks</description>
-		<param-name>chunk-storage-path</param-name>
-		<param-value>c:\temp\mibox</param-value>
-	</context-param>
 
 	<!-- Define basic http auth as login method -->
 	<login-config>

@@ -17,10 +17,7 @@
  */
 package com.wlami.mibox.server.services;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,12 +41,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import com.wlami.mibox.core.util.HashUtil;
 import com.wlami.mibox.server.data.Chunk;
 import com.wlami.mibox.server.data.User;
+import com.wlami.mibox.server.services.chunk.ChunkManagerResponseBuilder;
 import com.wlami.mibox.server.util.HttpHeaderUtil;
 import com.wlami.mibox.server.util.PersistenceUtil;
 
@@ -62,6 +59,10 @@ public class ChunkManager {
 	@Context
 	ServletContext context;
 
+	/** this reference is used to create the responses */
+	ChunkManagerResponseBuilder chunkManagerResponseBuilder;
+
+	/** Default constructor */
 	public ChunkManager() {
 		String pu = PersistenceUtil.getPersistenceUnitName();
 		emf = Persistence.createEntityManagerFactory(pu);
@@ -71,41 +72,30 @@ public class ChunkManager {
 	@GET
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response loadChunk(@PathParam("hash") String hash,
-			@Context HttpHeaders headers) throws FileNotFoundException {
+			@Context HttpHeaders headers) {
 
+		// Check whether user is properly logged in
 		User user = getUserFromHttpHeaders(headers);
 		if (user == null) {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}
 
+		// Retrieve the chunk from db
 		Chunk chunk;
 		try {
 			chunk = (Chunk) em
 					.createQuery("SELECT c from Chunk c WHERE c.hash = :hash")
 					.setParameter("hash", hash).getSingleResult();
+			// Check whether this chunk belongs to user
 			if (!user.getChunks().contains(chunk)) {
 				return Response.status(Status.NOT_FOUND).build();
 			}
 		} catch (NoResultException e) {
 			return Response.status(Status.NOT_FOUND).build();
 		}
-
-		// Get the file
-		final String storagePath = context
-				.getInitParameter("chunk-storage-path");
-		File file = new File(storagePath, chunk.getHash());
-
-		// return 404 if file doesn't exist
-		if (!file.exists()) {
-			return Response.serverError().status(Status.NOT_FOUND).build();
-		}
-
-		// return the file
-		ResponseBuilder responseBuilder = Response.ok();
-		InputStream inputStream = new BufferedInputStream(new FileInputStream(
-				file));
-		responseBuilder.header("Content-Length", file.length());
-		return responseBuilder.entity(inputStream).build();
+		// Everything seems ok. Create the response
+		return chunkManagerResponseBuilder.buildGetChunkResponse(chunk
+				.getHash());
 	}
 
 	@PUT
@@ -166,6 +156,15 @@ public class ChunkManager {
 		em.getTransaction().commit();
 
 		return Response.ok().build();
+	}
+
+	/**
+	 * @param chunkManagerResponseBuilder
+	 *            the chunkManagerResponseBuilder to set
+	 */
+	public void setChunkManagerResponseBuilder(
+			ChunkManagerResponseBuilder chunkManagerResponseBuilder) {
+		this.chunkManagerResponseBuilder = chunkManagerResponseBuilder;
 	}
 
 	/**
