@@ -17,14 +17,10 @@
  */
 package com.wlami.mibox.server.services;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
-import java.util.UUID;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -43,15 +39,23 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.wlami.mibox.core.util.HashUtil;
 import com.wlami.mibox.server.data.Chunk;
 import com.wlami.mibox.server.data.User;
 import com.wlami.mibox.server.services.chunk.ChunkManagerResponseBuilder;
+import com.wlami.mibox.server.services.chunk.ChunkPersistenceProvider;
 import com.wlami.mibox.server.util.HttpHeaderUtil;
 import com.wlami.mibox.server.util.PersistenceUtil;
 
 @Path("/chunkmanager/{hash}")
 public class ChunkManager {
+
+	/** internal logger */
+	Logger log = LoggerFactory.getLogger(getClass().getName());
 
 	EntityManagerFactory emf;
 	EntityManager em;
@@ -61,6 +65,9 @@ public class ChunkManager {
 
 	/** this reference is used to create the responses */
 	ChunkManagerResponseBuilder chunkManagerResponseBuilder;
+
+	/** this reference is used to persist and retrieve the chunk data */
+	ChunkPersistenceProvider chunkPersistenceProvider;
 
 	/** Default constructor */
 	public ChunkManager() {
@@ -102,31 +109,23 @@ public class ChunkManager {
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	public Response saveChunk(@PathParam("hash") String hash,
 			@Context HttpHeaders headers, final InputStream inputStream)
-			throws IOException, NoSuchAlgorithmException {
+			throws NoSuchAlgorithmException {
 		User user = getUserFromHttpHeaders(headers);
 		if (user == null) {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}
-		System.out.println(user.getUsername());
-		// Get path for output file
-		final String storagePath = context
-				.getInitParameter("chunk-storage-path");
-		UUID uuid = UUID.randomUUID();
-		File outputFile = new File(storagePath, uuid.toString());
-		FileOutputStream out = new FileOutputStream(outputFile);
-		int receivedByte;
-		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
 
-		// receive the data and compute the hash
-		while ((receivedByte = inputStream.read()) != -1) {
-			out.write(receivedByte);
-			messageDigest.update((byte) receivedByte);
+		byte[] input;
+		try {
+			input = IOUtils.toByteArray(inputStream);
+		} catch (IOException e1) {
+			log.error("", e1);
+			em.getTransaction().rollback();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-		out.flush();
-		out.close();
+		String newHash = HashUtil.calculateSha256(input);
 
-		String newHash = HashUtil.digestToString(messageDigest.digest());
-		System.out.println(out.toString() + "\n hash : " + newHash);
+		System.out.println("\n hash : " + newHash);
 
 		if (!hash.equals(newHash)) {
 			return Response.status(Status.BAD_REQUEST).build();
@@ -143,9 +142,13 @@ public class ChunkManager {
 		em.getTransaction().begin();
 		if (chunk == null) {
 			chunk = new Chunk(newHash);
-			outputFile.renameTo(new File(storagePath, newHash));
-			// Associate chunk with user
-
+			try {
+				chunkPersistenceProvider.persistChunk(newHash, input);
+			} catch (IOException e) {
+				log.error("", e);
+				em.getTransaction().rollback();
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
 		} else {
 			chunk.setLastAccessed(new Date());
 		}
@@ -165,6 +168,15 @@ public class ChunkManager {
 	public void setChunkManagerResponseBuilder(
 			ChunkManagerResponseBuilder chunkManagerResponseBuilder) {
 		this.chunkManagerResponseBuilder = chunkManagerResponseBuilder;
+	}
+
+	/**
+	 * @param chunkPersistenceProvider
+	 *            the chunkPersistenceProvider to set
+	 */
+	public void setChunkPersistenceProvider(
+			ChunkPersistenceProvider chunkPersistenceProvider) {
+		this.chunkPersistenceProvider = chunkPersistenceProvider;
 	}
 
 	/**

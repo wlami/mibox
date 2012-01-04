@@ -17,14 +17,7 @@
  */
 package com.wlami.mibox.server.services.chunk;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
@@ -34,14 +27,13 @@ import org.slf4j.LoggerFactory;
  * @author Wladislaw Mitzel
  * 
  */
-public class ChunkManagerDirectResponseBuilder implements
+public class ChunkManagerProxyResponseBuilder implements
 		ChunkManagerResponseBuilder {
 
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(getClass().getName());
 
-	/** This path is used to store the chunks */
-	String storagePath = "c:\\temp\\mibox";
+	ChunkPersistenceProvider chunkPersistenceProvider;
 
 	/*
 	 * (non-Javadoc)
@@ -51,45 +43,24 @@ public class ChunkManagerDirectResponseBuilder implements
 	 */
 	@Override
 	public Response buildGetChunkResponse(String hash) {
-		// Get the file
-		File file = new File(storagePath, hash);
 
-		// return 404 if file doesn't exist
-		if (!file.exists()) {
-			return Response.serverError().status(Status.NOT_FOUND).build();
-		}
+		byte[] data = chunkPersistenceProvider.retrieveChunk(hash);
 
-		// return the file
-		ResponseBuilder responseBuilder = Response.ok();
-		InputStream inputStream;
-		try {
-			inputStream = new BufferedInputStream(new FileInputStream(file));
-		} catch (FileNotFoundException e) {
-			log.error("", e);
+		if (data == null) {
 			return Response.status(Status.NOT_FOUND).build();
+		} else {
+			return Response.ok().header("Content-Length", data.length)
+					.entity(data).build();
 		}
-		responseBuilder.header("Content-Length", file.length());
-		return responseBuilder.entity(inputStream).build();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.wlami.mibox.server.services.chunk.ChunkManagerResponseBuilder#
-	 * buildPutChunkResponse(java.lang.String, java.io.InputStream)
-	 */
-	@Override
-	public Response buildPutChunkResponse(String hash, InputStream inputStream) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	/**
-	 * @param storagePath
-	 *            the storagePath to set
+	 * @param chunkPersistenceProvider
+	 *            the chunkPersistenceProvider to set
 	 */
-	public void setStoragePath(String storagePath) {
-		this.storagePath = storagePath;
+	public void setChunkPersistenceProvider(
+			ChunkPersistenceProvider chunkPersistenceProvider) {
+		this.chunkPersistenceProvider = chunkPersistenceProvider;
 	}
 
 }

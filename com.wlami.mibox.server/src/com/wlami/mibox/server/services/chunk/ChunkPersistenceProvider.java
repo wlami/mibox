@@ -17,26 +17,31 @@
  */
 package com.wlami.mibox.server.services.chunk;
 
-import javax.ws.rs.core.Response;
+import java.io.IOException;
 
 /**
- * This interface defines classes which are responsible for creating an
- * appropriate Response for chunk requests.
- * 
- * @author Wladislaw Mitzel
- * 
+ * This interface defines classes which are responsible for persisting of chunk
+ * data. Possible implementation could use local or cloud storage.
  */
-public interface ChunkManagerResponseBuilder {
+public interface ChunkPersistenceProvider {
 
 	/**
-	 * Builds a {@link Response} for a get request.
+	 * Retrieve a chunk from the persistent storage.
 	 * 
 	 * @param hash
-	 *            Hash of the chunk.
-	 * @return An HTTP-{@link Response}. The HTTP status can differ: If
-	 *         successful 200 (ok) or 3xx (in case of redirection). Otherwise >=
-	 *         400
+	 *            Hash which is used for identification of the chunk
+	 * @return Returns a {@link Byte}-Array which contains the chunk data.
 	 */
-	public abstract Response buildGetChunkResponse(String hash);
+	public abstract byte[] retrieveChunk(String hash);
+
+	/**
+	 * Persist a chunk to the storage.
+	 * 
+	 * @param hash
+	 *            Hash which is used for identification of the chunk.
+	 * @param data
+	 *            A {@link Byte}-Array which contains the chunk data.
+	 */
+	public void persistChunk(String hash, byte[] data) throws IOException;
 
 }
