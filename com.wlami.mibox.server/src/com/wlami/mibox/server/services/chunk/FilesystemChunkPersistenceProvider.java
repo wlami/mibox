@@ -63,6 +63,7 @@ public class FilesystemChunkPersistenceProvider implements
 			int fileLength = (int) file.length();
 			byte[] data = new byte[fileLength];
 			fis.read(data, 0, fileLength);
+			fis.close();
 			return data;
 		} catch (IOException e) {
 			log.error("", e);
