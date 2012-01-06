@@ -1,5 +1,8 @@
 package com.wlami.mibox.server.services;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Arrays;
@@ -10,14 +13,18 @@ import javax.persistence.FlushModeType;
 import javax.persistence.Persistence;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.test.framework.JerseyTest;
+import com.wlami.mibox.server.data.Chunk;
 import com.wlami.mibox.server.data.User;
+import com.wlami.mibox.server.services.chunk.ChunkPersistenceProvider;
 
 public class ChunkManagerTest extends JerseyTest {
 
@@ -58,12 +65,35 @@ public class ChunkManagerTest extends JerseyTest {
 	}
 
 	@Test
-	public void testLoadChunk() {
-		addUser("user1", "password");
-		WebResource res = resource().path("chunkmanager").path("hashhashhash");
-		res.addFilter(new HTTPBasicAuthFilter("user1", "password"));
+	public void testLoadChunk() throws IOException {
+		byte[] testData = new byte[] { 'T', 'E', 'S', 'T' };
+
+		File f = new File(".", "testLoadChunk");
+		FileOutputStream fos = new FileOutputStream(f);
+		fos.write(testData);
+		fos.close();
+
+		User user = new User("user", "test@localhost", "password");
+		Chunk chunk = new Chunk("testLoadChunk");
+		user.getChunks().add(chunk);
+
+		em.getTransaction().begin();
+		em.persist(user);
+		em.getTransaction().commit();
+
+		ChunkPersistenceProvider chunkPersistenceProvider = Mockito
+				.mock(ChunkPersistenceProvider.class);
+		Mockito.when(chunkPersistenceProvider.retrieveChunk("testLoadChunk"))
+				.thenReturn(testData);
+
+		// TODO How to inject the mocked provider into the service?
+
+		WebResource res = resource().path("chunkmanager").path("testLoadChunk");
+		res.addFilter(new HTTPBasicAuthFilter("user", "password"));
 		byte[] result = res.get((byte[].class));
 		System.out.println(Arrays.toString(result));
+
+		Assert.assertTrue(f.delete());
 	}
 
 	/**
@@ -76,6 +106,14 @@ public class ChunkManagerTest extends JerseyTest {
 		User user = new User(username, "test@localhost", password);
 		em.getTransaction().begin();
 		em.persist(user);
+		em.getTransaction().commit();
+	}
+
+	protected void addChunk(String... hashes) {
+		em.getTransaction().begin();
+		for (String hash : hashes) {
+			em.persist(new Chunk(hash));
+		}
 		em.getTransaction().commit();
 	}
 
