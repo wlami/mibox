@@ -185,14 +185,11 @@ public class ChunkManager {
 	 */
 	protected User getUserFromHttpHeaders(HttpHeaders headers) {
 		try {
-			return (User) em
-					.createQuery(
-							"SELECT u from User u WHERE u.username = :username")
-					.setParameter("username",
-							HttpHeaderUtil.getAuthorization(headers)[0])
-					.getSingleResult();
+			String username = HttpHeaderUtil.getAuthorization(headers)[0];
+			return User.loadUserByUsername(username, em);
 		} catch (NoResultException e) {
 			return null;
 		}
 	}
+
 }

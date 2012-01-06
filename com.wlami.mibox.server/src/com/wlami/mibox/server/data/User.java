@@ -9,6 +9,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -98,6 +99,17 @@ public class User {
 
 	public Set<Chunk> getChunks() {
 		return chunks;
+	}
+
+	/**
+	 * @param username
+	 * @return
+	 */
+	public static User loadUserByUsername(String username, EntityManager em) {
+		return (User) em
+				.createQuery(
+						"SELECT u from User u WHERE u.username = :username")
+				.setParameter("username", username).getSingleResult();
 	}
 
 }
