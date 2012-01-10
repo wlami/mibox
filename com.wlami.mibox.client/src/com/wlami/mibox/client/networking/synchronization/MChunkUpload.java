@@ -75,8 +75,8 @@ public class MChunkUpload implements Comparable<MChunkUpload> {
 	 */
 	@Override
 	public int compareTo(MChunkUpload o) {
-		return mChunk.getEncryptedChunkHash().compareTo(
-				o.getMChunk().getEncryptedChunkHash());
+		return mChunk.getDecryptedChunkHash().compareTo(
+				o.getMChunk().getDecryptedChunkHash());
 	}
 
 	/*

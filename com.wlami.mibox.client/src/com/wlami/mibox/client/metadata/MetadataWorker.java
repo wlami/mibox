@@ -197,6 +197,10 @@ class MetadataWorker extends Thread {
 	 */
 	private void traverseFileSystem(File filesystemFolder, MFolder mFolder) {
 		log.debug("traversing " + filesystemFolder.getAbsolutePath());
+		if (!filesystemFolder.exists()) {
+			log.error("folder does not exist! " + filesystemFolder);
+			return;
+		}
 		for (File f : filesystemFolder.listFiles()) {
 			if (f.isDirectory()) {
 				// We got a folder and have to recurse again.
