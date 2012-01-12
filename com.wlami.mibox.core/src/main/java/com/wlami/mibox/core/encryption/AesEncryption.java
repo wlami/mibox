@@ -75,15 +75,19 @@ public class AesEncryption {
 
 	private static byte[] crypt(byte[] ciphertext, String keyString,
 			Integer initVector, boolean encrypt) throws CryptoException {
+		log.debug("starting " + (encrypt ? "encryption" : "decryption"));
 		byte[] key = HashUtil.stringToDigest(keyString);
 		BlockCipher engine = new AESEngine();
 		PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
 				new CBCBlockCipher(engine));
+		log.debug("retrieved an AESEngine");
 		cipher.init(encrypt, new ParametersWithIV(new KeyParameter(key),
 				HashUtil.intToByteArray(initVector)));
 		byte[] cipherArray = new byte[cipher.getOutputSize(ciphertext.length)];
+		log.debug("creatied cipherArray with size " + cipherArray.length + "\n encryption...");
 		int outputByteCount = cipher.processBytes(ciphertext, 0,
 				ciphertext.length, cipherArray, 0);
+		log.debug("finalizing cipher");
 		outputByteCount += cipher.doFinal(cipherArray, outputByteCount);
 		byte[] result = new byte[outputByteCount];
 		System.arraycopy(cipherArray, 0, result, 0, outputByteCount);

@@ -25,7 +25,7 @@ public class HashUtilTest {
 
 	@Test
 	public void testDigestFileChunks() throws IOException {
-		File f = new File("test/data/1_400_000B.input");
+		File f = new File( ClassLoader.getSystemResource("data/1_400_000B.input").getFile() );
 		FileInputStream fis = new FileInputStream(f);
 		int fullFileSize = (int) f.length();
 		byte[] fullFile = new byte[fullFileSize];
