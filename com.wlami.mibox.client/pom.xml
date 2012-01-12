@@ -168,4 +168,12 @@
 			<version>${swt.version}</version>
 		</dependency>
 	</dependencies>
+    <repositories>
+        <repository>
+            <id>local</id>
+            <name>Mibox Local Repository</name>
+            <layout>default</layout>
+            <url>file://${basedir}/mvn/local</url>
+        </repository>
+    </repositories>
 </project>
