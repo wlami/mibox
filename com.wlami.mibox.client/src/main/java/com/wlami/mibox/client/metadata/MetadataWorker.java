@@ -298,6 +298,8 @@ class MetadataWorker extends Thread {
 					currentChunk++;
 
 				}
+				//TODO split hashing and chunk-upload
+				
 				mFile.setFileHash(HashUtil.digestToString(fileDigest.digest()));
 				mFile.setLastModified(filesystemLastModified);
 
