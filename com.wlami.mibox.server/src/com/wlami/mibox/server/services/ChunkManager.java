@@ -17,17 +17,10 @@
  */
 package com.wlami.mibox.server.services;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Formatter;
-import java.util.UUID;
+import java.util.Date;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -36,7 +29,6 @@ import javax.persistence.Persistence;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -45,114 +37,159 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
-import com.wlami.mibox.server.data.ChunkHddMapping;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Path("/chunkmanager/{id}")
+import com.wlami.mibox.core.util.HashUtil;
+import com.wlami.mibox.server.data.Chunk;
+import com.wlami.mibox.server.data.User;
+import com.wlami.mibox.server.services.chunk.ChunkManagerResponseBuilder;
+import com.wlami.mibox.server.services.chunk.ChunkPersistenceProvider;
+import com.wlami.mibox.server.util.HttpHeaderUtil;
+import com.wlami.mibox.server.util.PersistenceUtil;
+
+@Path("/chunkmanager/{hash}")
 public class ChunkManager {
 
-	private static final String PERSISTENCE_UNIT_NAME = "com.wlami.mibox.server";
+	/** internal logger */
+	Logger log = LoggerFactory.getLogger(getClass().getName());
+
 	EntityManagerFactory emf;
 	EntityManager em;
 
 	@Context
 	ServletContext context;
 
+	/** this reference is used to create the responses */
+	ChunkManagerResponseBuilder chunkManagerResponseBuilder;
+
+	/** this reference is used to persist and retrieve the chunk data */
+	ChunkPersistenceProvider chunkPersistenceProvider;
+
+	/** Default constructor */
 	public ChunkManager() {
-		emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+		String pu = PersistenceUtil.getPersistenceUnitName();
+		emf = Persistence.createEntityManagerFactory(pu);
 		em = emf.createEntityManager();
 	}
 
 	@GET
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response loadChunk(@PathParam("id") String id)
-			throws FileNotFoundException {
-		// Get the filename from db
-		ChunkHddMapping chunkHddMapping;
+	public Response loadChunk(@PathParam("hash") String hash,
+			@Context HttpHeaders headers) {
+
+		// Check whether user is properly logged in
+		User user = getUserFromHttpHeaders(headers);
+		if (user == null) {
+			return Response.status(Status.UNAUTHORIZED).build();
+		}
+
+		// Retrieve the chunk from db
+		Chunk chunk;
 		try {
-			// Get the filename from db
-			chunkHddMapping = (ChunkHddMapping) em
-					.createQuery(
-							"SELECT c from ChunkHddMapping c WHERE c.id = :id")
-					.setParameter("id", id).getSingleResult();
+			chunk = (Chunk) em
+					.createQuery("SELECT c from Chunk c WHERE c.hash = :hash")
+					.setParameter("hash", hash).getSingleResult();
+			// Check whether this chunk belongs to user
+			if (!user.getChunks().contains(chunk)) {
+				return Response.status(Status.NOT_FOUND).build();
+			}
 		} catch (NoResultException e) {
 			return Response.status(Status.NOT_FOUND).build();
 		}
-
-		// Get the file
-		final String storagePath = context
-				.getInitParameter("chunk-storage-path");
-		File file = new File(storagePath, chunkHddMapping.getValue());
-
-		// return 404 if file doesn't exist
-		if (!file.exists()) {
-			return Response.serverError().status(Status.NOT_FOUND).build();
-		}
-		System.out.println(file.getAbsolutePath());
-
-		// return the file
-		ResponseBuilder responseBuilder = Response.ok();
-		InputStream inputStream = new BufferedInputStream(new FileInputStream(
-				file));
-		responseBuilder.header("Content-Length", file.length());
-		return responseBuilder.entity(inputStream).build();
+		// Everything seems ok. Create the response
+		return chunkManagerResponseBuilder.buildGetChunkResponse(chunk
+				.getHash());
 	}
 
 	@PUT
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
-	public Response saveChunk(final InputStream inputStream,
-			@HeaderParam(HttpHeaders.CONTENT_LENGTH) final long contentLength)
-			throws IOException, NoSuchAlgorithmException {
-		System.out.print("New Message. Length [" + contentLength + "] => ");
-
-		// Get path for output file
-		final String storagePath = context
-				.getInitParameter("chunk-storage-path");
-		UUID uuid = UUID.randomUUID();
-		FileOutputStream out = new FileOutputStream(new File(storagePath,
-				uuid.toString()));
-		int receivedByte;
-		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-
-		// receive the data and compute the hash
-		while ((receivedByte = inputStream.read()) != -1) {
-			out.write(receivedByte);
-			messageDigest.update((byte) receivedByte);
+	public Response saveChunk(@PathParam("hash") String hash,
+			@Context HttpHeaders headers, final InputStream inputStream)
+			throws NoSuchAlgorithmException {
+		User user = getUserFromHttpHeaders(headers);
+		if (user == null) {
+			return Response.status(Status.UNAUTHORIZED).build();
 		}
-		out.flush();
-		out.close();
 
-		// get the file hash
-		byte[] digest = messageDigest.digest();
-		String hash = digestToString(digest);
-		System.out.println(out.toString() + "\n hash : " + hash);
+		byte[] input;
+		try {
+			input = IOUtils.toByteArray(inputStream);
+		} catch (IOException e1) {
+			log.error("", e1);
+			em.getTransaction().rollback();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+		String newHash = HashUtil.calculateSha256(input);
 
-		// persist the chunk-mapping to db
+		System.out.println("\n hash : " + newHash);
+
+		if (!hash.equals(newHash)) {
+			return Response.status(Status.BAD_REQUEST).build();
+		}
+		Chunk chunk;
+		try {
+			chunk = (Chunk) em
+					.createQuery("SELECT c from Chunk c WHERE c.hash = :hash")
+					.setParameter("hash", hash).getSingleResult();
+		} catch (NoResultException e) {
+			chunk = null;
+		}
+
 		em.getTransaction().begin();
-		ChunkHddMapping chunkHddMapping = new ChunkHddMapping();
-		chunkHddMapping.setId(hash);
-		chunkHddMapping.setValue(uuid.toString());
-		em.persist(chunkHddMapping);
+		if (chunk == null) {
+			chunk = new Chunk(newHash);
+			try {
+				chunkPersistenceProvider.persistChunk(newHash, input);
+			} catch (IOException e) {
+				log.error("", e);
+				em.getTransaction().rollback();
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
+		} else {
+			chunk.setLastAccessed(new Date());
+		}
+		if (!user.getChunks().contains(chunk)) {
+			user.getChunks().add(chunk);
+		}
+		em.persist(chunk);
 		em.getTransaction().commit();
 
-		// respond with the hash of the created file
-		ResponseBuilder responseBuilder = Response.ok();
-		return responseBuilder.entity(hash).build();
+		return Response.ok().build();
 	}
 
 	/**
-	 * Creates a String from a MessageDigest result.
-	 * 
-	 * @param input
+	 * @param chunkManagerResponseBuilder
+	 *            the chunkManagerResponseBuilder to set
+	 */
+	public void setChunkManagerResponseBuilder(
+			ChunkManagerResponseBuilder chunkManagerResponseBuilder) {
+		this.chunkManagerResponseBuilder = chunkManagerResponseBuilder;
+	}
+
+	/**
+	 * @param chunkPersistenceProvider
+	 *            the chunkPersistenceProvider to set
+	 */
+	public void setChunkPersistenceProvider(
+			ChunkPersistenceProvider chunkPersistenceProvider) {
+		this.chunkPersistenceProvider = chunkPersistenceProvider;
+	}
+
+	/**
+	 * @param headers
 	 * @return
 	 */
-	private static String digestToString(byte[] input) {
-		Formatter formatter = new Formatter();
-		for (byte b : input) {
-			formatter.format("%02x", b);
+	protected User getUserFromHttpHeaders(HttpHeaders headers) {
+		try {
+			String username = HttpHeaderUtil.getAuthorization(headers)[0];
+			return User.loadUserByUsername(username, em);
+		} catch (NoResultException e) {
+			return null;
 		}
-		return formatter.toString();
 	}
+
 }

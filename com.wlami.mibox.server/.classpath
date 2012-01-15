@@ -1,17 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.jetty.runtimeTarget/Jetty v8.x">
-		<attributes>
-			<attribute name="owner.project.facets" value="jst.web"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry excluding="META-INF/" kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/asm-3.3.1.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jersey-core-1.11.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jersey-server-1.11.jar"/>
-	<classpathentry kind="con" path="org.eclipse.datatools.connectivity.jdt.DRIVERLIBRARY/Derby Embedded JDBC Driver"/>
+	<classpathentry kind="lib" path="testlib/activation-1.1.1.jar"/>
+	<classpathentry kind="lib" path="testlib/grizzly-framework-1.9.36.jar"/>
+	<classpathentry kind="lib" path="testlib/grizzly-http-1.9.36.jar"/>
+	<classpathentry kind="lib" path="testlib/grizzly-http-servlet-1.9.36.jar"/>
+	<classpathentry kind="lib" path="testlib/grizzly-portunif-1.9.36.jar"/>
+	<classpathentry kind="lib" path="testlib/grizzly-rcm-1.9.36.jar"/>
+	<classpathentry kind="lib" path="testlib/grizzly-servlet-webserver-1.9.36.jar"/>
+	<classpathentry kind="lib" path="testlib/grizzly-utils-1.9.36.jar"/>
+	<classpathentry kind="lib" path="testlib/javax.servlet-3.2-b05.jar"/>
+	<classpathentry kind="lib" path="testlib/jaxb-api-2.2.4.jar"/>
+	<classpathentry kind="lib" path="testlib/jaxb-impl-2.2.4-1.jar"/>
+	<classpathentry kind="lib" path="testlib/jersey-client-1.11.jar"/>
+	<classpathentry kind="lib" path="testlib/jersey-test-framework-core-1.11.jar" />
+	<classpathentry kind="lib" path="testlib/jersey-test-framework-grizzly-1.11.jar"/>
+	<classpathentry kind="lib" path="testlib/jsr311-api-1.1.1.jar"/>
+	<classpathentry kind="lib" path="testlib/servlet-api-2.5.jar"/>
+	<classpathentry kind="lib" path="testlib/stax-api-1.0-2.jar"/>
+	<classpathentry kind="lib" path="testlib/h2-1.3.162.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/org.springframework.beans-3.1.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/org.springframework.context-3.1.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/org.springframework.core-3.1.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/org.springframework.web-3.1.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jcl-over-slf4j-1.6.4.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/org.springframework.asm-3.1.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/org.springframework.expression-3.1.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jersey-spring-1.11.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/org.springframework.aop-3.1.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/commons-io-2.1.jar"/>
+	<classpathentry kind="lib" path="testlib/junit-4.10.jar"/>
+	<classpathentry kind="lib" path="testlib/junit-dep-4.10.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/EclipseLink 2.3.1 - Indigo">
 		<attributes>
 			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
@@ -22,11 +47,15 @@
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/eclipselink.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/javax.persistence_1.0.0.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/javax.persistence_2.0.3.v201010191057.jar"/>
-	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jersey-bundle-1.11.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jersey-bundle-1.11.jar" />
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6">
 		<attributes>
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v7.0"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/com.wlami.mibox.core"/>
+	<classpathentry kind="lib" path="testlib/mockito-all-1.9.0.jar"/>
+	<classpathentry kind="lib" path="test/META-INF"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

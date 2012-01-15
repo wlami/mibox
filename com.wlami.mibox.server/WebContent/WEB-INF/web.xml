@@ -1,59 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
-  <display-name>de.vogella.jersey.first</display-name>
-  <servlet>
-    <servlet-name>Jersey REST Service</servlet-name>
-    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
-    <init-param>
-      <param-name>com.sun.jersey.config.property.packages</param-name>
-      <param-value>com.wlami.mibox.server.services</param-value>
-    </init-param>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>Jersey REST Service</servlet-name>
-    <url-pattern>/rest/*</url-pattern>
-  </servlet-mapping>
-  <context-param>
-  	<description>This parameter describes where the server shall store the data chunks</description>
-  	<param-name>chunk-storage-path</param-name>
-  	<param-value>c:\temp\mibox</param-value>
-  </context-param>
-  
-  <!--  Define basic http auth as login method -->
-  <login-config>
-  	<auth-method>BASIC</auth-method>
-  	<realm-name>rest</realm-name>
-  </login-config>
-  
-  <!-- Define roles -->
-  <security-role>
-  	<description>normal user</description>
-  	<role-name>user</role-name>
-  </security-role>
-  <security-role>
-  	<description>administrator</description>
-  	<role-name>admin</role-name>
-  </security-role>
-  
-  <!-- define the security constraints -->
-  <security-constraint>
-  	<web-resource-collection>
-  		<web-resource-name>rest user-accessible interface</web-resource-name>
-  		<url-pattern>/rest/chunkmanager/*</url-pattern>
-  	</web-resource-collection>
-  	<auth-constraint>
-  		<role-name>user</role-name>
-  	</auth-constraint>
-  </security-constraint>
-  
-  <security-constraint>
-  	<web-resource-collection>
-  		<web-resource-name>rest user-accessible interface</web-resource-name>
-  		<url-pattern>/rest/usermanager/*</url-pattern>
-  	</web-resource-collection>
-  	<auth-constraint>
-  		<role-name>admin</role-name>
-  	</auth-constraint>
-  </security-constraint>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	id="WebApp_ID" version="2.5">
+	<display-name>com.wlami.mibox.server</display-name>
+
+	<!-- Define where the spring configuration is -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:META-INF/spring.xml</param-value>
+	</context-param>
+
+	<!-- define spring listener -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+	<!-- Define our REST service. Tell the servlet which package contains the Services. -->
+	<servlet>
+		<servlet-name>Jersey REST Service</servlet-name>
+		<servlet-class>com.sun.jersey.spi.spring.container.servlet.SpringServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<!-- Define a mapping for the jersey servlet -->
+	<servlet-mapping>
+		<servlet-name>Jersey REST Service</servlet-name>
+		<url-pattern>/rest/*</url-pattern>
+	</servlet-mapping>
+
+	<!-- Define basic http auth as login method -->
+	<login-config>
+		<auth-method>BASIC</auth-method>
+		<realm-name>rest</realm-name>
+	</login-config>
+
+	<!-- Define roles -->
+	<security-role>
+		<description>normal user</description>
+		<role-name>user</role-name>
+	</security-role>
+	<security-role>
+		<description>administrator</description>
+		<role-name>admin</role-name>
+	</security-role>
+
+	<!-- define the security constraint for the chunkmanager -->
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>rest user-accessible interface</web-resource-name>
+			<url-pattern>/rest/chunkmanager/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>user</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+	<!-- define the security constraint for the usermanager -->
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>rest user-accessible interface</web-resource-name>
+			<url-pattern>/rest/usermanager/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>admin</role-name>
+		</auth-constraint>
+	</security-constraint>
 </web-app>
