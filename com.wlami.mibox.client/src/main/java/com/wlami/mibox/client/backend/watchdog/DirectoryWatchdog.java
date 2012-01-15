@@ -96,7 +96,7 @@ public class DirectoryWatchdog extends Thread {
 		this.appSettingsDao = appSettingsDao;
 		this.metadataRepository = metadataRepository;
 		this.keyMap = new HashMap<WatchKey, Path>();
-		appSettingsDao
+		this.appSettingsDao
 				.registerNewAppSettingsListener(getNewAppSettingsListener());
 	}
 
@@ -168,6 +168,7 @@ public class DirectoryWatchdog extends Thread {
 				wk = watchService.poll(250L, TimeUnit.MILLISECONDS);
 				if (wk != null) {
 					for (WatchEvent<?> watchEvent : wk.pollEvents()) {
+						@SuppressWarnings("unchecked")
 						WatchEvent.Kind<Path> kind = (WatchEvent.Kind<Path>) watchEvent
 								.kind();
 						Path currentPath = keyMap.get(wk);
