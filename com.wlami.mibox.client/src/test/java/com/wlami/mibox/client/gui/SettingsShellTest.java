@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.wlami.mibox.client.application.AppSettingsDao;
@@ -48,7 +49,7 @@ public class SettingsShellTest {
 	public void tearDown() throws Exception {
 	}
 
-	@Test
+	@Test @Ignore
 	public void test() throws IOException {
 
 		AppSettingsDao appSettingsDao = new AppSettingsDaoProperty();

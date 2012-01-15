@@ -24,11 +24,17 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.Security;
 
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.wlami.mibox.client.application.AppSettings;
@@ -43,6 +49,7 @@ import com.wlami.mibox.core.util.HashUtil;
  * @author Wladislaw Mitzel
  * 
  */
+@Ignore
 public class UserDataChunkTransporterTest {
 
 	AppSettings appSettings;
@@ -51,9 +58,12 @@ public class UserDataChunkTransporterTest {
 	/**
 	 * @throws java.lang.Exception
 	 */
-	@Before
+	@Before 
 	public void setUp() throws Exception {
 		Security.addProvider(new BouncyCastleProvider());
+		Path testFile = Paths.get(ClassLoader.getSystemResource("1_400_000B.input").getFile());
+		Path target = Paths.get("test/data/1_400_000B.input");
+		Files.copy(testFile, target, StandardCopyOption.REPLACE_EXISTING);
 		appSettings = new PropertyAppSettings();
 		appSettings
 				.setServerUrl("http://localhost:8080/com.wlami.mibox.server/");
@@ -73,7 +83,7 @@ public class UserDataChunkTransporterTest {
 	 * @throws IOException
 	 * @throws CryptoException
 	 */
-
+	@Test
 	public void testEncryptAndUploadChunk() throws CryptoException, IOException {
 		MFolder root = new MFolder(null);
 		root.setName("/");
@@ -100,6 +110,7 @@ public class UserDataChunkTransporterTest {
 	 * @throws CryptoException
 	 */
 
+	@Test
 	public void testDownloadAndDecryptChunk() throws IOException,
 			CryptoException {
 		MChunk mChunk = new MChunk(0);
@@ -111,12 +122,14 @@ public class UserDataChunkTransporterTest {
 
 	}
 
+	@Test
 	public void testEncryptAndUploadChunk1_4_MB() throws CryptoException,
 			IOException {
 		MFolder root = new MFolder(null);
 		root.setName("/");
 		MFile file = new MFile();
 		file.setFolder(root);
+		//new File( ClassLoader.getSystemResource("data/dateiname.txt").
 		file.setName("1_400_000B.input");
 		MChunk chunk1 = new MChunk(0);
 		chunk1.setDecryptedChunkHash("e28f41c7c362ba70c4143082bdc24a6655686bdc9ced9050af4da9423f6279a6");

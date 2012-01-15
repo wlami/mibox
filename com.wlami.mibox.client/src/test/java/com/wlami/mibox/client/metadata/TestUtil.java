@@ -19,12 +19,16 @@ package com.wlami.mibox.client.metadata;
 
 import java.util.Date;
 
+import org.junit.Ignore;
+
 /**
  * @author Wladislaw Mitzel
  * 
  */
+@Ignore
 public class TestUtil {
 
+	@Ignore
 	public static MFolder getSimpleMetadata() {
 		MFolder folder = new MFolder(null);
 		folder.setName("/");

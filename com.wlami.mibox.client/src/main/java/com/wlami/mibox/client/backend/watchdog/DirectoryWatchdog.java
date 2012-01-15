@@ -168,7 +168,6 @@ public class DirectoryWatchdog extends Thread {
 				wk = watchService.poll(250L, TimeUnit.MILLISECONDS);
 				if (wk != null) {
 					for (WatchEvent<?> watchEvent : wk.pollEvents()) {
-						@SuppressWarnings("unchecked")
 						WatchEvent.Kind<Path> kind = (WatchEvent.Kind<Path>) watchEvent
 								.kind();
 						Path currentPath = keyMap.get(wk);
