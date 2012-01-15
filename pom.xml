@@ -16,4 +16,5 @@
         <module>com.wlami.mibox.core</module>
         <module>com.wlami.mibox.client</module>
     </modules>
+
 </project>
