@@ -21,6 +21,8 @@ import java.io.UnsupportedEncodingException;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.core.util.HashUtil;
 
@@ -29,6 +31,9 @@ import com.wlami.mibox.core.util.HashUtil;
  * Test class for {@link PBKDF2}
  */
 public class PBKDF2Test {
+	
+	/** internal logger */
+	Logger log = LoggerFactory.getLogger(this.getClass());
 
 	private static final String PASSWORD = "test";
 	private static final String SALT = "salt";
@@ -52,7 +57,7 @@ public class PBKDF2Test {
 	@Test
 	public void testDoPbkdf2() throws UnsupportedEncodingException {
 		byte[] result = PBKDF2.doPbkdf2(PASSWORD, SALT, ROUNDS);
-		System.out.println("testDoPbkdf2:" + HashUtil.digestToString(result));
+		log.info("testDoPbkdf2:" + HashUtil.digestToString(result));
 	}
 
 	/**
@@ -65,7 +70,7 @@ public class PBKDF2Test {
 	@Test
 	public void testDoPbkdf2LONG() throws UnsupportedEncodingException {
 		byte[] result = PBKDF2.doPbkdf2(PASSWORD, SALT, ROUNDS_LONG);
-		System.out.println("testDoPbkdf2LONG:" + HashUtil.digestToString(result));
+		log.info("testDoPbkdf2LONG:" + HashUtil.digestToString(result));
 	}
 	
 	/**
@@ -76,7 +81,7 @@ public class PBKDF2Test {
 	@Test
 	public void testGetKeyFromPasswordAndSalt() {
 		byte[] result = PBKDF2.getKeyFromPasswordAndSalt(PASSWORD, SALT);
-		System.out.println("testGetKeyFromPasswordAndSalt:" + HashUtil.digestToString(result));
+		log.info("testGetKeyFromPasswordAndSalt:" + HashUtil.digestToString(result));
 	}
 
 }
