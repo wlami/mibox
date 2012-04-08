@@ -68,9 +68,13 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 	 * @see com.wlami.mibox.client.application.AppSettingsDao#load()
 	 */
 	@Override
-	public AppSettings load() throws IOException {
+	public AppSettings load() {
 		if (appSettings == null) {
-			appSettings = loadFromPropertyFile();
+			try {
+				appSettings = loadFromPropertyFile();
+			} catch (IOException e) {
+				log.error("Error during loading of AppSettings", e);
+			}
 		}
 		return appSettings.clone();
 	}
@@ -121,9 +125,13 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 	 * .client.application.AppSettings)
 	 */
 	@Override
-	public void save(AppSettings appSettings) throws IOException {
+	public void save(AppSettings appSettings) {
 		log.debug("persisting application settings");
-		saveToPropertyFile(appSettings);
+		try {
+			saveToPropertyFile(appSettings);
+		} catch (IOException e) {
+			log.error("Error during saving of AppSettings", e);
+		}
 		this.appSettings = appSettings.clone();
 		// notify each listener
 		for (NewAppSettingsListener listener : appSettingsListeners) {

@@ -30,7 +30,7 @@ public interface AppSettingsDao {
 	 * 
 	 * @return current Settings
 	 */
-	public AppSettings load() throws IOException;
+	public AppSettings load();
 
 	/**
 	 * persists the given Settings.
@@ -38,7 +38,7 @@ public interface AppSettingsDao {
 	 * @param appSettings
 	 *            settings to persist.
 	 */
-	public void save(AppSettings appSettings) throws IOException;
+	public void save(AppSettings appSettings);
 
 	/**
 	 * allows to register a NewAppSettingsListener which gets notified as soon

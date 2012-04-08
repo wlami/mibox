@@ -416,12 +416,7 @@ public class SettingsShell extends Shell {
 		btnSave.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				try {
 					appSettingsDao.save(settings);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 				setUnsavedChanges(false);
 				shell.close();
 			}
@@ -460,12 +455,7 @@ public class SettingsShell extends Shell {
 		btnApply.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				try {
-					appSettingsDao.save(settings);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				appSettingsDao.save(settings);
 				setUnsavedChanges(false);
 			}
 		});

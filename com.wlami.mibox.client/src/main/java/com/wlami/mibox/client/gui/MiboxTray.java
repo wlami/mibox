@@ -143,20 +143,19 @@ public class MiboxTray {
 		createStartStopSynchronizationItem();
 		createSettingsItem();
 		createCloseItem();
-		
+
 		trayItem.addSelectionListener(new SelectionAdapter() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.swt.events.SelectionAdapter#widgetDefaultSelected(org.eclipse.swt.events.SelectionEvent)
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see
+			 * org.eclipse.swt.events.SelectionAdapter#widgetDefaultSelected
+			 * (org.eclipse.swt.events.SelectionEvent)
 			 */
 			@Override
 			public void widgetDefaultSelected(SelectionEvent arg0) {
 				super.widgetDefaultSelected(arg0);
-				try {
-					Program.launch(appSettingsDao.load().getWatchDirectory());
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				Program.launch(appSettingsDao.load().getWatchDirectory());
 			}
 		});
 
@@ -167,17 +166,13 @@ public class MiboxTray {
 	 */
 	private void createStartStopSynchronizationItem() {
 		final MenuItem menuItem = new MenuItem(menu, SWT.PUSH);
-		try {
-			AppSettings appSettings = appSettingsDao.load();
-			String title = (appSettings.getMonitoringActive() ? strings
-					.getString(TRAY_MENU_STOP_MONITORING) : strings
-					.getString(TRAY_MENU_START_MONITORING));
-			menuItem.setText(title);
-			menuItem.addListener(SWT.Selection,
-					getStartStopSynchronizationListener(menuItem));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		AppSettings appSettings = appSettingsDao.load();
+		String title = (appSettings.getMonitoringActive() ? strings
+				.getString(TRAY_MENU_STOP_MONITORING) : strings
+				.getString(TRAY_MENU_START_MONITORING));
+		menuItem.setText(title);
+		menuItem.addListener(SWT.Selection,
+				getStartStopSynchronizationListener(menuItem));
 	}
 
 	/**
@@ -188,26 +183,21 @@ public class MiboxTray {
 			@Override
 			public void handleEvent(Event arg0) {
 				AppSettings appSettings;
-				try {
-					appSettings = appSettingsDao.load();
-					if (appSettings.getMonitoringActive()) {
-						// monitoring has been active, now switch it off
-						appSettings.setMonitoringActive(false);
-						appSettingsDao.save(appSettings);
-						// relabel the button to "Start"
-						menuItem.setText(strings
-								.getString(TRAY_MENU_START_MONITORING));
-					} else {
-						// monitoring has been inactive, now switch it on
-						appSettings.setMonitoringActive(true);
-						appSettingsDao.save(appSettings);
-						// relabel the button to "Stop"
-						menuItem.setText(strings
-								.getString(TRAY_MENU_STOP_MONITORING));
-					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				appSettings = appSettingsDao.load();
+				if (appSettings.getMonitoringActive()) {
+					// monitoring has been active, now switch it off
+					appSettings.setMonitoringActive(false);
+					appSettingsDao.save(appSettings);
+					// relabel the button to "Start"
+					menuItem.setText(strings
+							.getString(TRAY_MENU_START_MONITORING));
+				} else {
+					// monitoring has been inactive, now switch it on
+					appSettings.setMonitoringActive(true);
+					appSettingsDao.save(appSettings);
+					// relabel the button to "Stop"
+					menuItem.setText(strings
+							.getString(TRAY_MENU_STOP_MONITORING));
 				}
 			}
 		};

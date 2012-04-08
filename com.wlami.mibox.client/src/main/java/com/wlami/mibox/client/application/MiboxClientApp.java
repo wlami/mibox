@@ -107,14 +107,9 @@ public final class MiboxClientApp {
 	protected void startWatchdog() {
 		DirectoryWatchdog directoryWatchdog = ctx.getBean("directoryWatchdog",
 				DirectoryWatchdog.class);
-		try {
-			AppSettings appSettings = appSettingsDao.load();
-			directoryWatchdog.setDirectory(appSettings.getWatchDirectory());
-			directoryWatchdog.setActive(appSettings.getMonitoringActive());
-			directoryWatchdog.start();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		AppSettings appSettings = appSettingsDao.load();
+		directoryWatchdog.setDirectory(appSettings.getWatchDirectory());
+		directoryWatchdog.setActive(appSettings.getMonitoringActive());
+		directoryWatchdog.start();
 	}
 }

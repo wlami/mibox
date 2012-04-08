@@ -61,14 +61,9 @@ public final class LangUtils {
 		String language = null;
 		String country = null;
 		AppSettings appSettings;
-		try {
-			appSettings = appSettingsDao.load();
-			language = appSettings.getLanguage();
-			country = appSettings.getCountry();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		appSettings = appSettingsDao.load();
+		language = appSettings.getLanguage();
+		country = appSettings.getCountry();
 		if (language == null) {
 			currentLocale = new Locale("en", "US");
 		} else {
