@@ -19,7 +19,11 @@ package com.wlami.mibox.client.metadata2;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,11 +35,13 @@ import com.wlami.mibox.client.application.AppFolders;
  * @author wladislaw Mitzel
  * 
  */
-public class EncryptedMiTreeLoader {
+@Singleton
+@Named
+public class EncryptedMiTreeRepository {
 
 	/** interal logger */
 	private static Logger log = LoggerFactory
-			.getLogger(EncryptedMiTreeLoader.class);
+			.getLogger(EncryptedMiTreeRepository.class);
 
 	/**
 	 * Loads an encrypted MiTree from local file system.
@@ -54,6 +60,24 @@ public class EncryptedMiTreeLoader {
 		} catch (IOException e) {
 			log.error("Error during load of encrypted MiTree", e);
 			return null;
+		}
+	}
+
+	/**
+	 * Save an encrypted MiTree to local file system
+	 * 
+	 * @param encryptedMiTree
+	 *            The tree which shall be saved.
+	 * @param fileName
+	 *            filename of the MiTree.
+	 */
+	public void saveEncryptedMiTree(EncryptedMiTree encryptedMiTree,
+			String fileName) {
+		File file = new File(AppFolders.getConfigFolder(), fileName);
+		try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
+			fileOutputStream.write(encryptedMiTree.getContent());
+		} catch (IOException e) {
+			log.error("Error during save of encrypted MiTree", e);
 		}
 	}
 }

@@ -19,22 +19,18 @@ package com.wlami.mibox.client.metadata;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
+import org.bouncycastle.crypto.CryptoException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +38,15 @@ import org.slf4j.LoggerFactory;
 import com.wlami.mibox.client.application.AppFolders;
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
+import com.wlami.mibox.client.metadata2.DecryptedMiTree;
+import com.wlami.mibox.client.metadata2.EncryptedMiTree;
+import com.wlami.mibox.client.metadata2.EncryptedMiTreeInformation;
+import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
 import com.wlami.mibox.client.networking.synchronization.MChunkUpload;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 import com.wlami.mibox.client.networking.synchronization.UploadCallback;
+import com.wlami.mibox.core.encryption.KeyGen;
+import com.wlami.mibox.core.encryption.PBKDF2;
 import com.wlami.mibox.core.util.HashUtil;
 
 /**
@@ -84,11 +86,8 @@ class MetadataWorker extends Thread {
 	private File metadataFile = new File(AppFolders.getConfigFolder(),
 			METADATA_DEFAULT_FILENAME);
 
-	/** Next time the metadata shall be written to disk */
-	private Date nextWrite;
-
-	/** Used for time calculations */
-	private Calendar calendar = Calendar.getInstance();
+	/** reference to a loader */
+	private EncryptedMiTreeRepository encryptedMiTreeRepo;
 
 	/**
 	 * set of incoming {@link ObservedFilesystemEvent} instances which is
@@ -116,10 +115,12 @@ class MetadataWorker extends Thread {
 	 */
 	public MetadataWorker(AppSettingsDao appSettingsDao,
 			TransportProvider transportProvider,
-			ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents) {
+			ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents,
+			EncryptedMiTreeRepository encryptedMiTreeRepo) {
 		this.incomingEvents = incomingEvents;
 		this.appSettingsDao = appSettingsDao;
 		this.transportProvider = transportProvider;
+		this.encryptedMiTreeRepo = encryptedMiTreeRepo;
 		try {
 			if (metadataFile.exists()) {
 				// read the metadata from disk
@@ -135,7 +136,6 @@ class MetadataWorker extends Thread {
 				rootFolder.setName("/");
 				objectMapper.writeValue(metadataFile, rootFolder);
 			}
-			writeMetadata(false);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -163,91 +163,117 @@ class MetadataWorker extends Thread {
 		log.debug("Synchronizing metadata with filesystem");
 		AppSettings appSettings = appSettingsDao.load();
 		String watchDir = appSettings.getWatchDirectory();
-		traverseFileSystem(new File(watchDir), rootFolder);
-		writeMetadata(true);
-	}
 
-	/**
-	 * Writes the metadata to the filesystem.
-	 * 
-	 * @param write
-	 *            If <code>true</code> the metadata really gets written.<br/>
-	 *            If <code>false</code> only the next write time will be
-	 *            calculated.
-	 * @throws IOException
-	 *             Thrown on IO-Exceptions: noe permissions, etc.
-	 * @throws JsonGenerationException
-	 * @throws JsonMappingException
-	 */
-	protected synchronized void writeMetadata(boolean write)
-			throws IOException, JsonGenerationException, JsonMappingException {
-		calendar.setTime(new Date());
-		calendar.add(Calendar.SECOND, WRITE_PERIOD_SECONDS);
-		nextWrite = calendar.getTime();
-		if (write) {
-			ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(
-					metadataFile));
-			zip.putNextEntry(new ZipEntry(METADATA_DEFAULT_FILENAME));
-			objectMapper.writeValue(zip, rootFolder);
-			log.info("Written metadata. Next write will probably be "
-					+ nextWrite.toString());
-			zip.close();
-			zip = null;
+		EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(appSettings);
+
+		EncryptedMiTree encryptedRoot = encryptedMiTreeRepo
+				.loadEncryptedMiTree(miTreeInformation.getFileName());
+		DecryptedMiTree root;
+		if (encryptedRoot == null) {
+			root = new DecryptedMiTree();
+			root.setFolderName("/");
+		} else {
+			try {
+				root = encryptedRoot.decrypt(miTreeInformation.getKey(),
+						miTreeInformation.getIv());
+			} catch (CryptoException e) {
+				log.error("Error during decrypting the root metadata!", e);
+				return;
+			}
 		}
-
+		traverseFileSystem(new File(watchDir), root, miTreeInformation);
 	}
 
 	/**
-	 * Helper-method of synchronizeMetadata. Algorithm is described there.
-	 * 
-	 * @param filesystemFolder
-	 *            {@link File} instance which shall be synchronized in this
-	 *            recursion step.
-	 * @param mFolder
-	 *            {@link MFolder} instance which shall contain the metadata.
+	 * @param appSettings
+	 * @return
 	 */
-	private void traverseFileSystem(File filesystemFolder, MFolder mFolder) {
-		log.debug("traversing " + filesystemFolder.getAbsolutePath());
-		if (!filesystemFolder.exists()) {
-			log.error("folder does not exist! " + filesystemFolder);
+	public EncryptedMiTreeInformation retrieveRootMiTreeInformation(
+			AppSettings appSettings) {
+		EncryptedMiTreeInformation miTreeInformation = new EncryptedMiTreeInformation();
+		byte[] key = PBKDF2.getKeyFromPasswordAndSalt(
+				appSettings.getPassword(), appSettings.getUsername());
+		byte[] iv = HashUtil.calculateMD5Bytes(appSettings.getUsername()
+				.getBytes());
+		miTreeInformation.setKey(key);
+		miTreeInformation.setIv(iv);
+		miTreeInformation.setFileName("root");
+		return miTreeInformation;
+	}
+
+
+	/**
+	 * 
+	 * @param rootFolder
+	 * @param decryptedMiTree
+	 *            MUST NOT BE NULL!
+	 */
+	public void traverseFileSystem(File rootFolder,
+			DecryptedMiTree decryptedMiTree,
+			EncryptedMiTreeInformation miTreeInformation) {
+		if (!rootFolder.exists()) {
+			log.error("folder does not exist! " + rootFolder);
 			return;
 		}
-		for (File f : filesystemFolder.listFiles()) {
-			if (f.isDirectory()) {
-				// We got a folder and have to recurse again.
-				MFolder subFolder;
-				if (mFolder.getSubfolders().containsKey(f.getName())) {
-					// There is a matching MFolder so we use it.
-					subFolder = mFolder.getSubfolders().get(f.getName());
-				} else {
-					// We did not find a matching MFolder so we create it!
-					subFolder = new MFolder();
-					subFolder.setName(f.getName());
-					subFolder.setParentFolder(mFolder);
-					mFolder.getSubfolders().put(subFolder.getName(), subFolder);
-				}
-				traverseFileSystem(f, subFolder);
-			} else if (f.isFile()) {
+		for (File file : rootFolder.listFiles()) {
+			if (file.isFile()) {
 				MFile mFile;
-				if (mFolder.getFiles().containsKey(f.getName())) {
+				if (decryptedMiTree.getFiles().containsKey(file.getName())) {
 					// There is a matching MFile.
-					mFile = mFolder.getFiles().get(f.getName());
-					log.debug("Found file in metadata. " + f.getName());
+					mFile = decryptedMiTree.getFiles().get(file.getName());
+					log.debug("Found file in metadata. " + file.getName());
 				} else {
 					// There is no matching file, so we create it first
 					mFile = new MFile();
-					mFile.setFolder(mFolder);
-					mFile.setName(f.getName());
-					mFolder.getFiles().put(mFile.getName(), mFile);
+					mFile.setName(file.getName());
+					decryptedMiTree.getFiles().put(mFile.getName(), mFile);
 					log.debug("Creating a new MFile in metadata for "
-							+ f.getName());
+							+ file.getName());
 				}
-				synchronizeFileMetadata(f, mFile);
-			} else {
-				// What do we have over here, not a file and not a dir?!
-				log.error("wtf? " + f.getName());
+				synchronizeFileMetadata(file, mFile);
+			} else if (file.isDirectory()) {
+				// find the right metadata
+				EncryptedMiTreeInformation encryptedMiTreeInformation = decryptedMiTree
+						.getSubfolder().get(file.getName());
+				if (encryptedMiTreeInformation == null) {
+					// Let's create a new subtree!
+					DecryptedMiTree subTree = new DecryptedMiTree();
+					subTree.setFolderName(file.getName());
+					encryptedMiTreeInformation = new EncryptedMiTreeInformation();
+					KeyGen keyGen = new KeyGen();
+					encryptedMiTreeInformation.setIv(keyGen
+							.generateRandomBytes(16));
+					encryptedMiTreeInformation.setKey(keyGen
+							.generateRandomBytes(32));
+					encryptedMiTreeInformation.setFileName(UUID.randomUUID().toString());
+					decryptedMiTree.getSubfolder().put(file.getName(),
+							encryptedMiTreeInformation);
+					traverseFileSystem(file, subTree,
+							encryptedMiTreeInformation);
+				} else {
+					// load the metadata for the subtree
+					EncryptedMiTree encryptedMiTree = encryptedMiTreeRepo
+							.loadEncryptedMiTree(encryptedMiTreeInformation
+									.getFileName());
+					// decrypt this shit
+					try {
+						DecryptedMiTree subTree = encryptedMiTree.decrypt(
+								encryptedMiTreeInformation.getKey(),
+								encryptedMiTreeInformation.getIv());
+						traverseFileSystem(file, subTree,
+								encryptedMiTreeInformation);
+					} catch (CryptoException | IOException e) {
+						log.error("Could not decrypt subfolder metadata", e);
+					}
+				}
 			}
 		}
+
+		// Save the tree
+		EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt(
+				miTreeInformation.getKey(), miTreeInformation.getIv());
+		encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree,
+				miTreeInformation.getFileName());
 	}
 
 	/**
@@ -309,15 +335,10 @@ class MetadataWorker extends Thread {
 					currentChunk++;
 
 				}
-				//TODO split hashing and chunk-upload
-				
+				// TODO split hashing and chunk-upload
+
 				mFile.setFileHash(HashUtil.digestToString(fileDigest.digest()));
 				mFile.setLastModified(filesystemLastModified);
-
-				// if a certain amount of time has elapsed persist
-				if (new Date().after(nextWrite)) {
-					writeMetadata(true);
-				}
 
 			} catch (NoSuchAlgorithmException e) {
 				log.error("No SHA availabe", e);
@@ -343,13 +364,13 @@ class MetadataWorker extends Thread {
 			public void uploadCallback(MChunk mChunk, String result) {
 				mChunk.setEncryptedChunkHash(result);
 				mChunk.setLastSync(new Date());
-				try {
-					writeMetadata(true);
-				} catch (IOException e) {
-					log.error(
-							"Could not persist metadata. Maybe you have to toggle this process manually.",
-							e);
-				}
+//				try {
+//					//TODO writeMetadata(true);
+//				} catch (IOException e) {
+//					log.error(
+//							"Could not persist metadata. Maybe you have to toggle this process manually.",
+//							e);
+//				}
 			}
 		});
 		transportProvider.addChunkUpload(mChunkUpload);

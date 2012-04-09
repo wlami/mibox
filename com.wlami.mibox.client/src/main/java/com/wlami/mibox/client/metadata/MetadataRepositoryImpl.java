@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.application.AppSettingsDao;
+import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 
 /**
@@ -50,6 +51,9 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	 * structure.
 	 */
 	private MetadataWorker worker;
+	
+	/** loader reference which is needed for the worker */
+	private EncryptedMiTreeRepository encryptedMiTreeRepo;
 
 	/**
 	 * set of incoming {@link ObservedFilesystemEvent} instances which shall be
@@ -62,9 +66,11 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	 */
 	@Inject
 	public MetadataRepositoryImpl(AppSettingsDao appSettingsDao,
-			TransportProvider transportProvider) {
+			TransportProvider transportProvider, 
+			EncryptedMiTreeRepository encryptedMiTreeRepository) {
 		this.appSettingsDao = appSettingsDao;
 		this.transportProvider = transportProvider;
+		this.encryptedMiTreeRepo = encryptedMiTreeRepository;
 	}
 
 	/*
@@ -76,7 +82,7 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	public void startProcessing() {
 		if (worker == null) {
 			worker = new MetadataWorker(appSettingsDao, transportProvider,
-					incomingEvents);
+					incomingEvents, encryptedMiTreeRepo);
 			worker.start();
 			log.info("Starting MetadataRepository");
 		} else {

@@ -18,8 +18,8 @@
 package com.wlami.mibox.client.metadata2;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bouncycastle.crypto.CryptoException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -44,9 +44,9 @@ public class DecryptedMiTree {
 	/** name of this folder */
 	private String folderName;
 
-	List<EncryptedMiTreeInformation> subfolder = new ArrayList<>();
+	private Map<String, EncryptedMiTreeInformation> subfolder = new HashMap<>();
 
-	List<MFile> files = new ArrayList<>();
+	private Map<String, MFile> files = new HashMap<>();
 
 	/**
 	 * @return the folderName
@@ -68,28 +68,28 @@ public class DecryptedMiTree {
 	/**
 	 * @return the subfolder
 	 */
-	public List<EncryptedMiTreeInformation> getSubfolder() {
+	public Map<String, EncryptedMiTreeInformation> getSubfolder() {
 		return subfolder;
 	}
 
 	/**
 	 * @param subfolder the subfolder to set
 	 */
-	public void setSubfolder(List<EncryptedMiTreeInformation> subfolder) {
+	public void setSubfolder(Map<String, EncryptedMiTreeInformation> subfolder) {
 		this.subfolder = subfolder;
 	}
 
 	/**
 	 * @return the files
 	 */
-	public List<MFile> getFiles() {
+	public Map<String, MFile> getFiles() {
 		return files;
 	}
 
 	/**
 	 * @param files the files to set
 	 */
-	public void setFiles(List<MFile> files) {
+	public void setFiles(Map<String, MFile> files) {
 		this.files = files;
 	}
 

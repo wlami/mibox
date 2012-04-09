@@ -54,9 +54,10 @@ public class AesEncryption {
 	 */
 	public static byte[] encrypt(byte[] plain, String keyString,
 			Integer initVector) throws CryptoException {
-		return crypt(true, plain, keyString, HashUtil.intToByteArray(initVector));
+		return crypt(true, plain, keyString,
+				HashUtil.intToByteArray(initVector));
 	}
-	
+
 	/**
 	 * Encrypts the plain byte array (the chunk) with the given key.
 	 * Bouncycastle specific implementation.
@@ -88,9 +89,10 @@ public class AesEncryption {
 	 */
 	public static byte[] decrypt(byte[] ciphertext, String keyString,
 			Integer initVector) throws CryptoException {
-		return crypt(false, ciphertext, keyString, HashUtil.intToByteArray(initVector));
+		return crypt(false, ciphertext, keyString,
+				HashUtil.intToByteArray(initVector));
 	}
-	
+
 	/**
 	 * Decrypts the plain byte array (the chunk) with the given key.
 	 * Bouncycastle specific implementation.
@@ -110,11 +112,16 @@ public class AesEncryption {
 
 	/**
 	 * Encrypts and decrypts a byte array.
-	 * @param encrypt <code>true</code> for encryption <br/>
-	 * 	<code>false</code> for decryption
-	 * @param ciphertext the data which shall be decrypted or encrypted
-	 * @param keyString the key
-	 * @param initVector the iv
+	 * 
+	 * @param encrypt
+	 *            <code>true</code> for encryption <br/>
+	 *            <code>false</code> for decryption
+	 * @param ciphertext
+	 *            the data which shall be decrypted or encrypted
+	 * @param keyString
+	 *            the key
+	 * @param initVector
+	 *            the iv
 	 * @return an encrypted /decrypted byte array
 	 * @throws CryptoException
 	 */
@@ -126,11 +133,16 @@ public class AesEncryption {
 
 	/**
 	 * Encrypts and decrypts a byte array.
-	 * @param encrypt <code>true</code> for encryption <br/>
-	 * 	<code>false</code> for decryption
-	 * @param ciphertext the data which shall be decrypted or encrypted
-	 * @param initVector the iv
-	 * @param key the key
+	 * 
+	 * @param encrypt
+	 *            <code>true</code> for encryption <br/>
+	 *            <code>false</code> for decryption
+	 * @param ciphertext
+	 *            the data which shall be decrypted or encrypted
+	 * @param initVector
+	 *            the iv
+	 * @param key
+	 *            the key
 	 * @return an encrypted /decrypted byte array
 	 * @throws CryptoException
 	 */
@@ -144,7 +156,8 @@ public class AesEncryption {
 		cipher.init(encrypt, new ParametersWithIV(new KeyParameter(key),
 				initVector));
 		byte[] cipherArray = new byte[cipher.getOutputSize(ciphertext.length)];
-		log.debug("creatied cipherArray with size " + cipherArray.length + "\n encryption...");
+		log.debug("creatied cipherArray with size " + cipherArray.length
+				+ "\n encryption...");
 		int outputByteCount = cipher.processBytes(ciphertext, 0,
 				ciphertext.length, cipherArray, 0);
 		log.debug("finalizing cipher");

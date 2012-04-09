@@ -22,8 +22,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
+import java.util.UUID;
 
 import org.bouncycastle.crypto.CryptoException;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,8 +80,7 @@ public class TreeEncryptionTest {
 		mChunk.setLastChange(new Date());
 		mChunk.setMFile(mFile);
 		mFile.getChunks().add(mChunk);
-
-		decryptedMiTree.getFiles().add(mFile);
+		decryptedMiTree.getFiles().put(mFile.getName(), mFile);
 
 		final byte[] key = PBKDF2.getKeyFromPasswordAndSalt("ultrasecret",
 				"username");
@@ -104,5 +106,30 @@ public class TreeEncryptionTest {
 		ObjectMapper mapper = new ObjectMapper();
 		System.out.println(mapper.writeValueAsString(decryptedMiTree));
 	}
+	
+	@Test
+	public void testJsonArray() throws JsonGenerationException, JsonMappingException, IOException {
+		class WLadi {
+			byte[] inhalt = new byte[]{1,2,3,'c'};
+			/**
+			 * @return the inhalt
+			 */
+			public byte[] getInhalt() {
+				return inhalt;
+			}
+
+			/**
+			 * @param inhalt the inhalt to set
+			 */
+			public void setInhalt(byte[] inhalt) {
+				this.inhalt = inhalt;
+			}
+			
+		}
+		ObjectMapper mapper = new ObjectMapper();
+		System.out.println(mapper.writeValueAsString(new WLadi()));
+	}
+
+
 
 }
