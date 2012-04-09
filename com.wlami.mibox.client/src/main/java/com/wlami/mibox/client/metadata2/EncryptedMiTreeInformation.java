@@ -18,10 +18,60 @@
 package com.wlami.mibox.client.metadata2;
 
 /**
- * @author wladislaw
+ * @author wladislaw mitzel
+ * @author stefan baust
  *
  */
 public class EncryptedMiTreeInformation {
-	String fileName;
-	String key;
+	
+	
+	private String fileName;
+	
+	private String key;
+	
+	private String iv;
+
+	/**
+	 * @return the fileName
+	 */
+	public String getFileName() {
+		return fileName;
+	}
+
+	/**
+	 * @param fileName the fileName to set
+	 */
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	/**
+	 * @return the key
+	 */
+	public String getKey() {
+		return key;
+	}
+
+	/**
+	 * @param key the key to set
+	 */
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	/**
+	 * @return the iv
+	 */
+	public String getIv() {
+		return iv;
+	}
+
+	/**
+	 * @param iv the iv to set
+	 */
+	public void setIv(String iv) {
+		this.iv = iv;
+	}
+	
+	
 }

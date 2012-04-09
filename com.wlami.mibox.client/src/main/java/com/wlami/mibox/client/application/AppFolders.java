@@ -21,6 +21,9 @@ import java.io.File;
 
 /**
  * Provides information on system paths.
+ * 
+ * @author Wladislaw Mitzel
+ * @author Stefan Baust
  */
 public class AppFolders {
 

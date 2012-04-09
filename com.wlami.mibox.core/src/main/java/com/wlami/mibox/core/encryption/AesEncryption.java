@@ -19,6 +19,7 @@ package com.wlami.mibox.core.encryption;
 
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.CryptoException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
@@ -53,7 +54,24 @@ public class AesEncryption {
 	 */
 	public static byte[] encrypt(byte[] plain, String keyString,
 			Integer initVector) throws CryptoException {
-		return crypt(plain, keyString, initVector, true);
+		return crypt(true, plain, keyString, HashUtil.intToByteArray(initVector));
+	}
+	
+	/**
+	 * Encrypts the plain byte array (the chunk) with the given key.
+	 * Bouncycastle specific implementation.
+	 * 
+	 * @param plain
+	 *            plain text to be encrypted.
+	 * @param keyString
+	 *            The key to use for encryption
+	 * @param initVector
+	 *            IV for encryption
+	 * @return Returns the enrypted byte array.
+	 */
+	public static byte[] encrypt(byte[] plain, String keyString,
+			byte[] initVector) throws CryptoException {
+		return crypt(true, plain, keyString, initVector);
 	}
 
 	/**
@@ -70,19 +88,61 @@ public class AesEncryption {
 	 */
 	public static byte[] decrypt(byte[] ciphertext, String keyString,
 			Integer initVector) throws CryptoException {
-		return crypt(ciphertext, keyString, initVector, false);
+		return crypt(false, ciphertext, keyString, HashUtil.intToByteArray(initVector));
+	}
+	
+	/**
+	 * Decrypts the plain byte array (the chunk) with the given key.
+	 * Bouncycastle specific implementation.
+	 * 
+	 * @param ciphertext
+	 *            cipher text to be decrypted.
+	 * @param keyString
+	 *            The key to use for decryption
+	 * @param initVector
+	 *            IV for encryption
+	 * @return Returns the decrypted byte array.
+	 */
+	public static byte[] decrypt(byte[] ciphertext, String keyString,
+			byte[] initVector) throws CryptoException {
+		return crypt(false, ciphertext, keyString, initVector);
 	}
 
-	private static byte[] crypt(byte[] ciphertext, String keyString,
-			Integer initVector, boolean encrypt) throws CryptoException {
-		log.debug("starting " + (encrypt ? "encryption" : "decryption"));
+	/**
+	 * Encrypts and decrypts a byte array.
+	 * @param encrypt <code>true</code> for encryption <br/>
+	 * 	<code>false</code> for decryption
+	 * @param ciphertext the data which shall be decrypted or encrypted
+	 * @param keyString the key
+	 * @param initVector the iv
+	 * @return an encrypted /decrypted byte array
+	 * @throws CryptoException
+	 */
+	public static byte[] crypt(boolean encrypt, byte[] ciphertext,
+			String keyString, byte[] initVector) throws CryptoException {
 		byte[] key = HashUtil.stringToDigest(keyString);
+		return crypt(encrypt, ciphertext, initVector, key);
+	}
+
+	/**
+	 * Encrypts and decrypts a byte array.
+	 * @param encrypt <code>true</code> for encryption <br/>
+	 * 	<code>false</code> for decryption
+	 * @param ciphertext the data which shall be decrypted or encrypted
+	 * @param initVector the iv
+	 * @param key the key
+	 * @return an encrypted /decrypted byte array
+	 * @throws CryptoException
+	 */
+	public static byte[] crypt(boolean encrypt, byte[] ciphertext,
+			byte[] initVector, byte[] key) throws InvalidCipherTextException {
+		log.debug("starting " + (encrypt ? "encryption" : "decryption"));
 		BlockCipher engine = new AESEngine();
 		PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
 				new CBCBlockCipher(engine));
 		log.debug("retrieved an AESEngine");
 		cipher.init(encrypt, new ParametersWithIV(new KeyParameter(key),
-				HashUtil.intToByteArray(initVector)));
+				initVector));
 		byte[] cipherArray = new byte[cipher.getOutputSize(ciphertext.length)];
 		log.debug("creatied cipherArray with size " + cipherArray.length + "\n encryption...");
 		int outputByteCount = cipher.processBytes(ciphertext, 0,

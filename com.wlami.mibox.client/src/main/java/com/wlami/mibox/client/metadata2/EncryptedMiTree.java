@@ -17,14 +17,58 @@
  */
 package com.wlami.mibox.client.metadata2;
 
+import java.io.IOException;
+
+import org.bouncycastle.crypto.CryptoException;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import com.wlami.mibox.core.encryption.AesEncryption;
+
 /**
- * @author wladislaw
- *
+ * @author Wladislaw Mitzel
+ * @author Stefan Baust
+ * 
  */
 public class EncryptedMiTree {
-	
-	public DecryptedMiTree decrypt(String key) {
-		return null;
+
+	/** JSON Object mapper for persistence. */
+	private ObjectMapper objectMapper = new ObjectMapper();
+
+	/**
+	 * Create a new encrypted for a encrypted byte array.
+	 * 
+	 * @param content
+	 *            The encrypted data.
+	 */
+	public EncryptedMiTree(byte[] content) {
+		this.content = content;
+	}
+
+	/** encrypted content */
+	private byte[] content;
+
+	/**
+	 * @return the content
+	 */
+	public byte[] getContent() {
+		return content; //TODO Check whether a deep copy is required at this point.
+	}
+
+	/**
+	 * Decrypts the MiTree content
+	 * 
+	 * @throws CryptoException
+	 * @throws IOException
+	 * @throws JsonMappingException
+	 * @throws JsonParseException
+	 */
+	public DecryptedMiTree decrypt(byte[] key, byte[] iv)
+			throws CryptoException, JsonParseException, JsonMappingException,
+			IOException {
+		byte[] decrypted = AesEncryption.crypt(false, content,iv, key);
+		return objectMapper.readValue(decrypted, DecryptedMiTree.class);
 	}
 
 }

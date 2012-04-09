@@ -35,14 +35,23 @@ public class HashUtil {
 
 	/** reference to a {@link MessageDigest} */
 	private static MessageDigest messageDigest;
+	
+	/** reference to a {@link MessageDigest} */
+	private static MessageDigest md5;
+	
+	/** Constant for accessing the SHA! algorithm. */
+	public static final String MD5_MESSAGE_DIGEST = "MD5";
 
 	/** Constant for accessing the SHA256 algorithm. */
 	public static final String SHA_256_MESSAGE_DIGEST = "SHA-256";
+	
+	
 
 	/** get a {@link MessageDigest} implementation */
 	static {
 		try {
 			messageDigest = MessageDigest.getInstance(SHA_256_MESSAGE_DIGEST);
+			md5 = MessageDigest.getInstance(MD5_MESSAGE_DIGEST);
 		} catch (NoSuchAlgorithmException e) {
 			log.error("", e);
 			// TODO Tell the user something is terribly wrong!
@@ -58,7 +67,7 @@ public class HashUtil {
 	 * @return returns the hash as String.
 	 */
 	public static String calculateSha256(byte[] input) {
-		return calculateHash(input, input.length, SHA_256_MESSAGE_DIGEST);
+		return calculateHash(input, input.length);
 	}
 
 	/**
@@ -71,19 +80,41 @@ public class HashUtil {
 	 * @return returns the hash as String.
 	 */
 	public static String calculateSha256(byte[] input, int length) {
-		return calculateHash(input, length, SHA_256_MESSAGE_DIGEST);
+		return calculateHash(input, length);
 	}
-
+	
+	/**
+	 * calculates the SHA256 hash value of the first length bytes of the array and returns the result as byte array.
+	 * 
+	 * @param input
+	 *            input array to be hashed.
+	 * @return returns the hash as byte[].
+	 */
+	public static byte[] calculateSha256Bytes(byte[] input) {
+		messageDigest.update(input, 0, input.length);
+		return messageDigest.digest();
+	}
+	
+	/**
+	 * calculates the SHA1 hash value and returns the result as byte array.
+	 * 
+	 * @param input
+	 *            input array to be hashed.
+	 * @return returns the hash as byte[].
+	 */
+	public static byte[] calculateMD5Bytes(byte[] input) {
+		md5.update(input, 0, input.length);
+		return md5.digest();
+	}
+	
 	/**
 	 * internal hash calulcator. can be called with differen digest algorithms.
 	 * 
 	 * @param input
 	 *            input array to be hashed.
-	 * @param digest
-	 *            name of the hash algorithm.
 	 * @return returns the hash as String
 	 */
-	private static String calculateHash(byte[] input, int length, String digest) {
+	private static String calculateHash(byte[] input, int length) {
 		messageDigest.update(input, 0, length);
 		return digestToString(messageDigest.digest());
 	}

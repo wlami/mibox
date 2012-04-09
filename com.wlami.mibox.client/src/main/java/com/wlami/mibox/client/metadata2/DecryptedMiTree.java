@@ -17,25 +17,36 @@
  */
 package com.wlami.mibox.client.metadata2;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.bouncycastle.crypto.CryptoException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.wlami.mibox.client.metadata.MFile;
+import com.wlami.mibox.core.encryption.AesEncryption;
 
 /**
  * This class represents a folder in the metadata.
  * 
  * @author Stefan Baust
  * @author Wladislaw Mitzel
- *
+ * 
  */
 public class DecryptedMiTree {
 	
+	/** internal logger */
+	Logger log = LoggerFactory.getLogger(DecryptedMiTree.class);
+
 	/** name of this folder */
 	private String folderName;
-	
-	List<EncryptedMiTreeInformation> subfolder; //hier brauchen wir die "resource url" und "key"
-	
-	List<MFile> files;
+
+	List<EncryptedMiTreeInformation> subfolder = new ArrayList<>();
+
+	List<MFile> files = new ArrayList<>();
 
 	/**
 	 * @return the folderName
@@ -45,11 +56,59 @@ public class DecryptedMiTree {
 	}
 
 	/**
-	 * @param folderName the folderName to set
+	 * @param folderName
+	 *            the folderName to set
 	 */
 	public void setFolderName(String folderName) {
 		this.folderName = folderName;
 	}
 	
 	
+
+	/**
+	 * @return the subfolder
+	 */
+	public List<EncryptedMiTreeInformation> getSubfolder() {
+		return subfolder;
+	}
+
+	/**
+	 * @param subfolder the subfolder to set
+	 */
+	public void setSubfolder(List<EncryptedMiTreeInformation> subfolder) {
+		this.subfolder = subfolder;
+	}
+
+	/**
+	 * @return the files
+	 */
+	public List<MFile> getFiles() {
+		return files;
+	}
+
+	/**
+	 * @param files the files to set
+	 */
+	public void setFiles(List<MFile> files) {
+		this.files = files;
+	}
+
+	/**
+	 * encrypt this MiTree with the given key and iv.
+	 * @param key Key to use for encryption
+	 * @param iv IV to use for encryption
+	 * @return an {@link EncryptedMiTree} representing this MiTree
+	 */
+	public EncryptedMiTree encrypt(byte[] key, byte[] iv) {
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+			byte[] data = objectMapper.writeValueAsBytes(this);
+			byte[] encrypted = AesEncryption.crypt(true, data, iv, key);
+			return new EncryptedMiTree(encrypted);
+		} catch ( IOException | CryptoException e) {
+			log.error("Error during encryption of MiTree",e);
+			return null;
+		}
+	}
+
 }
