@@ -45,7 +45,7 @@ public class TransportProviderSingleThread implements TransportProvider {
 	AppSettingsDao appSettingsDao;
 
 	/** reference to our only working thread */
-	Transporter transporter;
+	Transporter<MChunkUpload> transporter;
 
 	/** collection of {@link MChunk}s which shall be uploaded. */
 	ConcurrentSkipListSet<MChunkUpload> mChunkUploads;

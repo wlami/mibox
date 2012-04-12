@@ -158,6 +158,7 @@ public class DirectoryWatchdog extends Thread {
 	 * Starts the directory observation. Registers it at a WatchService and
 	 * checks for new Events.
 	 */
+	@SuppressWarnings("unchecked")
 	protected void startObservation() {
 		try {
 			watchService = FileSystems.getDefault().newWatchService();

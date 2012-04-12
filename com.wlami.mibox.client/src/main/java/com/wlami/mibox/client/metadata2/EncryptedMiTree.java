@@ -23,6 +23,8 @@ import org.bouncycastle.crypto.CryptoException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.core.encryption.AesEncryption;
 
@@ -32,6 +34,9 @@ import com.wlami.mibox.core.encryption.AesEncryption;
  * 
  */
 public class EncryptedMiTree {
+	
+	/** internal logger */
+	private static Logger log = LoggerFactory.getLogger(EncryptedMiTree.class);
 
 	/** JSON Object mapper for persistence. */
 	private ObjectMapper objectMapper = new ObjectMapper();
@@ -67,7 +72,9 @@ public class EncryptedMiTree {
 	public DecryptedMiTree decrypt(byte[] key, byte[] iv)
 			throws CryptoException, JsonParseException, JsonMappingException,
 			IOException {
+		log.debug("decrypting MiTree");
 		byte[] decrypted = AesEncryption.crypt(false, content,iv, key);
+		log.debug("Decryption done. Trying now to read the data.");
 		return objectMapper.readValue(decrypted, DecryptedMiTree.class);
 	}
 

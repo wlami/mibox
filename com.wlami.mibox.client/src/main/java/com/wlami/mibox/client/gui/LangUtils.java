@@ -17,7 +17,6 @@
  */
 package com.wlami.mibox.client.gui;
 
-import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 

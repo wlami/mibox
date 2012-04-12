@@ -17,7 +17,6 @@
  */
 package com.wlami.mibox.client.application;
 
-import java.io.IOException;
 
 /**
  * @author Wladislaw Mitzel
