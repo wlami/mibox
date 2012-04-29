@@ -83,7 +83,7 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 			throws CryptoException,
 			IOException {
 		// get appsetting to retrieve the current watch dir
-		AppSettings appSettings = this.appSettingsDao.load();
+		AppSettings appSettings = appSettingsDao.load();
 		// read the chunk
 		FileInputStream fis = new FileInputStream(file);
 		int chunkSize = chunk.getMFile().getChunkSize();
@@ -97,22 +97,23 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 		} else {
 			arraySize = (int) (file.length() % chunkSize);
 		}
-		this.log.debug("Encrypting chunk. Using arraySize of " + arraySize);
+		log.debug("Encrypting chunk. Using arraySize of " + arraySize);
 		byte[] plainChunkData = new byte[arraySize];
 		// Skip bytes if we dont have the first chunk
 		fis.skip(chunkPosition * chunkSize);
 		// read the chunk data
 		fis.read(plainChunkData, 0, arraySize);
-		this.log.debug("Starting encryption");
+		log.debug("Starting encryption");
 		byte[] encryptedChunkData = AesEncryption.encrypt(plainChunkData,
 				chunk.getDecryptedChunkHash(), chunkPosition);
-		this.log.debug("Finished encryption");
+		log.debug("Finished encryption");
 		// calculate the encrypted hash
 		String encryptedHash = HashUtil.calculateSha256(encryptedChunkData);
-		this.log.debug("Calculate Encrypted Hash: " + encryptedHash);
+		log.debug("Calculate Encrypted Hash: " + encryptedHash);
 		// upload it
-		WebResource webResource = this.getWebResource(appSettings, encryptedHash);
-		this.log.debug("Execute the HTTP PUT: " + webResource.getURI().toString());
+		WebResource webResource = getWebResource(appSettings, encryptedHash);
+		log.debug("Execute the HTTP PUT: "
+				+ webResource.getURI().toString());
 		webResource.put(encryptedChunkData);
 		return encryptedHash;
 	}
@@ -127,8 +128,8 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 	public byte[] downloadAndDecryptChunk(MChunk chunk) throws IOException,
 	CryptoException {
 		// get appsetting to retrieve the current watch dir AND MORE
-		AppSettings appSettings = this.appSettingsDao.load();
-		WebResource webResource = this.getWebResource(appSettings,
+		AppSettings appSettings = appSettingsDao.load();
+		WebResource webResource = getWebResource(appSettings,
 				chunk.getEncryptedChunkHash());
 		byte[] encryptedChunk = webResource.get(byte[].class);
 		return AesEncryption.decrypt(encryptedChunk,
@@ -153,7 +154,7 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 					appSettings.getServerUrl() + "rest/chunkmanager/"
 							+ encryptedHash).build();
 		} catch (IllegalArgumentException e) {
-			this.log.error("", e);
+			log.error("", e);
 		}
 		WebResource webResource = client.resource(uri);
 		return webResource;
@@ -168,27 +169,29 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 	@Override
 	public void threadMainMethod() {
 		// Process the upload requests
-		for (MChunkUpload mChunkUpload : this.uploads) {
-			this.log.debug("Processing MChunkUpload for file "
+		for (MChunkUpload mChunkUpload : uploads) {
+			log.debug("Processing MChunkUpload for file "
 					+ mChunkUpload.getFile().getName());
 			try {
 				MChunk chunk = mChunkUpload.getMChunk();
 				File file = mChunkUpload.getFile();
-				String result = this.encryptAndUploadChunk(chunk, file);
+				String result = encryptAndUploadChunk(chunk, file);
 				mChunkUpload.getUploadCallback().uploadCallback(chunk, result);
-				this.log.debug("Processing of MChunkUpload successfully.");
+				log.debug("Processing of MChunkUpload successfully.");
 			} catch (CryptoException e) {
-				this.log.error("There has been en error while encrypting the chunk",
+				log.error(
+						"There has been en error while encrypting the chunk",
 						e);
 				// TODO tell the user about this problem.
 			} catch (UniformInterfaceException | ClientHandlerException e) {
-				this.log.warn("Error on putting chunk", e);
+				log.warn("Error on putting chunk", e);
 				// TODO tell the user about this problem.
 			} catch (IOException e) {
-				this.log.error("There has been an error while reading the chunk", e);
+				log.error(
+						"There has been an error while reading the chunk", e);
 				// TODO tell the user about this problem.
 			}
-			this.uploads.remove(mChunkUpload);
+			uploads.remove(mChunkUpload);
 			// TODO implement "retry later" logic: add to retry collection
 		}
 

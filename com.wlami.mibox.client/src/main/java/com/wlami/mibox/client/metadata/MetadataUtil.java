@@ -17,7 +17,19 @@
  */
 package com.wlami.mibox.client.metadata;
 
+import java.io.IOException;
 import java.util.Arrays;
+
+import org.bouncycastle.crypto.CryptoException;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.wlami.mibox.client.metadata2.DecryptedMiTree;
+import com.wlami.mibox.client.metadata2.EncryptedMiTree;
+import com.wlami.mibox.client.metadata2.EncryptedMiTreeInformation;
+import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
 
 /**
  * @author Wladislaw Mitzel
@@ -25,22 +37,34 @@ import java.util.Arrays;
  */
 public class MetadataUtil {
 
+	/** internal logger. */
+	private static final Logger LOG = LoggerFactory
+			.getLogger(MetadataUtil.class);
+
 	/**
 	 * 
 	 */
 	protected static final String UNIX_PATH_SEPARATOR = "/";
 
 	/**
-	 * Locates a {@link MFile} in the {@link MFolder} structure root. If it does
-	 * not exist yet, the file and all {@link MFolder}s in the path get created.
+	 * Locates a {@link MFile} in the {@link EncryptedMiTree} structure root. If
+	 * it does not exist yet, the file and all {@link EncryptedMiTree}s in the
+	 * path get created.
 	 * 
 	 * @param root
-	 *            the root {@link MFolder} where the search starts.
+	 *            the root {@link EncryptedMiTree} where the search starts.
 	 * @param relativePath
 	 *            the path relative to the position of the root.
 	 * @return
+	 * @throws IOException
+	 * @throws CryptoException
+	 * @throws JsonMappingException
+	 * @throws JsonParseException
 	 */
-	public static MFile locateMFile(MFolder root, String relativePath) {
+	public static MFile locateMFile(EncryptedMiTree root,
+			EncryptedMiTreeInformation information, String relativePath)
+					throws JsonParseException, JsonMappingException, CryptoException,
+					IOException {
 		if (!relativePath.startsWith(UNIX_PATH_SEPARATOR)) {
 			throw new IllegalArgumentException(
 					"relativePath has to start with File.pathSeparator");
@@ -48,21 +72,44 @@ public class MetadataUtil {
 
 		String[] folder = relativePath.split(UNIX_PATH_SEPARATOR);
 		System.out.println(Arrays.toString(folder));
+		DecryptedMiTree decryptedMiTree = root.decrypt(information.getKey(),
+				information.getIv());
 		if (folder.length == 2) {
-			MFile file = root.getFiles().get(folder[1]);
+			MFile file = decryptedMiTree.getFiles().get(folder[1]);
 			if (file == null) {
 				file = new MFile();
 				file.setName(folder[1]);
-				root.getFiles().put(file.getName(), file);
+				decryptedMiTree.getFiles().put(file.getName(), file);
 			}
 			return file;
 		} else {
-			MFolder subfolder = root.getSubfolders().get(folder[1]);
-			if (subfolder == null) {
-				subfolder = new MFolder(root);
-				subfolder.setName(folder[1]);
-				root.getSubfolders().put(subfolder.getName(), subfolder);
+			LOG.debug("we have to look in the subtrees.");
+			EncryptedMiTree subTree;
+			EncryptedMiTreeInformation subTreeInformation = decryptedMiTree
+					.getSubfolder().get(folder[1]);
+			EncryptedMiTreeRepository encryptedMiTreeRepository = new EncryptedMiTreeRepository();
+
+			if (subTreeInformation == null) {
+				LOG.debug("Create new subtree, didn't find it.");
+				DecryptedMiTree decryptedSubTree = new DecryptedMiTree();
+				subTreeInformation = EncryptedMiTreeInformation.createRandom();
+				subTree = decryptedSubTree.encrypt(subTreeInformation.getKey(),
+						subTreeInformation.getIv());
+				decryptedMiTree.getSubfolder().put(folder[1],
+						subTreeInformation);
+				// Save the new subtree
+				encryptedMiTreeRepository.saveEncryptedMiTree(subTree,
+						subTreeInformation.getFileName());
+				// Save the new metadata for the current tree
+				encryptedMiTreeRepository.saveEncryptedMiTree(decryptedMiTree
+						.encrypt(information.getKey(), information.getIv()),
+						information.getFileName());
+			} else {
+				LOG.debug("Found subtree, loading it from repository.");
+				subTree = encryptedMiTreeRepository
+						.loadEncryptedMiTree(subTreeInformation.getFileName());
 			}
+
 			StringBuilder sb = new StringBuilder(UNIX_PATH_SEPARATOR);
 			for (int i = 2; i < folder.length; i++) {
 				sb.append(folder[i]);
@@ -70,7 +117,8 @@ public class MetadataUtil {
 					sb.append(UNIX_PATH_SEPARATOR);
 				}
 			}
-			return locateMFile(subfolder, sb.toString());
+			// recurse for the subtree
+			return locateMFile(subTree, subTreeInformation, sb.toString());
 		}
 
 	}

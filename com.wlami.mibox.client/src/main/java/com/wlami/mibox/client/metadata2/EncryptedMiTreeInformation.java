@@ -17,6 +17,10 @@
  */
 package com.wlami.mibox.client.metadata2;
 
+import java.util.UUID;
+
+import com.wlami.mibox.core.encryption.KeyGen;
+
 /**
  * @author wladislaw mitzel
  * @author stefan baust
@@ -34,7 +38,7 @@ public class EncryptedMiTreeInformation {
 	 * @return the fileName
 	 */
 	public String getFileName() {
-		return fileName;
+		return this.fileName;
 	}
 
 	/**
@@ -49,7 +53,7 @@ public class EncryptedMiTreeInformation {
 	 * @return the key
 	 */
 	public byte[] getKey() {
-		return key;
+		return this.key;
 	}
 
 	/**
@@ -64,7 +68,7 @@ public class EncryptedMiTreeInformation {
 	 * @return the iv
 	 */
 	public byte[] getIv() {
-		return iv;
+		return this.iv;
 	}
 
 	/**
@@ -73,6 +77,22 @@ public class EncryptedMiTreeInformation {
 	 */
 	public void setIv(byte[] iv) {
 		this.iv = iv;
+	}
+
+	/**
+	 * Creates a new {@link EncryptedMiTreeInformation} with random key, iv and
+	 * filename.
+	 * 
+	 * @return A new instance containing the random data.
+	 */
+	public static EncryptedMiTreeInformation createRandom() {
+		EncryptedMiTreeInformation encryptedMiTreeInformation;
+		encryptedMiTreeInformation = new EncryptedMiTreeInformation();
+		KeyGen keyGen = new KeyGen();
+		encryptedMiTreeInformation.setIv(keyGen.generateRandomBytes(16));
+		encryptedMiTreeInformation.setKey(keyGen.generateRandomBytes(32));
+		encryptedMiTreeInformation.setFileName(UUID.randomUUID().toString());
+		return encryptedMiTreeInformation;
 	}
 
 }

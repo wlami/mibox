@@ -24,7 +24,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Date;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.commons.io.FilenameUtils;
@@ -42,7 +41,6 @@ import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
 import com.wlami.mibox.client.networking.synchronization.MChunkUpload;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 import com.wlami.mibox.client.networking.synchronization.UploadCallback;
-import com.wlami.mibox.core.encryption.KeyGen;
 import com.wlami.mibox.core.encryption.PBKDF2;
 import com.wlami.mibox.core.util.HashUtil;
 
@@ -59,7 +57,8 @@ class MetadataWorker extends Thread {
 	protected static final int WRITE_PERIOD_SECONDS = 60;
 
 	/** internal logger. */
-	private final Logger log = LoggerFactory.getLogger(MetadataWorker.class);
+	private static final Logger log = LoggerFactory
+			.getLogger(MetadataWorker.class);
 
 	/**
 	 * Defines the current state. Thread runs until active is set to false. Then
@@ -69,9 +68,6 @@ class MetadataWorker extends Thread {
 
 	/** Time period between checking the incoming set. */
 	private static final long DEFAULT_SLEEP_TIME_MILLIS = 250L;
-
-	/** the internal file structure stored as an {@link MFolder} instance. */
-	private MFolder rootFolder;
 
 	/** reference to a loader */
 	private final EncryptedMiTreeRepository encryptedMiTreeRepo;
@@ -128,7 +124,7 @@ class MetadataWorker extends Thread {
 	 *             Thrown on io errors.
 	 */
 	private void synchronizeMetadata() throws IOException {
-		this.log.debug("Synchronizing metadata with filesystem");
+		log.debug("Synchronizing metadata with filesystem");
 		AppSettings appSettings = this.appSettingsDao.load();
 		String watchDir = appSettings.getWatchDirectory();
 
@@ -145,7 +141,7 @@ class MetadataWorker extends Thread {
 				root = encryptedRoot.decrypt(miTreeInformation.getKey(),
 						miTreeInformation.getIv());
 			} catch (CryptoException e) {
-				this.log.error("Error during decrypting the root metadata!", e);
+				log.error("Error during decrypting the root metadata!", e);
 				return;
 			}
 		}
@@ -179,59 +175,53 @@ class MetadataWorker extends Thread {
 			DecryptedMiTree decryptedMiTree,
 			EncryptedMiTreeInformation miTreeInformation) {
 		if (!rootFolder.exists()) {
-			this.log.error("folder does not exist! [{}]", rootFolder);
+			log.error("folder does not exist! [{}]", rootFolder);
 			return;
 		}
-		this.log.debug("Traversing file system. Processing folder [{}]",
+		log.debug("Traversing file system. Processing folder [{}]",
 				rootFolder.getName());
 		for (File file : rootFolder.listFiles()) {
 			if (file.isFile()) {
 				MFile mFile;
-				this.log.debug("Processing file [{}]", file.getName());
+				log.debug("Processing file [{}]", file.getName());
 				if (decryptedMiTree.getFiles().containsKey(file.getName())) {
 					// There is a matching MFile.
 					mFile = decryptedMiTree.getFiles().get(file.getName());
-					this.log.debug("Found file in metadata. [{}]", file.getName());
+					log.debug("Found file in metadata. [{}]", file.getName());
 				} else {
 					// There is no matching file, so we create it first
 					mFile = new MFile();
 					mFile.setName(file.getName());
 					decryptedMiTree.getFiles().put(mFile.getName(), mFile);
-					this.log.debug("Creating a new MFile in metadata for [{}]",
+					log.debug("Creating a new MFile in metadata for [{}]",
 							file.getName());
 				}
 				this.synchronizeFileMetadata(file, mFile);
 			} else if (file.isDirectory()) {
 				// find the right metadata
-				this.log.debug("Search folder metadata for [{}]", file.getName());
+				log.debug("Search folder metadata for [{}]", file.getName());
 				EncryptedMiTreeInformation encryptedMiTreeInformation = decryptedMiTree
 						.getSubfolder().get(file.getName());
 				if (encryptedMiTreeInformation == null) {
 					// Let's create a new subtree!
 					DecryptedMiTree subTree = new DecryptedMiTree();
 					subTree.setFolderName(file.getName());
-					encryptedMiTreeInformation = new EncryptedMiTreeInformation();
-					KeyGen keyGen = new KeyGen();
-					encryptedMiTreeInformation.setIv(keyGen
-							.generateRandomBytes(16));
-					encryptedMiTreeInformation.setKey(keyGen
-							.generateRandomBytes(32));
-					encryptedMiTreeInformation.setFileName(UUID.randomUUID()
-							.toString());
+					encryptedMiTreeInformation = EncryptedMiTreeInformation
+							.createRandom();
 					decryptedMiTree.getSubfolder().put(file.getName(),
 							encryptedMiTreeInformation);
-					this.log.debug(
+					log.debug(
 							"No information available yet. Creating new data file [{}]",
 							encryptedMiTreeInformation.getFileName());
 					this.traverseFileSystem(file, subTree,
 							encryptedMiTreeInformation);
 				} else {
 					// load the metadata for the subtree
-					this.log.debug("Found information for folder. Trying to load it");
+					log.debug("Found information for folder. Trying to load it");
 					EncryptedMiTree encryptedMiTree = this.encryptedMiTreeRepo
 							.loadEncryptedMiTree(encryptedMiTreeInformation
 									.getFileName());
-					this.log.debug("Trying to decrypt the metadata now.");
+					log.debug("Trying to decrypt the metadata now.");
 					try {
 						DecryptedMiTree subTree = encryptedMiTree.decrypt(
 								encryptedMiTreeInformation.getKey(),
@@ -239,7 +229,7 @@ class MetadataWorker extends Thread {
 						this.traverseFileSystem(file, subTree,
 								encryptedMiTreeInformation);
 					} catch (CryptoException | IOException e) {
-						this.log.error("Could not decrypt subfolder metadata", e);
+						log.error("Could not decrypt subfolder metadata", e);
 					}
 				}
 			}
@@ -251,6 +241,7 @@ class MetadataWorker extends Thread {
 		this.encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree,
 				miTreeInformation.getFileName());
 	}
+
 
 	/**
 	 * Synchronizes the file system state with the metadata.<br/>
@@ -265,12 +256,14 @@ class MetadataWorker extends Thread {
 	 */
 	private void synchronizeFileMetadata(File f, MFile mFile) {
 		// Check whether the file has been modified since the last meta sync
-		this.log.debug("Start synchronization for file [{}]", f.getAbsolutePath());
+		log.debug("Start synchronization for file [{}]", f.getAbsolutePath());
 		Date filesystemLastModified = new Date(f.lastModified());
 		if ((mFile.getLastModified() == null)
 				|| (filesystemLastModified.after(mFile.getLastModified()))) {
 			// The file has been modified, so we have to update metadata
-			this.log.debug("File newer than last modification date. Calculating file and chunk hashes for [{}]", f.getName());
+			log.debug(
+					"File newer than last modification date. Calculating file and chunk hashes for [{}]",
+					f.getName());
 			try {
 				// create two digests. One is for the whole file. The other
 				// is for the chunks and gets reseted after each chunk.
@@ -304,7 +297,8 @@ class MetadataWorker extends Thread {
 					if (!newChunkHash.equals(chunk.getDecryptedChunkHash())) {
 						chunk.setLastChange(new Date());
 						chunk.setDecryptedChunkHash(newChunkHash);
-						this.log.debug("Neu Chunk [{}] finished with hash [{}]" ,currentChunk, newChunkHash);
+						log.debug("Neu Chunk [{}] finished with hash [{}]",
+								currentChunk, newChunkHash);
 						// Create Upload request
 						this.createUploadRequest(chunk, f);
 					}
@@ -317,12 +311,12 @@ class MetadataWorker extends Thread {
 				mFile.setLastModified(filesystemLastModified);
 
 			} catch (NoSuchAlgorithmException e) {
-				this.log.error("No SHA availabe", e);
+				log.error("No SHA availabe", e);
 			} catch (IOException | NoSuchProviderException e) {
-				this.log.error("", e);
+				log.error("", e);
 			}
 		} else {
-			this.log.debug("The file has not been modified [{}]", f.getName());
+			log.debug("The file has not been modified [{}]", f.getName());
 		}
 	}
 
@@ -334,12 +328,12 @@ class MetadataWorker extends Thread {
 	 *            the chunk which shall be uploaded.
 	 */
 	protected void createUploadRequest(MChunk chunk, File file) {
-		this.log.debug("Creating upload request for chunk [{}]",
+		log.debug("Creating upload request for chunk [{}]",
 				chunk.getDecryptedChunkHash());
 		MChunkUpload mChunkUpload = new MChunkUpload(chunk, file,
 				this.createDefaultUploadCallback());
 		this.transportProvider.addChunkUpload(mChunkUpload);
-		this.log.debug("Added upload request to the processing queue");
+		log.debug("Added upload request to the processing queue");
 	}
 
 	/**
@@ -372,13 +366,13 @@ class MetadataWorker extends Thread {
 	 */
 	@Override
 	public void run() {
-		this.log.debug("Starting");
+		log.debug("Starting");
 		try {
 			this.synchronizeMetadata();
 			AppSettings appSettings = this.appSettingsDao.load();
 			while (this.active) {
 				for (ObservedFilesystemEvent ofe : this.incomingEvents) {
-					this.log.debug("Processing event " + ofe);
+					log.debug("Processing event " + ofe);
 					File f = new File(ofe.getFilename());
 					if (f.isFile()) {
 						String relativePath = StringUtils.substringAfter(
@@ -386,7 +380,11 @@ class MetadataWorker extends Thread {
 										.getFilename()), appSettings
 										.getWatchDirectory());
 						System.out.println(relativePath);
-						MFile mFile = MetadataUtil.locateMFile(this.rootFolder,
+
+						EncryptedMiTreeInformation miTreeInformation = this.retrieveRootMiTreeInformation(appSettings);
+						EncryptedMiTree encryptedRoot = this.encryptedMiTreeRepo
+								.loadEncryptedMiTree(miTreeInformation.getFileName());
+						MFile mFile = MetadataUtil.locateMFile(encryptedRoot, miTreeInformation,
 								relativePath);
 						this.synchronizeFileMetadata(f, mFile);
 					}
@@ -399,9 +397,12 @@ class MetadataWorker extends Thread {
 				}
 			}
 		} catch (IOException e) {
-			this.log.error(
+			log.error(
 					"Cannot load Appsettings - MetadataRepository cannot be started!",
 					e);
+		} catch (CryptoException e) {
+			log.error("Cannot decrypt metadata!", e);
+			e.printStackTrace();
 		}
 	}
 }
