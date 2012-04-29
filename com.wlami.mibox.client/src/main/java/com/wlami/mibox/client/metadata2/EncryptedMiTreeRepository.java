@@ -58,7 +58,10 @@ public class EncryptedMiTreeRepository {
 			fileInputStream.read(content);
 			return new EncryptedMiTree(content);
 		} catch (IOException e) {
-			log.error("Error during load of encrypted MiTree", e);
+			// If there is no root file one gets created. So don't log an error.
+			if (!"root".equals(fileName)) {
+				log.error("Error during load of encrypted MiTree", e);
+			}
 			return null;
 		}
 	}

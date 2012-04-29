@@ -306,7 +306,7 @@ class MetadataWorker extends Thread {
 						chunk.setDecryptedChunkHash(newChunkHash);
 						this.log.debug("Neu Chunk [{}] finished with hash [{}]" ,currentChunk, newChunkHash);
 						// Create Upload request
-						this.createUploadRequest(chunk);
+						this.createUploadRequest(chunk, f);
 					}
 					currentChunk++;
 
@@ -333,12 +333,11 @@ class MetadataWorker extends Thread {
 	 * @param chunk
 	 *            the chunk which shall be uploaded.
 	 */
-	protected void createUploadRequest(MChunk chunk) {
+	protected void createUploadRequest(MChunk chunk, File file) {
 		this.log.debug("Creating upload request for chunk [{}]",
 				chunk.getDecryptedChunkHash());
-		MChunkUpload mChunkUpload = new MChunkUpload();
-		mChunkUpload.setMChunk(chunk);
-		mChunkUpload.setUploadCallback(this.createDefaultUploadCallback());
+		MChunkUpload mChunkUpload = new MChunkUpload(chunk, file,
+				this.createDefaultUploadCallback());
 		this.transportProvider.addChunkUpload(mChunkUpload);
 		this.log.debug("Added upload request to the processing queue");
 	}
