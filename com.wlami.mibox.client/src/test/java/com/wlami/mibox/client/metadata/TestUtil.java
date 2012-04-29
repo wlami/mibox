@@ -36,7 +36,6 @@ public class TestUtil {
 		subfolder.setName("subfolder");
 		folder.getSubfolders().put(subfolder.getName(), subfolder);
 		MFile file1 = new MFile();
-		file1.setFolder(folder);
 		file1.setName("file1");
 		file1.setFileHash("affecaffebabe");
 		MChunk chunk1 = new MChunk(0);
@@ -49,7 +48,6 @@ public class TestUtil {
 		folder.getFiles().put(file1.getName(), file1);
 
 		MFile file2 = new MFile();
-		file2.setFolder(subfolder);
 		file2.setName("file2");
 		file2.setFileHash("ffffaaaacc");
 		subfolder.getFiles().put(file2.getName(), file2);
@@ -59,7 +57,6 @@ public class TestUtil {
 		subfolder.getSubfolders().put(subfolder2.getName(), subfolder2);
 
 		MFile mFile3 = new MFile();
-		mFile3.setFolder(subfolder2);
 		mFile3.setName("file3");
 		subfolder2.getFiles().put(mFile3.getName(), mFile3);
 

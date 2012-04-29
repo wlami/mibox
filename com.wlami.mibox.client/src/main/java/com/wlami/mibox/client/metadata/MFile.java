@@ -17,19 +17,15 @@
  */
 package com.wlami.mibox.client.metadata;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonBackReference;
 import org.codehaus.jackson.annotate.JsonManagedReference;
-
-import com.wlami.mibox.client.application.AppSettings;
 
 /**
  * @author Wladislaw Mitzel
- * 
+ * @author Stefan Baust
  */
 public class MFile {
 
@@ -44,16 +40,10 @@ public class MFile {
 	private String name;
 
 	/**
-	 * Defines the folder in which this file is contained.
-	 */
-	@JsonBackReference
-	private MFolder folder;
-
-	/**
 	 * Contains a ordered list of file chunks.
 	 */
 	@JsonManagedReference
-	private List<MChunk> chunks = new ArrayList<MChunk>();
+	private final List<MChunk> chunks = new ArrayList<MChunk>();
 
 	/**
 	 * This is the hash-value of the non-encrypted file. It is used for
@@ -64,7 +54,7 @@ public class MFile {
 	/**
 	 * Determines the size of the file chunks. Measured in byte.
 	 */
-	private int chunkSize = DEFAULT_CHUNK_SIZE;
+	private final int chunkSize = DEFAULT_CHUNK_SIZE;
 
 	/**
 	 * Defines the last time the file got modified. The same as the file system
@@ -73,32 +63,17 @@ public class MFile {
 	private Date lastModified;
 
 	/**
-	 * @return the folder
-	 */
-	public MFolder getFolder() {
-		return folder;
-	}
-
-	/**
-	 * @param folder
-	 *            the folder to set
-	 */
-	public void setFolder(MFolder folder) {
-		this.folder = folder;
-	}
-
-	/**
 	 * @return the chunks
 	 */
 	public List<MChunk> getChunks() {
-		return chunks;
+		return this.chunks;
 	}
 
 	/**
 	 * @return the fileHash
 	 */
 	public String getFileHash() {
-		return fileHash;
+		return this.fileHash;
 	}
 
 	/**
@@ -113,14 +88,14 @@ public class MFile {
 	 * @return the chunkSize
 	 */
 	public int getChunkSize() {
-		return chunkSize;
+		return this.chunkSize;
 	}
 
 	/**
 	 * @return the name
 	 */
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	/**
@@ -135,7 +110,7 @@ public class MFile {
 	 * @return the lastModified
 	 */
 	public Date getLastModified() {
-		return lastModified;
+		return this.lastModified;
 	}
 
 	/**
@@ -146,13 +121,4 @@ public class MFile {
 		this.lastModified = lastModified;
 	}
 
-	/**
-	 * Returns a {@link File} instance which can be used to access the file
-	 * behind this metadata.
-	 * 
-	 * @return File instance behind this metadata.
-	 */
-	public File getFile(AppSettings settings) {
-		return new File(folder.getFile(settings), name);
-	}
 }

@@ -17,6 +17,7 @@
  */
 package com.wlami.mibox.client.networking.synchronization;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -33,7 +34,7 @@ import com.wlami.mibox.client.metadata.MChunk;
 public abstract class Transporter<T> extends Thread {
 
 	/** internal logger */
-	Logger log = LoggerFactory.getLogger(getClass());
+	Logger log = LoggerFactory.getLogger(this.getClass());
 
 	/** if set to false this thread stops. */
 	private boolean active = true;
@@ -56,9 +57,11 @@ public abstract class Transporter<T> extends Thread {
 	 * 
 	 * @param chunk
 	 *            Chunk to be uploaded.
+	 * @param file
+	 *            File which contains the chunk.
 	 * @return the hash of the encrypted chunk
 	 */
-	public abstract String encryptAndUploadChunk(MChunk chunk)
+	public abstract String encryptAndUploadChunk(MChunk chunk, File file)
 			throws CryptoException, IOException;
 
 	/**
@@ -80,10 +83,10 @@ public abstract class Transporter<T> extends Thread {
 	/* (non-Javadoc) @see java.lang.Thread#run() */
 	@Override
 	public final void run() {
-		log.info("Start Transporter");
-		while (active) {
-			threadMainMethod();
+		this.log.info("Start Transporter");
+		while (this.active) {
+			this.threadMainMethod();
 		}
-		log.info("Stopped Transporter");
+		this.log.info("Stopped Transporter");
 	}
 }

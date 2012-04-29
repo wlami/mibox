@@ -47,13 +47,12 @@ public class MFolder {
 	 * Contains a set of subfolders.
 	 */
 	@JsonManagedReference
-	private Hashtable<String, MFolder> subfolders;
+	private final Hashtable<String, MFolder> subfolders;
 
 	/**
 	 * Contains a set of all files in this folder.
 	 */
-	@JsonManagedReference
-	private Hashtable<String, MFile> files;
+	private final Hashtable<String, MFile> files;
 
 	/**
 	 * 
@@ -71,29 +70,29 @@ public class MFolder {
 	 */
 	public MFolder(MFolder parent) {
 		this.parentFolder = parent;
-		files = new Hashtable<String, MFile>();
-		subfolders = new Hashtable<String, MFolder>();
+		this.files = new Hashtable<String, MFile>();
+		this.subfolders = new Hashtable<String, MFolder>();
 	}
 
 	/**
 	 * @return the subfolder
 	 */
 	public Hashtable<String, MFolder> getSubfolders() {
-		return subfolders;
+		return this.subfolders;
 	}
 
 	/**
 	 * @return the files
 	 */
 	public Hashtable<String, MFile> getFiles() {
-		return files;
+		return this.files;
 	}
 
 	/**
 	 * @return the parentFolder
 	 */
 	public MFolder getParentFolder() {
-		return parentFolder;
+		return this.parentFolder;
 	}
 
 	/**
@@ -108,7 +107,7 @@ public class MFolder {
 	 * @return the name
 	 */
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	/**
@@ -126,7 +125,7 @@ public class MFolder {
 	 */
 	@Override
 	public String toString() {
-		return name;
+		return this.name;
 	}
 
 	/**
@@ -138,10 +137,10 @@ public class MFolder {
 	 * @return
 	 */
 	public File getFile(AppSettings settings) {
-		if (parentFolder != null) {
-			return new File(parentFolder.getFile(settings), name);
+		if (this.parentFolder != null) {
+			return new File(this.parentFolder.getFile(settings), this.name);
 		} else {
-			return new File(settings.getWatchDirectory(), name);
+			return new File(settings.getWatchDirectory(), this.name);
 		}
 	}
 

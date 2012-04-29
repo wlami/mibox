@@ -21,7 +21,7 @@ import java.util.Arrays;
 
 /**
  * @author Wladislaw Mitzel
- * 
+ * @author Stefan Baust
  */
 public class MetadataUtil {
 
@@ -53,7 +53,6 @@ public class MetadataUtil {
 			if (file == null) {
 				file = new MFile();
 				file.setName(folder[1]);
-				file.setFolder(root);
 				root.getFiles().put(file.getName(), file);
 			}
 			return file;

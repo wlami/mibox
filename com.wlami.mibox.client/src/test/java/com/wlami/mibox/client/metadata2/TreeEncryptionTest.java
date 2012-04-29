@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.util.Date;
 
 import org.bouncycastle.crypto.CryptoException;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,12 +52,18 @@ public class TreeEncryptionTest {
 	public void setUp() throws Exception {
 	}
 
+	@Test
+	public void testEncryptionAndDecryption() throws IOException,
+	CryptoException {
+		this.testEncryption();
+		this.testDecryption();
+	}
+
 	/**
 	 * test for the encryption of the metadata2 metadata =)
 	 * 
 	 * @throws IOException
 	 */
-	@Test
 	public void testEncryption() throws IOException {
 		// name für root metadata MiTree ist "root"!
 		final String rootName = "/";
@@ -93,7 +97,15 @@ public class TreeEncryptionTest {
 
 	}
 
-	@Test
+
+	/**
+	 * test for the decryption of the metadata2 metadata
+	 * 
+	 * @throws IOException
+	 *             if the file is not found
+	 * @throws CryptoException
+	 *             On encryption erros or when AES-stuff cannot be loaded.
+	 */
 	public void testDecryption() throws IOException, CryptoException {
 		File file = new File("encryptedrootmetadata");
 		FileInputStream fileInputStream = new FileInputStream(file);
@@ -105,30 +117,5 @@ public class TreeEncryptionTest {
 		ObjectMapper mapper = new ObjectMapper();
 		System.out.println(mapper.writeValueAsString(decryptedMiTree));
 	}
-	
-	@Test
-	public void testJsonArray() throws JsonGenerationException, JsonMappingException, IOException {
-		class WLadi {
-			byte[] inhalt = new byte[]{1,2,3,'c'};
-			/**
-			 * @return the inhalt
-			 */
-			public byte[] getInhalt() {
-				return inhalt;
-			}
-
-			/**
-			 * @param inhalt the inhalt to set
-			 */
-			public void setInhalt(byte[] inhalt) {
-				this.inhalt = inhalt;
-			}
-			
-		}
-		ObjectMapper mapper = new ObjectMapper();
-		System.out.println(mapper.writeValueAsString(new WLadi()));
-	}
-
-
 
 }

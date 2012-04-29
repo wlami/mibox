@@ -17,14 +17,16 @@
  */
 package com.wlami.mibox.client.networking.synchronization;
 
+import java.io.File;
+
 import com.wlami.mibox.client.metadata.MChunk;
 
 /**
- * This class defines a upload task which shall be executed by the
+ * This class defines an upload task which shall be executed by the
  * {@link TransportProvider}.
  * 
  * @author Wladislaw Mitzel
- * 
+ * @author Stefan Baust
  */
 public class MChunkUpload implements Comparable<MChunkUpload> {
 
@@ -33,16 +35,56 @@ public class MChunkUpload implements Comparable<MChunkUpload> {
 	 */
 	private MChunk mChunk;
 
+	/** a file reference which contains the {@link #mChunk}. */
+	private File file;
+
 	/**
 	 * the callbackMethod which shall be executed when the upload is finished.
 	 */
 	private UploadCallback uploadCallback;
 
 	/**
+	 * Default constructor.
+	 */
+	public MChunkUpload() {
+	}
+
+	/**
+	 * Convenience constructor which sets the attributes.
+	 * 
+	 * @param mChunk
+	 *            The value {@link #mChunk} shall be set to.
+	 * @param file
+	 *            The value {@link #file} shall be set to.
+	 * @param uploadCallback
+	 *            THe value {@link #uploadCallback} shall be set to.
+	 */
+	public MChunkUpload(MChunk mChunk, File file, UploadCallback uploadCallback) {
+		this.mChunk = mChunk;
+		this.file = file;
+		this.uploadCallback = uploadCallback;
+	}
+
+	/**
 	 * @return the mChunk
 	 */
 	public MChunk getMChunk() {
-		return mChunk;
+		return this.mChunk;
+	}
+
+	/**
+	 * @return the {@link #file}
+	 */
+	public File getFile() {
+		return this.file;
+	}
+
+	/**
+	 * @param file
+	 *            the {@link #file} to set
+	 */
+	public void setFile(File file) {
+		this.file = file;
 	}
 
 	/**
@@ -57,7 +99,7 @@ public class MChunkUpload implements Comparable<MChunkUpload> {
 	 * @return the uploadCallback
 	 */
 	public UploadCallback getUploadCallback() {
-		return uploadCallback;
+		return this.uploadCallback;
 	}
 
 	/**
@@ -75,7 +117,7 @@ public class MChunkUpload implements Comparable<MChunkUpload> {
 	 */
 	@Override
 	public int compareTo(MChunkUpload o) {
-		return mChunk.getDecryptedChunkHash().compareTo(
+		return this.mChunk.getDecryptedChunkHash().compareTo(
 				o.getMChunk().getDecryptedChunkHash());
 	}
 
@@ -87,7 +129,7 @@ public class MChunkUpload implements Comparable<MChunkUpload> {
 	@Override
 	public boolean equals(Object obj) {
 		MChunkUpload o = (MChunkUpload) obj;
-		return mChunk.getEncryptedChunkHash().equals(
+		return this.mChunk.getEncryptedChunkHash().equals(
 				o.getMChunk().getEncryptedChunkHash());
 	}
 
