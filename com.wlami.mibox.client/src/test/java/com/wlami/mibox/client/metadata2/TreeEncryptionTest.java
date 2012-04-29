@@ -65,7 +65,6 @@ public class TreeEncryptionTest {
 	 * @throws IOException
 	 */
 	public void testEncryption() throws IOException {
-		// name für root metadata MiTree ist "root"!
 		final String rootName = "/";
 		DecryptedMiTree decryptedMiTree = new DecryptedMiTree();
 		// foldername for root is SLASH
