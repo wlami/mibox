@@ -21,6 +21,9 @@ import java.util.Date;
 
 import org.junit.Ignore;
 
+import com.wlami.mibox.client.metadata2.DecryptedMiTree;
+import com.wlami.mibox.client.metadata2.EncryptedMiTreeInformation;
+
 /**
  * @author Wladislaw Mitzel
  * 
@@ -28,13 +31,22 @@ import org.junit.Ignore;
 @Ignore
 public class TestUtil {
 
+	public static EncryptedMiTreeInformation getTreeCrypto() {
+		EncryptedMiTreeInformation result = new EncryptedMiTreeInformation();
+		result.setFileName("tree");
+		result.setKey(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4,
+				5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1 });
+		result.setIv(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4,
+				5 });
+		return result;
+	}
+
 	@Ignore
-	public static MFolder getSimpleMetadata() {
-		MFolder folder = new MFolder(null);
-		folder.setName("/");
-		MFolder subfolder = new MFolder(folder);
-		subfolder.setName("subfolder");
-		folder.getSubfolders().put(subfolder.getName(), subfolder);
+	public static DecryptedMiTree getSimpleMetadata() {
+		DecryptedMiTree folder = new DecryptedMiTree();
+		DecryptedMiTree subfolder = new DecryptedMiTree();
+		EncryptedMiTreeInformation subfolderInfo = getTreeCrypto();
+		folder.getSubfolder().put("subfolder", subfolderInfo);
 		MFile file1 = new MFile();
 		file1.setName("file1");
 		file1.setFileHash("affecaffebabe");
@@ -52,9 +64,8 @@ public class TestUtil {
 		file2.setFileHash("ffffaaaacc");
 		subfolder.getFiles().put(file2.getName(), file2);
 
-		MFolder subfolder2 = new MFolder(subfolder);
-		subfolder2.setName("subfolder2");
-		subfolder.getSubfolders().put(subfolder2.getName(), subfolder2);
+		DecryptedMiTree subfolder2 = new DecryptedMiTree();
+		subfolder.getSubfolder().put("subfolder2", subfolderInfo);
 
 		MFile mFile3 = new MFile();
 		mFile3.setName("file3");
