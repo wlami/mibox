@@ -29,7 +29,6 @@ import java.security.Security;
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.wlami.mibox.client.application.AppSettings;
@@ -43,7 +42,7 @@ import com.wlami.mibox.core.util.HashUtil;
  * @author Wladislaw Mitzel
  * 
  */
-@Ignore
+
 public class UserDataChunkTransporterTest {
 
 	AppSettings appSettings;
