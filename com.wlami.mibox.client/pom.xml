@@ -7,6 +7,15 @@
 	<name>MiBox Client Desktop</name>
 	<build>
 		<plugins>
+			<!-- Bugfix for Java7 with mvn. We turn off the byte code verifier for tests. -->
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.7.2</version>
+				<configuration>
+					<argLine>-XX:-UseSplitVerifier</argLine>
+				</configuration>
+			</plugin>
+			<!-- Bugfix end -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
