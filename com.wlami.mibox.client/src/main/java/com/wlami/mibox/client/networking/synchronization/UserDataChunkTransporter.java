@@ -18,7 +18,6 @@
 package com.wlami.mibox.client.networking.synchronization;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -39,8 +38,10 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.client.metadata.MChunk;
+import com.wlami.mibox.client.networking.encryption.AesChunkEncryption;
+import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
+import com.wlami.mibox.client.networking.encryption.EncryptedChunk;
 import com.wlami.mibox.core.encryption.AesEncryption;
-import com.wlami.mibox.core.util.HashUtil;
 
 /**
  * @author Wladislaw Mitzel
@@ -50,6 +51,10 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(this.getClass());
+
+	/** reference to a chunk encryption instance. */
+	ChunkEncryption chunkEncryption = new AesChunkEncryption(); // TODO Inject a
+	// reference
 
 	/**
 	 * {@link AppSettingsDao} instance for retrieving the watchDirectory.
@@ -84,38 +89,16 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 			IOException {
 		// get appsetting to retrieve the current watch dir
 		AppSettings appSettings = appSettingsDao.load();
-		// read the chunk
-		FileInputStream fis = new FileInputStream(file);
-		int chunkSize = chunk.getMFile().getChunkSize();
-		// encrypt it
-		int fileChunkCount = chunk.getMFile().getChunks().size();
-		int chunkPosition = chunk.getPosition();
-		int arraySize;
 
-		if (chunkPosition + 1 < fileChunkCount) {
-			arraySize = chunk.getMFile().getChunkSize();
-		} else {
-			arraySize = (int) (file.length() % chunkSize);
-		}
-		log.debug("Encrypting chunk. Using arraySize of " + arraySize);
-		byte[] plainChunkData = new byte[arraySize];
-		// Skip bytes if we dont have the first chunk
-		fis.skip(chunkPosition * chunkSize);
-		// read the chunk data
-		fis.read(plainChunkData, 0, arraySize);
-		log.debug("Starting encryption");
-		byte[] encryptedChunkData = AesEncryption.encrypt(plainChunkData,
-				chunk.getDecryptedChunkHash(), chunkPosition);
-		log.debug("Finished encryption");
-		// calculate the encrypted hash
-		String encryptedHash = HashUtil.calculateSha256(encryptedChunkData);
-		log.debug("Calculate Encrypted Hash: " + encryptedHash);
+		EncryptedChunk encryptedChunk = chunkEncryption.encryptChunk(chunk,
+				file);
 		// upload it
-		WebResource webResource = getWebResource(appSettings, encryptedHash);
+		WebResource webResource = getWebResource(appSettings,
+				encryptedChunk.getHash());
 		log.debug("Execute the HTTP PUT: "
 				+ webResource.getURI().toString());
-		webResource.put(encryptedChunkData);
-		return encryptedHash;
+		webResource.put(encryptedChunk.getContent());
+		return encryptedChunk.getHash();
 	}
 
 	/*
