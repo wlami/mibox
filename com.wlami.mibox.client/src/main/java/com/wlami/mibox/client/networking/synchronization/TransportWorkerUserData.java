@@ -19,42 +19,36 @@ package com.wlami.mibox.client.networking.synchronization;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.concurrent.ConcurrentSkipListSet;
-
-import javax.ws.rs.core.UriBuilder;
 
 import org.bouncycastle.crypto.CryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.client.metadata.MChunk;
+import com.wlami.mibox.client.networking.adapter.RestTransporter;
 import com.wlami.mibox.client.networking.encryption.AesChunkEncryption;
 import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
 import com.wlami.mibox.client.networking.encryption.EncryptedChunk;
-import com.wlami.mibox.core.encryption.AesEncryption;
+import com.wlami.mibox.client.networking.transporter.EncryptedChunkTransporter;
 
 /**
  * @author Wladislaw Mitzel
  * 
  */
-public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
+public class TransportWorkerUserData extends TransportWorker<MChunkUpload> {
 
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(this.getClass());
 
 	/** reference to a chunk encryption instance. */
 	ChunkEncryption chunkEncryption = new AesChunkEncryption(); // TODO Inject a
-	// reference
+
+	EncryptedChunkTransporter encryptedChunkTransporter;
 
 	/**
 	 * {@link AppSettingsDao} instance for retrieving the watchDirectory.
@@ -71,10 +65,15 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 	 *            reference to a {@link ConcurrentSkipListSet} with
 	 *            {@link MChunk}s to be uploaded.
 	 */
-	public UserDataChunkTransporter(AppSettingsDao appSettingsDao,
+	public TransportWorkerUserData(AppSettingsDao appSettingsDao,
 			ConcurrentSkipListSet<MChunkUpload> uploads) {
 		this.uploads = uploads;
 		this.appSettingsDao = appSettingsDao;
+		AppSettings appSettings = appSettingsDao.load();
+		String dataStoreUrl = appSettings.getServerUrl() + "rest/chunkmanager/";
+		encryptedChunkTransporter = new EncryptedChunkTransporter(
+				new RestTransporter(dataStoreUrl)); // TODO: mehrere Transporter
+		// möglich
 	}
 
 	/*
@@ -87,17 +86,10 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 	public String encryptAndUploadChunk(MChunk chunk, File file)
 			throws CryptoException,
 			IOException {
-		// get appsetting to retrieve the current watch dir
-		AppSettings appSettings = appSettingsDao.load();
 
 		EncryptedChunk encryptedChunk = chunkEncryption.encryptChunk(chunk,
 				file);
-		// upload it
-		WebResource webResource = getWebResource(appSettings,
-				encryptedChunk.getHash());
-		log.debug("Execute the HTTP PUT: "
-				+ webResource.getURI().toString());
-		webResource.put(encryptedChunk.getContent());
+		encryptedChunkTransporter.upload(encryptedChunk);
 		return encryptedChunk.getHash();
 	}
 
@@ -110,37 +102,14 @@ public class UserDataChunkTransporter extends Transporter<MChunkUpload> {
 	@Override
 	public byte[] downloadAndDecryptChunk(MChunk chunk) throws IOException,
 	CryptoException {
-		// get appsetting to retrieve the current watch dir AND MORE
-		AppSettings appSettings = appSettingsDao.load();
-		WebResource webResource = getWebResource(appSettings,
-				chunk.getEncryptedChunkHash());
-		byte[] encryptedChunk = webResource.get(byte[].class);
-		return AesEncryption.decrypt(encryptedChunk,
-				chunk.getDecryptedChunkHash(), chunk.getPosition());
-	}
-
-	/**
-	 * creates a rest client and builds uri. Furthermore http-auth is used
-	 * 
-	 * @param appSettings
-	 * @param encryptedHash
-	 * @return
-	 */
-	private WebResource getWebResource(AppSettings appSettings,
-			String encryptedHash) {
-		ClientConfig clientConfig = new DefaultClientConfig();
-		Client client = Client.create(clientConfig);
-		client.addFilter(new HTTPBasicAuthFilter("user", "user"));
-		URI uri = null;
-		try {
-			uri = UriBuilder.fromUri(
-					appSettings.getServerUrl() + "rest/chunkmanager/"
-							+ encryptedHash).build();
-		} catch (IllegalArgumentException e) {
-			log.error("", e);
-		}
-		WebResource webResource = client.resource(uri);
-		return webResource;
+		// // get appsetting to retrieve the current watch dir AND MORE
+		// AppSettings appSettings = appSettingsDao.load();
+		// WebResource webResource = getWebResource(appSettings,
+		// chunk.getEncryptedChunkHash());
+		// byte[] encryptedChunk = webResource.get(byte[].class);
+		// return AesEncryption.decrypt(encryptedChunk,
+		// chunk.getDecryptedChunkHash(), chunk.getPosition());
+		return null;
 	}
 
 	/*

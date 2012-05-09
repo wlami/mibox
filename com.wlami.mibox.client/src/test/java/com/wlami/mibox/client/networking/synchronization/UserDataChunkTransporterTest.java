@@ -47,7 +47,7 @@ import com.wlami.mibox.core.util.HashUtil;
 public class UserDataChunkTransporterTest {
 
 	AppSettings appSettings;
-	UserDataChunkTransporter userDataChunkTransporter;
+	TransportWorkerUserData userDataChunkTransporter;
 
 	/**
 	 * @throws java.lang.Exception
@@ -66,13 +66,13 @@ public class UserDataChunkTransporterTest {
 
 		AppSettingsDao appSettingsDao = mock(AppSettingsDao.class);
 		when(appSettingsDao.load()).thenReturn(appSettings);
-		userDataChunkTransporter = new UserDataChunkTransporter(appSettingsDao,
+		userDataChunkTransporter = new TransportWorkerUserData(appSettingsDao,
 				null);
 	}
 
 	/**
 	 * Test method for
-	 * {@link com.wlami.mibox.client.networking.synchronization.UserDataChunkTransporter#encryptAndUploadChunk(com.wlami.mibox.client.metadata.MChunk)}
+	 * {@link com.wlami.mibox.client.networking.synchronization.TransportWorkerUserData#encryptAndUploadChunk(com.wlami.mibox.client.metadata.MChunk)}
 	 * .
 	 * 
 	 * @throws IOException
@@ -95,7 +95,7 @@ public class UserDataChunkTransporterTest {
 
 	/**
 	 * Test method for
-	 * {@link com.wlami.mibox.client.networking.synchronization.UserDataChunkTransporter#downloadAndDecryptChunk(com.wlami.mibox.client.metadata.MChunk)}
+	 * {@link com.wlami.mibox.client.networking.synchronization.TransportWorkerUserData#downloadAndDecryptChunk(com.wlami.mibox.client.metadata.MChunk)}
 	 * .
 	 * 
 	 * @throws IOException

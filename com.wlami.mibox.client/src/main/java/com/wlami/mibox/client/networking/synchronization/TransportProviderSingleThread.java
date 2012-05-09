@@ -45,7 +45,7 @@ public class TransportProviderSingleThread implements TransportProvider {
 	AppSettingsDao appSettingsDao;
 
 	/** reference to our only working thread */
-	Transporter<MChunkUpload> transporter;
+	TransportWorker<MChunkUpload> transporter;
 
 	/** collection of {@link MChunk}s which shall be uploaded. */
 	ConcurrentSkipListSet<MChunkUpload> mChunkUploads;
@@ -66,7 +66,7 @@ public class TransportProviderSingleThread implements TransportProvider {
 	@Override
 	public void startProcessing() {
 		if (transporter == null) {
-			transporter = new UserDataChunkTransporter(appSettingsDao,
+			transporter = new TransportWorkerUserData(appSettingsDao,
 					mChunkUploads);
 			transporter.start();
 			log.info("Starting TransportProvider");

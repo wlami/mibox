@@ -20,7 +20,7 @@ package com.wlami.mibox.client.networking.synchronization;
 import com.wlami.mibox.client.metadata.MChunk;
 
 /**
- * This interface defines a class which utilizes one or more {@link Transporter}
+ * This interface defines a class which utilizes one or more {@link TransportWorker}
  * implementations to execute the network and encryption tasks.
  * 
  * @author Wladislaw Mitzel

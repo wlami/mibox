@@ -46,7 +46,9 @@ public class EncryptedChunk {
 
 	/**
 	 * This returns a reference to the internal array and <b>DOES NOT</b> create
-	 * a <b>copy</b>. So <b>do not modify</b> the content.
+	 * a <b>copy</b>.<br/>
+	 * <br/>
+	 * So <b>do not modify</b> the content.
 	 * 
 	 * @return the content
 	 */

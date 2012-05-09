@@ -31,7 +31,7 @@ import com.wlami.mibox.client.metadata.MChunk;
  * This interface describes classes which can be used to transport encrypted
  * data to the server and from it.
  */
-public abstract class Transporter<T> extends Thread {
+public abstract class TransportWorker<T> extends Thread {
 
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(this.getClass());
