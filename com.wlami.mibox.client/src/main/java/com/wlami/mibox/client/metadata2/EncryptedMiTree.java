@@ -34,15 +34,16 @@ import com.wlami.mibox.core.encryption.AesEncryption;
  * 
  */
 public class EncryptedMiTree {
-	
+
 	/** internal logger */
 	private static Logger log = LoggerFactory.getLogger(EncryptedMiTree.class);
 
 	/** JSON Object mapper for persistence. */
-	private ObjectMapper objectMapper = new ObjectMapper();
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	/**
-	 * Create a new encrypted for a encrypted byte array.
+	 * EncryptedChunkTransporter Create a new encrypted for a encrypted byte
+	 * array.
 	 * 
 	 * @param content
 	 *            The encrypted data.
@@ -52,7 +53,7 @@ public class EncryptedMiTree {
 	}
 
 	/** encrypted content */
-	private byte[] content;
+	private final byte[] content;
 
 	/**
 	 * @return the content

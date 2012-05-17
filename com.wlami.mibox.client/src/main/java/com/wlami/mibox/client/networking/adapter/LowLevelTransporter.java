@@ -24,7 +24,7 @@ package com.wlami.mibox.client.networking.adapter;
  * @author Wladislaw Mitzel
  * @author Stefan Baust *
  */
-public abstract class Transporter {
+public abstract class LowLevelTransporter {
 
 	/**
 	 * Uploads an entity to the target storage.

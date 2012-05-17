@@ -17,12 +17,14 @@
  */
 package com.wlami.mibox.client.networking.encryption;
 
+import com.wlami.mibox.client.networking.transporter.Transportable;
+
 /**
  * Represents an encrypted Chunk.
  * 
  * @author wladislaw mitzel
  */
-public class EncryptedChunk {
+public class EncryptedChunk implements Transportable {
 
 	/** hash of the #content */
 	private String hash;
@@ -52,6 +54,7 @@ public class EncryptedChunk {
 	 * 
 	 * @return the content
 	 */
+	@Override
 	public byte[] getContent() {
 		return content;
 	}
@@ -70,6 +73,17 @@ public class EncryptedChunk {
 	public EncryptedChunk(String hash, byte[] content) {
 		this.hash = hash;
 		this.content = content;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.networking.transporter.Transportable#getName()
+	 */
+	@Override
+	public String getName() {
+		return hash;
 	}
 
 }

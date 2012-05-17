@@ -34,7 +34,7 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
  * @author wladislaw
  *
  */
-public class RestTransporter extends Transporter {
+public class RestTransporter extends LowLevelTransporter {
 
 	/** internal logger */
 	private static final Logger log = LoggerFactory

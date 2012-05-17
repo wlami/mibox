@@ -34,7 +34,7 @@ import com.wlami.mibox.client.networking.adapter.RestTransporter;
 import com.wlami.mibox.client.networking.encryption.AesChunkEncryption;
 import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
 import com.wlami.mibox.client.networking.encryption.EncryptedChunk;
-import com.wlami.mibox.client.networking.transporter.EncryptedChunkTransporter;
+import com.wlami.mibox.client.networking.transporter.Transporter;
 
 /**
  * @author Wladislaw Mitzel
@@ -48,7 +48,7 @@ public class TransportWorkerUserData extends TransportWorker<MChunkUpload> {
 	/** reference to a chunk encryption instance. */
 	ChunkEncryption chunkEncryption = new AesChunkEncryption(); // TODO Inject a
 
-	EncryptedChunkTransporter encryptedChunkTransporter;
+	Transporter<EncryptedChunk> encryptedChunkTransporter;
 
 	/**
 	 * {@link AppSettingsDao} instance for retrieving the watchDirectory.
@@ -71,7 +71,7 @@ public class TransportWorkerUserData extends TransportWorker<MChunkUpload> {
 		this.appSettingsDao = appSettingsDao;
 		AppSettings appSettings = appSettingsDao.load();
 		String dataStoreUrl = appSettings.getServerUrl() + "rest/chunkmanager/";
-		encryptedChunkTransporter = new EncryptedChunkTransporter(
+		encryptedChunkTransporter = new Transporter<EncryptedChunk>(
 				new RestTransporter(dataStoreUrl)); // TODO: mehrere Transporter
 		// möglich
 	}

@@ -17,35 +17,27 @@
  */
 package com.wlami.mibox.client.networking.transporter;
 
-import com.wlami.mibox.client.networking.adapter.Transporter;
-import com.wlami.mibox.client.networking.encryption.EncryptedChunk;
-
-
 /**
- * @author wladislaw
- *
+ * Classes implementing this interface can be uploaded and downloaded.
+ * 
+ * @author wladislaw mitzel
+ * @author stefan baust
+ * 
  */
-public class EncryptedChunkTransporter {
-
-	/** responsible for the low level transport of the chunks. */
-	private final Transporter transporter;
+public interface Transportable {
 
 	/**
+	 * The name of the resource.
 	 * 
-	 * @param transporter
+	 * @return resource name.
 	 */
-	public EncryptedChunkTransporter(Transporter transporter) {
-		this.transporter = transporter;
-	}
+	String getName();
 
 	/**
-	 * Upload the encrypted chunk using the specified transporter.
+	 * content of the transportable object.
 	 * 
-	 * @param encryptedChunk
-	 *            The chunk to upload.
+	 * @return the content.
 	 */
-	public void upload(EncryptedChunk encryptedChunk) {
-		transporter.upload(encryptedChunk.getHash(),
-				encryptedChunk.getContent());
-	}
+	byte[] getContent();
+
 }
