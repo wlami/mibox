@@ -17,7 +17,6 @@
  */
 package com.wlami.mibox.client.networking.synchronization;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -25,13 +24,17 @@ import org.bouncycastle.crypto.CryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.wlami.mibox.client.metadata.MChunk;
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.wlami.mibox.client.networking.transporter.Transportable;
+import com.wlami.mibox.client.networking.transporter.Transporter;
 
 /**
  * This interface describes classes which can be used to transport encrypted
  * data to the server and from it.
  */
-public abstract class TransportWorker<T> extends Thread {
+public class TransportWorker<T extends UploadRequest<?>, E extends Transportable>
+extends Thread {
 
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(this.getClass());
@@ -52,40 +55,65 @@ public abstract class TransportWorker<T> extends Thread {
 		this.active = false;
 	}
 
-	/**
-	 * Uploads a chunk to the server.
-	 * 
-	 * @param chunk
-	 *            Chunk to be uploaded.
-	 * @param file
-	 *            File which contains the chunk.
-	 * @return the hash of the encrypted chunk
-	 */
-	public abstract String encryptAndUploadChunk(MChunk chunk, File file)
-			throws CryptoException, IOException;
+	/** a reference to a transporter which sends and receives the data */
+	Transporter transporter;
 
 	/**
-	 * Downloads a chunk and decrypts it afterwards.
 	 * 
-	 * @param chunk
-	 *            Metadata of the chunk to be downloaded.
-	 * @return byte array with the decrypted data.
+	 * @param transporter
 	 */
-	public abstract byte[] downloadAndDecryptChunk(MChunk chunk)
-			throws CryptoException, IOException;
-
-	/**
-	 * This method represents this thread's main method. It is executed in a
-	 * loop.
-	 */
-	protected abstract void threadMainMethod();
+	public TransportWorker(Transporter transporter,
+			ConcurrentSkipListSet<T> uploads) {
+		this.transporter = transporter;
+		this.uploads = uploads;
+	}
 
 	/* (non-Javadoc) @see java.lang.Thread#run() */
 	@Override
 	public final void run() {
 		this.log.info("Start Transporter");
 		while (this.active) {
-			this.threadMainMethod();
+			// Process the upload requests
+			for (UploadRequest<?> uploadRequest : uploads) {
+				log.debug("Processing MChunkUpload for file ");
+				try {
+					Transportable transportable = uploadRequest
+							.getTransportable();
+					transporter.upload(transportable);
+					// String result = encryptAndUploadChunk(chunk, file);
+					// mChunkUpload.getUploadCallback().uploadCallback(chunk,
+					// result);
+					log.debug("Processing of MChunkUpload successfully.");
+				} catch (CryptoException e) {
+					log.error(
+							"There has been en error while encrypting the chunk",
+							e);
+					// TODO tell the user about this problem.
+				} catch (UniformInterfaceException | ClientHandlerException e) {
+					log.warn("Error on putting chunk", e);
+					// TODO tell the user about this problem.
+				} catch (IOException e) {
+					log.error("There has been an error while reading the data",
+							e);
+					// TODO tell the user about this problem.
+				} catch (Exception e) {
+					log.error(
+							"There has been an error during the processing of an upload request",
+							e);
+				}
+				uploads.remove(uploadRequest);
+				// TODO implement "retry later" logic: add to retry collection
+			}
+
+			// TODO Process the download requests
+
+			// Sleep before next iteration
+			try {
+				Thread.sleep(DEFAULT_SLEEP_TIME_MILLIS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
 		}
 		this.log.info("Stopped Transporter");
 	}

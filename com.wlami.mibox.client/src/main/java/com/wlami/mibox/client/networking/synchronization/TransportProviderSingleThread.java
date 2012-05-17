@@ -25,8 +25,12 @@ import javax.inject.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.client.metadata.MChunk;
+import com.wlami.mibox.client.networking.adapter.RestTransporter;
+import com.wlami.mibox.client.networking.encryption.EncryptedChunk;
+import com.wlami.mibox.client.networking.transporter.Transporter;
 
 /**
  * This class implements the {@link TransportProvider} and uses only one Thread
@@ -45,16 +49,16 @@ public class TransportProviderSingleThread implements TransportProvider {
 	AppSettingsDao appSettingsDao;
 
 	/** reference to our only working thread */
-	TransportWorker<MChunkUpload> transporter;
+	TransportWorker<ChunkUploadRequest, EncryptedChunk> transportWorker;
 
 	/** collection of {@link MChunk}s which shall be uploaded. */
-	ConcurrentSkipListSet<MChunkUpload> mChunkUploads;
+	ConcurrentSkipListSet<ChunkUploadRequest> mChunkUploads;
 
 	/** default constructor. */
 	@Inject
 	public TransportProviderSingleThread(AppSettingsDao appSettingsDao) {
 		this.appSettingsDao = appSettingsDao;
-		mChunkUploads = new ConcurrentSkipListSet<MChunkUpload>();
+		mChunkUploads = new ConcurrentSkipListSet<ChunkUploadRequest>();
 	}
 
 	/*
@@ -65,10 +69,14 @@ public class TransportProviderSingleThread implements TransportProvider {
 	 */
 	@Override
 	public void startProcessing() {
-		if (transporter == null) {
-			transporter = new TransportWorkerUserData(appSettingsDao,
-					mChunkUploads);
-			transporter.start();
+		if (transportWorker == null) {
+			AppSettings appSettings = appSettingsDao.load();
+			String dataStoreUrl = appSettings.getServerUrl()
+					+ "rest/chunkmanager/";
+			RestTransporter restTransporter = new RestTransporter(dataStoreUrl);
+			Transporter transporter = new Transporter(restTransporter);
+			transportWorker = new TransportWorker<>(transporter, mChunkUploads);
+			transportWorker.start();
 			log.info("Starting TransportProvider");
 		} else {
 			log.debug("TransportProvider already started.");
@@ -84,13 +92,13 @@ public class TransportProviderSingleThread implements TransportProvider {
 	 */
 	@Override
 	public void stopProcessing() {
-		if (transporter != null) {
-			transporter.stopProcessing();
+		if (transportWorker != null) {
+			transportWorker.stopProcessing();
 			try {
-				transporter.join();
+				transportWorker.join();
 			} catch (InterruptedException e) {
 			}
-			transporter = null;
+			transportWorker = null;
 			log.info("Stopping TransportProvider");
 		} else {
 			log.warn("Stop impossible: TransportProvider is not working.");
@@ -106,7 +114,7 @@ public class TransportProviderSingleThread implements TransportProvider {
 	 * com.wlami.mibox.client.networking.synchronization.UploadCallback)
 	 */
 	@Override
-	public void addChunkUpload(MChunkUpload mChunkUpload) {
+	public void addChunkUpload(ChunkUploadRequest mChunkUpload) {
 		if (!mChunkUploads.add(mChunkUpload)) {
 			log.debug("Upload task not added. Alread existing.");
 		}

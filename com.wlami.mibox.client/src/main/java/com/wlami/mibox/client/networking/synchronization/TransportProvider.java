@@ -47,6 +47,6 @@ public interface TransportProvider {
 	 *            instance which defines the {@link MChunk} and a callback
 	 *            method.
 	 */
-	void addChunkUpload(MChunkUpload mChunkUpload);
+	void addChunkUpload(ChunkUploadRequest mChunkUpload);
 
 }

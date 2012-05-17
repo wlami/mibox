@@ -26,6 +26,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.wlami.mibox.client.networking.transporter.Transportable;
 import com.wlami.mibox.core.encryption.AesEncryption;
 
 /**
@@ -33,7 +34,10 @@ import com.wlami.mibox.core.encryption.AesEncryption;
  * @author Stefan Baust
  * 
  */
-public class EncryptedMiTree {
+public class EncryptedMiTree implements Transportable {
+
+	/** filename of the encryptedMiTree */
+	private String name;
 
 	/** internal logger */
 	private static Logger log = LoggerFactory.getLogger(EncryptedMiTree.class);
@@ -58,9 +62,19 @@ public class EncryptedMiTree {
 	/**
 	 * @return the content
 	 */
+	@Override
 	public byte[] getContent() {
 		return content; //TODO Check whether a deep copy is required at this point.
 	}
+
+	/**
+	 * @param name
+	 *            the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+
 
 	/**
 	 * Decrypts the MiTree content
@@ -77,6 +91,17 @@ public class EncryptedMiTree {
 		byte[] decrypted = AesEncryption.crypt(false, content,iv, key);
 		log.debug("Decryption done. Trying now to read the data.");
 		return objectMapper.readValue(decrypted, DecryptedMiTree.class);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.networking.transporter.Transportable#getName()
+	 */
+	@Override
+	public String getName() {
+		return name;
 	}
 
 }

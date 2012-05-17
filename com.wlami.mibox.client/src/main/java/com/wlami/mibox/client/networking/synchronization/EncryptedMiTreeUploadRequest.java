@@ -15,34 +15,45 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wlami.mibox.client.networking.transporter;
+package com.wlami.mibox.client.networking.synchronization;
 
-import com.wlami.mibox.client.networking.adapter.LowLevelTransporter;
+import com.wlami.mibox.client.networking.transporter.Transportable;
 
 /**
  * @author wladislaw
  *
  */
-public class Transporter {
-	protected final LowLevelTransporter transporter;
+public class EncryptedMiTreeUploadRequest extends
+UploadRequest<EncryptedMiTreeUploadRequest> {
 
 	/**
+	 * Return the name of the EncryptedMiTree file.
 	 * 
-	 * @param transporter
+	 * @return Name part of the whole path.
 	 */
-	public Transporter(LowLevelTransporter transporter) {
-		this.transporter = transporter;
+	public String getName() {
+		return file.getName();
 	}
 
-	/**
-	 * Upload the uploadObject using the specified transporter.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @param uploadObject
-	 *            The uploadObject to upload.
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
 	 */
-	public void upload(Transportable uploadObject) {
-		transporter.upload(uploadObject.getName(),
-				uploadObject.getContent());
+	@Override
+	public int compareTo(EncryptedMiTreeUploadRequest o) {
+		return o.getName().compareTo(getName());
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.networking.synchronization.UploadRequest#
+	 * getTransportable()
+	 */
+	@Override
+	public Transportable getTransportable() {
+		// TODO
+		return null;
+	}
 }

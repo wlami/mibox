@@ -38,7 +38,8 @@ import com.wlami.mibox.client.metadata2.DecryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeInformation;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
-import com.wlami.mibox.client.networking.synchronization.MChunkUpload;
+import com.wlami.mibox.client.networking.encryption.AesChunkEncryption;
+import com.wlami.mibox.client.networking.synchronization.ChunkUploadRequest;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 import com.wlami.mibox.client.networking.synchronization.UploadCallback;
 import com.wlami.mibox.core.encryption.PBKDF2;
@@ -125,12 +126,12 @@ class MetadataWorker extends Thread {
 	 */
 	private void synchronizeMetadata() throws IOException {
 		log.debug("Synchronizing metadata with filesystem");
-		AppSettings appSettings = this.appSettingsDao.load();
+		AppSettings appSettings = appSettingsDao.load();
 		String watchDir = appSettings.getWatchDirectory();
 
-		EncryptedMiTreeInformation miTreeInformation = this.retrieveRootMiTreeInformation(appSettings);
+		EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(appSettings);
 
-		EncryptedMiTree encryptedRoot = this.encryptedMiTreeRepo
+		EncryptedMiTree encryptedRoot = encryptedMiTreeRepo
 				.loadEncryptedMiTree(miTreeInformation.getFileName());
 		DecryptedMiTree root;
 		if (encryptedRoot == null) {
@@ -145,7 +146,7 @@ class MetadataWorker extends Thread {
 				return;
 			}
 		}
-		this.traverseFileSystem(new File(watchDir), root, miTreeInformation);
+		traverseFileSystem(new File(watchDir), root, miTreeInformation);
 	}
 
 	/**
@@ -196,7 +197,7 @@ class MetadataWorker extends Thread {
 					log.debug("Creating a new MFile in metadata for [{}]",
 							file.getName());
 				}
-				this.synchronizeFileMetadata(file, mFile);
+				synchronizeFileMetadata(file, mFile);
 			} else if (file.isDirectory()) {
 				// find the right metadata
 				log.debug("Search folder metadata for [{}]", file.getName());
@@ -213,12 +214,12 @@ class MetadataWorker extends Thread {
 					log.debug(
 							"No information available yet. Creating new data file [{}]",
 							encryptedMiTreeInformation.getFileName());
-					this.traverseFileSystem(file, subTree,
+					traverseFileSystem(file, subTree,
 							encryptedMiTreeInformation);
 				} else {
 					// load the metadata for the subtree
 					log.debug("Found information for folder. Trying to load it");
-					EncryptedMiTree encryptedMiTree = this.encryptedMiTreeRepo
+					EncryptedMiTree encryptedMiTree = encryptedMiTreeRepo
 							.loadEncryptedMiTree(encryptedMiTreeInformation
 									.getFileName());
 					log.debug("Trying to decrypt the metadata now.");
@@ -226,7 +227,7 @@ class MetadataWorker extends Thread {
 						DecryptedMiTree subTree = encryptedMiTree.decrypt(
 								encryptedMiTreeInformation.getKey(),
 								encryptedMiTreeInformation.getIv());
-						this.traverseFileSystem(file, subTree,
+						traverseFileSystem(file, subTree,
 								encryptedMiTreeInformation);
 					} catch (CryptoException | IOException e) {
 						log.error("Could not decrypt subfolder metadata", e);
@@ -238,7 +239,7 @@ class MetadataWorker extends Thread {
 		// Save the tree
 		EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt(
 				miTreeInformation.getKey(), miTreeInformation.getIv());
-		this.encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree,
+		encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree,
 				miTreeInformation.getFileName());
 	}
 
@@ -300,7 +301,7 @@ class MetadataWorker extends Thread {
 						log.debug("Neu Chunk [{}] finished with hash [{}]",
 								currentChunk, newChunkHash);
 						// Create Upload request
-						this.createUploadRequest(chunk, f);
+						createUploadRequest(chunk, f);
 					}
 					currentChunk++;
 
@@ -321,7 +322,7 @@ class MetadataWorker extends Thread {
 	}
 
 	/**
-	 * Creates a {@link MChunkUpload} object and turns it over to the
+	 * Creates a {@link ChunkUploadRequest} object and turns it over to the
 	 * {@link TransportProvider}. Persists the metadata to disk.
 	 * 
 	 * @param chunk
@@ -330,9 +331,9 @@ class MetadataWorker extends Thread {
 	protected void createUploadRequest(MChunk chunk, File file) {
 		log.debug("Creating upload request for chunk [{}]",
 				chunk.getDecryptedChunkHash());
-		MChunkUpload mChunkUpload = new MChunkUpload(chunk, file,
-				this.createDefaultUploadCallback());
-		this.transportProvider.addChunkUpload(mChunkUpload);
+		ChunkUploadRequest mChunkUpload = new ChunkUploadRequest(chunk, file,
+				createDefaultUploadCallback(), new AesChunkEncryption());
+		transportProvider.addChunkUpload(mChunkUpload);
 		log.debug("Added upload request to the processing queue");
 	}
 
@@ -368,10 +369,10 @@ class MetadataWorker extends Thread {
 	public void run() {
 		log.debug("Starting");
 		try {
-			this.synchronizeMetadata();
-			AppSettings appSettings = this.appSettingsDao.load();
-			while (this.active) {
-				for (ObservedFilesystemEvent ofe : this.incomingEvents) {
+			synchronizeMetadata();
+			AppSettings appSettings = appSettingsDao.load();
+			while (active) {
+				for (ObservedFilesystemEvent ofe : incomingEvents) {
 					log.debug("Processing event " + ofe);
 					File f = new File(ofe.getFilename());
 					if (f.isFile()) {
@@ -381,15 +382,15 @@ class MetadataWorker extends Thread {
 										.getWatchDirectory());
 						System.out.println(relativePath);
 
-						EncryptedMiTreeInformation miTreeInformation = this.retrieveRootMiTreeInformation(appSettings);
-						EncryptedMiTree encryptedRoot = this.encryptedMiTreeRepo
+						EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(appSettings);
+						EncryptedMiTree encryptedRoot = encryptedMiTreeRepo
 								.loadEncryptedMiTree(miTreeInformation.getFileName());
 						MFile mFile = MetadataUtil.locateMFile(encryptedRoot, miTreeInformation,
 								relativePath);
-						this.synchronizeFileMetadata(f, mFile);
+						synchronizeFileMetadata(f, mFile);
 					}
 
-					this.incomingEvents.remove(ofe);
+					incomingEvents.remove(ofe);
 				}
 				try {
 					Thread.sleep(DEFAULT_SLEEP_TIME_MILLIS);

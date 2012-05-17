@@ -18,8 +18,13 @@
 package com.wlami.mibox.client.networking.synchronization;
 
 import java.io.File;
+import java.io.IOException;
+
+import org.bouncycastle.crypto.CryptoException;
 
 import com.wlami.mibox.client.metadata.MChunk;
+import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
+import com.wlami.mibox.client.networking.transporter.Transportable;
 
 /**
  * This class defines an upload task which shall be executed by the
@@ -28,25 +33,22 @@ import com.wlami.mibox.client.metadata.MChunk;
  * @author Wladislaw Mitzel
  * @author Stefan Baust
  */
-public class MChunkUpload implements Comparable<MChunkUpload> {
+public class ChunkUploadRequest extends UploadRequest<ChunkUploadRequest> {
 
 	/**
 	 * the MChunk to be uploaded,
 	 */
 	private MChunk mChunk;
 
-	/** a file reference which contains the {@link #mChunk}. */
-	private File file;
-
 	/**
-	 * the callbackMethod which shall be executed when the upload is finished.
+	 * reference to something which can encrypt chunks.
 	 */
-	private UploadCallback uploadCallback;
+	private ChunkEncryption chunkEncryption;
 
 	/**
 	 * Default constructor.
 	 */
-	public MChunkUpload() {
+	public ChunkUploadRequest() {
 	}
 
 	/**
@@ -59,33 +61,20 @@ public class MChunkUpload implements Comparable<MChunkUpload> {
 	 * @param uploadCallback
 	 *            THe value {@link #uploadCallback} shall be set to.
 	 */
-	public MChunkUpload(MChunk mChunk, File file, UploadCallback uploadCallback) {
+	public ChunkUploadRequest(MChunk mChunk, File file, UploadCallback uploadCallback, ChunkEncryption chunkEncryption) {
 		this.mChunk = mChunk;
 		this.file = file;
 		this.uploadCallback = uploadCallback;
+		this.chunkEncryption = chunkEncryption;
 	}
 
 	/**
 	 * @return the mChunk
 	 */
 	public MChunk getMChunk() {
-		return this.mChunk;
+		return mChunk;
 	}
 
-	/**
-	 * @return the {@link #file}
-	 */
-	public File getFile() {
-		return this.file;
-	}
-
-	/**
-	 * @param file
-	 *            the {@link #file} to set
-	 */
-	public void setFile(File file) {
-		this.file = file;
-	}
 
 	/**
 	 * @param mChunk
@@ -95,20 +84,6 @@ public class MChunkUpload implements Comparable<MChunkUpload> {
 		this.mChunk = mChunk;
 	}
 
-	/**
-	 * @return the uploadCallback
-	 */
-	public UploadCallback getUploadCallback() {
-		return this.uploadCallback;
-	}
-
-	/**
-	 * @param uploadCallback
-	 *            the uploadCallback to set
-	 */
-	public void setUploadCallback(UploadCallback uploadCallback) {
-		this.uploadCallback = uploadCallback;
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -116,8 +91,8 @@ public class MChunkUpload implements Comparable<MChunkUpload> {
 	 * @see java.lang.Comparable#compareTo(java.lang.Object)
 	 */
 	@Override
-	public int compareTo(MChunkUpload o) {
-		return this.mChunk.getDecryptedChunkHash().compareTo(
+	public int compareTo(ChunkUploadRequest o) {
+		return mChunk.getDecryptedChunkHash().compareTo(
 				o.getMChunk().getDecryptedChunkHash());
 	}
 
@@ -128,9 +103,17 @@ public class MChunkUpload implements Comparable<MChunkUpload> {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		MChunkUpload o = (MChunkUpload) obj;
-		return this.mChunk.getEncryptedChunkHash().equals(
+		ChunkUploadRequest o = (ChunkUploadRequest) obj;
+		return mChunk.getEncryptedChunkHash().equals(
 				o.getMChunk().getEncryptedChunkHash());
+	}
+
+	/* (non-Javadoc)
+	 * @see com.wlami.mibox.client.networking.synchronization.UploadRequest#getTransportable()
+	 */
+	@Override
+	public Transportable getTransportable() throws IOException, CryptoException {
+		return chunkEncryption.encryptChunk(mChunk, file);
 	}
 
 }
