@@ -8,4 +8,51 @@
 	
  <context:component-scan base-package="com.wlami.mibox.client" />
  
+ <bean id="miboxClientApp" class="com.wlami.mibox.client.application.MiboxClientApp">
+ 	<property name="appSettingsDao" ref="appSettingsDao" />
+ 	<property name="miboxTray" ref="miboxTray"></property>
+ 	<property name="metadataRepository" ref="metadataRepository"></property>
+ 	<property name="chunkTransportProvider" ref="chunkTransportProvider" />
+ 	<property name="encryptedMiTreeTransportProvider" ref="encryptedMiTreeTransportProvider" />
+ 	<property name="directoryWatchdog" ref="directoryWatchdog" />
+ </bean>
+ 
+ <bean id="appSettingsDao" class="com.wlami.mibox.client.application.AppSettingsDaoProperty" />
+ 
+ <bean id="directoryWatchdog" class="com.wlami.mibox.client.backend.watchdog.DirectoryWatchdog">
+ 	<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
+ 	<constructor-arg name="metadataRepository" ref="metadataRepository" />
+ </bean>
+ 
+ <bean id="miboxTray" class="com.wlami.mibox.client.gui.MiboxTray">
+ 	<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
+ 	<constructor-arg name="langUtils" ref="langUtils"></constructor-arg>
+ </bean>
+ 
+ <bean id="langUtils" class="com.wlami.mibox.client.gui.LangUtils">
+ 	<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
+ </bean>
+ 
+ <bean id="metadataRepository" class="com.wlami.mibox.client.metadata.MetadataRepositoryImpl">
+ 	<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
+ 	<constructor-arg name="encryptedMiTreeRepository" ref="encryptedMiTreeRepository" />
+ 	<constructor-arg name="chunkTransport" ref="chunkTransportProvider" />
+ 	<constructor-arg name="metadataUtil" ref="metadataUtil" />
+ </bean>
+ 
+ <bean id="encryptedMiTreeRepository" class="com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository">
+ 	<constructor-arg name="transportProvider" ref="encryptedMiTreeTransportProvider"></constructor-arg>
+ </bean>
+ 
+ <bean id="chunkTransportProvider" class="com.wlami.mibox.client.networking.synchronization.ChunkTransportProviderSingleThread">
+ 	<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
+ </bean>
+ 
+ <bean id="encryptedMiTreeTransportProvider" class="com.wlami.mibox.client.networking.synchronization.EncryptedMiTreeTransportProviderSingleThread">
+ 	<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
+ </bean>
+ 
+ <bean id="metadataUtil" class="com.wlami.mibox.client.metadata.MetadataUtil">
+ 	<constructor-arg name="encryptedMiTreeRepository" ref="encryptedMiTreeRepository" />
+ </bean>
 </beans>

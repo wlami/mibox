@@ -101,7 +101,7 @@ public class EncryptedMiTree implements Transportable {
 	 */
 	@Override
 	public String getName() {
-		return name;
+		return "TEST"; // TODO
 	}
 
 }

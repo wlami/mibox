@@ -41,9 +41,12 @@ public class MetadataUtil {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(MetadataUtil.class);
 
-	/**
-	 * 
-	 */
+	EncryptedMiTreeRepository encryptedMiTreeRepository;
+
+	public MetadataUtil(EncryptedMiTreeRepository encryptedMiTreeRepository) {
+		this.encryptedMiTreeRepository = encryptedMiTreeRepository;
+	}
+
 	protected static final String UNIX_PATH_SEPARATOR = "/";
 
 	/**
@@ -61,7 +64,7 @@ public class MetadataUtil {
 	 * @throws JsonMappingException
 	 * @throws JsonParseException
 	 */
-	public static MFile locateMFile(EncryptedMiTree root,
+	public MFile locateMFile(EncryptedMiTree root,
 			EncryptedMiTreeInformation information, String relativePath)
 					throws JsonParseException, JsonMappingException, CryptoException,
 					IOException {
@@ -87,7 +90,6 @@ public class MetadataUtil {
 			EncryptedMiTree subTree;
 			EncryptedMiTreeInformation subTreeInformation = decryptedMiTree
 					.getSubfolder().get(folder[1]);
-			EncryptedMiTreeRepository encryptedMiTreeRepository = new EncryptedMiTreeRepository();
 
 			if (subTreeInformation == null) {
 				LOG.debug("Create new subtree, didn't find it.");

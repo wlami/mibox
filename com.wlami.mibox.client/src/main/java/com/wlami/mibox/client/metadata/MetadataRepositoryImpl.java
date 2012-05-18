@@ -20,20 +20,19 @@ package com.wlami.mibox.client.metadata;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
+import com.wlami.mibox.client.networking.synchronization.ChunkUploadRequest;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 
 /**
  * @author Wladislaw Mitzel
  * 
  */
-@Named
 public class MetadataRepositoryImpl implements MetadataRepository {
 
 	/** internal logging object. */
@@ -41,36 +40,41 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 			.getLogger(MetadataRepositoryImpl.class);
 
 	/** Reference to the {@link AppSettingsDao} bean. */
-	private AppSettingsDao appSettingsDao;
+	private final AppSettingsDao appSettingsDao;
 
 	/** Reference to the {@link TransportProvider} bean. */
-	private TransportProvider transportProvider;
+	private final TransportProvider<ChunkUploadRequest> chunkTransport;
+
+	/** Reference to the {@link MetadataUtil} bean. */
+	private final MetadataUtil metadataUtil;
 
 	/**
 	 * reference to a {@link MetadataWorker} instance which handles the file
 	 * structure.
 	 */
 	private MetadataWorker worker;
-	
+
 	/** loader reference which is needed for the worker */
-	private EncryptedMiTreeRepository encryptedMiTreeRepo;
+	private final EncryptedMiTreeRepository encryptedMiTreeRepo;
 
 	/**
 	 * set of incoming {@link ObservedFilesystemEvent} instances which shall be
 	 * processed by the {@link MetadataWorker}.
 	 */
-	private ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents = new ConcurrentSkipListSet<ObservedFilesystemEvent>();
+	private final ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents = new ConcurrentSkipListSet<ObservedFilesystemEvent>();
 
 	/**
 	 * default constructor.
 	 */
-	@Inject
+	@Inject()
 	public MetadataRepositoryImpl(AppSettingsDao appSettingsDao,
-			TransportProvider transportProvider, 
-			EncryptedMiTreeRepository encryptedMiTreeRepository) {
+			TransportProvider<ChunkUploadRequest> chunkTransport,
+			EncryptedMiTreeRepository encryptedMiTreeRepository,
+			MetadataUtil metadataUtil) {
 		this.appSettingsDao = appSettingsDao;
-		this.transportProvider = transportProvider;
-		this.encryptedMiTreeRepo = encryptedMiTreeRepository;
+		this.chunkTransport = chunkTransport;
+		encryptedMiTreeRepo = encryptedMiTreeRepository;
+		this.metadataUtil = metadataUtil;
 	}
 
 	/*
@@ -81,8 +85,8 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	@Override
 	public void startProcessing() {
 		if (worker == null) {
-			worker = new MetadataWorker(appSettingsDao, transportProvider,
-					incomingEvents, encryptedMiTreeRepo);
+			worker = new MetadataWorker(appSettingsDao, chunkTransport,
+					incomingEvents, encryptedMiTreeRepo, metadataUtil);
 			worker.start();
 			log.info("Starting MetadataRepository");
 		} else {

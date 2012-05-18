@@ -22,26 +22,42 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.application.AppFolders;
+import com.wlami.mibox.client.metadata.MChunk;
+import com.wlami.mibox.client.networking.synchronization.EncryptedMiTreeUploadRequest;
+import com.wlami.mibox.client.networking.synchronization.TransportProvider;
+import com.wlami.mibox.client.networking.synchronization.UploadCallback;
 
 /**
  * @author Stefan baust
  * @author wladislaw Mitzel
  * 
  */
-@Singleton
-@Named
 public class EncryptedMiTreeRepository {
+
+	/**
+	 * reference to a transporter which can handle uploads of encrypted mi trees
+	 */
+	private final TransportProvider<EncryptedMiTreeUploadRequest> transportProvider;
 
 	/** interal logger */
 	private static Logger log = LoggerFactory
 			.getLogger(EncryptedMiTreeRepository.class);
+
+	/**
+	 * Creates a new {@link EncryptedMiTreeRepository}.
+	 * 
+	 * @param transportProvider
+	 *            A reference to a transport provider which is used for uploads
+	 *            and downloads.
+	 */
+	public EncryptedMiTreeRepository(
+			TransportProvider<EncryptedMiTreeUploadRequest> transportProvider) {
+		this.transportProvider = transportProvider;
+	}
 
 	/**
 	 * Loads an encrypted MiTree from local file system.
@@ -77,8 +93,29 @@ public class EncryptedMiTreeRepository {
 		File file = new File(AppFolders.getConfigFolder(), fileName);
 		try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
 			fileOutputStream.write(encryptedMiTree.getContent());
+			transportProvider.addChunkUpload(createUploadRequest(file));
 		} catch (IOException e) {
 			log.error("Error during save of encrypted MiTree", e);
 		}
+	}
+
+	/**
+	 * Creates a new upload request for an encryptedMiTree which is located
+	 * 
+	 * @param file
+	 *            a file representing the encryptedMiTree in the filesystem.
+	 * @return An upload request containing a file and a callback.
+	 */
+	protected EncryptedMiTreeUploadRequest createUploadRequest(File file) {
+		EncryptedMiTreeUploadRequest request = new EncryptedMiTreeUploadRequest(this);
+		request.setFile(file);
+		request.setUploadCallback(new UploadCallback() {
+			@Override
+			public void uploadCallback(MChunk mChunk, String result) {
+				log.debug("Execute the callback");
+				// TODO
+			}
+		});
+		return request;
 	}
 }

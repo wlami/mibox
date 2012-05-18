@@ -39,8 +39,9 @@ import com.wlami.mibox.client.networking.transporter.Transporter;
  * @author Wladislaw Mitzel
  * 
  */
-@Named
-public class TransportProviderSingleThread implements TransportProvider {
+@Named(value = "chunkTransport")
+public class ChunkTransportProviderSingleThread implements
+TransportProvider<ChunkUploadRequest> {
 
 	/** internal logger. */
 	Logger log = LoggerFactory.getLogger(getClass());
@@ -56,7 +57,7 @@ public class TransportProviderSingleThread implements TransportProvider {
 
 	/** default constructor. */
 	@Inject
-	public TransportProviderSingleThread(AppSettingsDao appSettingsDao) {
+	public ChunkTransportProviderSingleThread(AppSettingsDao appSettingsDao) {
 		this.appSettingsDao = appSettingsDao;
 		mChunkUploads = new ConcurrentSkipListSet<ChunkUploadRequest>();
 	}
@@ -77,9 +78,9 @@ public class TransportProviderSingleThread implements TransportProvider {
 			Transporter transporter = new Transporter(restTransporter);
 			transportWorker = new TransportWorker<>(transporter, mChunkUploads);
 			transportWorker.start();
-			log.info("Starting TransportProvider");
+			log.info("Starting ChunkTransportProviderSingleThread");
 		} else {
-			log.debug("TransportProvider already started.");
+			log.debug("ChunkTransportProviderSingleThread already started.");
 		}
 
 	}
@@ -99,9 +100,9 @@ public class TransportProviderSingleThread implements TransportProvider {
 			} catch (InterruptedException e) {
 			}
 			transportWorker = null;
-			log.info("Stopping TransportProvider");
+			log.info("Stopping ChunkTransportProviderSingleThread");
 		} else {
-			log.warn("Stop impossible: TransportProvider is not working.");
+			log.warn("Stop impossible: ChunkTransportProviderSingleThread is not working.");
 		}
 
 	}

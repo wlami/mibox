@@ -26,7 +26,7 @@ import com.wlami.mibox.client.metadata.MChunk;
  * @author Wladislaw Mitzel
  * 
  */
-public interface TransportProvider {
+public interface TransportProvider<T extends UploadRequest<?>> {
 
 	/**
 	 * Start transport. Each transporter runs in a separate thread.
@@ -47,6 +47,6 @@ public interface TransportProvider {
 	 *            instance which defines the {@link MChunk} and a callback
 	 *            method.
 	 */
-	void addChunkUpload(ChunkUploadRequest mChunkUpload);
+	void addChunkUpload(T uploadRequest);
 
 }

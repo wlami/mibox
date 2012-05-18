@@ -83,7 +83,7 @@ class MetadataWorker extends Thread {
 	AppSettingsDao appSettingsDao;
 
 	/** Reference to the {@link TransportProvider} bean. */
-	TransportProvider transportProvider;
+	TransportProvider<ChunkUploadRequest> transportProvider;
 
 	/**
 	 * @param active
@@ -93,18 +93,22 @@ class MetadataWorker extends Thread {
 		this.active = active;
 	}
 
+	private final MetadataUtil metadataUtil;
+
 	/**
 	 * Default constructor. Loads appSettings from {@link AppSettingsDao} and
 	 * the metadata from disk.
 	 */
 	public MetadataWorker(AppSettingsDao appSettingsDao,
-			TransportProvider transportProvider,
+			TransportProvider<ChunkUploadRequest> transportProvider,
 			ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents,
-			EncryptedMiTreeRepository encryptedMiTreeRepo) {
+			EncryptedMiTreeRepository encryptedMiTreeRepo,
+			MetadataUtil metadataUtil) {
 		this.incomingEvents = incomingEvents;
 		this.appSettingsDao = appSettingsDao;
 		this.transportProvider = transportProvider;
 		this.encryptedMiTreeRepo = encryptedMiTreeRepo;
+		this.metadataUtil = metadataUtil;
 	}
 
 	/**
@@ -385,7 +389,8 @@ class MetadataWorker extends Thread {
 						EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(appSettings);
 						EncryptedMiTree encryptedRoot = encryptedMiTreeRepo
 								.loadEncryptedMiTree(miTreeInformation.getFileName());
-						MFile mFile = MetadataUtil.locateMFile(encryptedRoot, miTreeInformation,
+						MFile mFile = metadataUtil.locateMFile(encryptedRoot,
+								miTreeInformation,
 								relativePath);
 						synchronizeFileMetadata(f, mFile);
 					}

@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +52,6 @@ import com.wlami.mibox.client.metadata.ObservedFilesystemEvent;
  * @author Wladislaw Mitzel
  * 
  */
-@Named
 public class DirectoryWatchdog extends Thread {
 
 	Logger log = LoggerFactory.getLogger(DirectoryWatchdog.class.getName());
@@ -65,7 +63,7 @@ public class DirectoryWatchdog extends Thread {
 
 	private WatchService watchService;
 
-	private Map<WatchKey, Path> keyMap;
+	private final Map<WatchKey, Path> keyMap;
 	/**
 	 * determines whether the watchdog shall watch currently.
 	 */
@@ -80,12 +78,12 @@ public class DirectoryWatchdog extends Thread {
 	/**
 	 * reference to the application settings data access object.
 	 */
-	private AppSettingsDao appSettingsDao;
+	private final AppSettingsDao appSettingsDao;
 
 	/**
 	 * reference to a {@link MetadataRepository}.
 	 */
-	private MetadataRepository metadataRepository;
+	private final MetadataRepository metadataRepository;
 
 	/**
 	 * default constructor.
@@ -95,7 +93,7 @@ public class DirectoryWatchdog extends Thread {
 			MetadataRepository metadataRepository) {
 		this.appSettingsDao = appSettingsDao;
 		this.metadataRepository = metadataRepository;
-		this.keyMap = new HashMap<WatchKey, Path>();
+		keyMap = new HashMap<WatchKey, Path>();
 		this.appSettingsDao
 				.registerNewAppSettingsListener(getNewAppSettingsListener());
 	}

@@ -77,6 +77,8 @@ public class RestTransporter extends LowLevelTransporter {
 	@Override
 	public void upload(String name, byte[] content) {
 		// upload it
+		assert name != null;
+		assert content != null;
 		WebResource webResource = getWebResource(name);
 		log.debug("Execute the HTTP PUT: " + webResource.getURI().toString());
 		webResource.put(content);

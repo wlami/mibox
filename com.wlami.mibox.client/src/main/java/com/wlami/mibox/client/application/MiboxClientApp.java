@@ -32,9 +32,9 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import com.wlami.mibox.client.backend.watchdog.DirectoryWatchdog;
 import com.wlami.mibox.client.gui.MiboxTray;
 import com.wlami.mibox.client.metadata.MetadataRepository;
-import com.wlami.mibox.client.metadata.MetadataRepositoryImpl;
+import com.wlami.mibox.client.networking.synchronization.ChunkUploadRequest;
+import com.wlami.mibox.client.networking.synchronization.EncryptedMiTreeUploadRequest;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
-import com.wlami.mibox.client.networking.synchronization.TransportProviderSingleThread;
 
 /**
  * Main class for the MiboxClient. Serves as the coupling point between the GUI
@@ -51,7 +51,7 @@ public final class MiboxClientApp {
 	protected static Logger log = LoggerFactory.getLogger(MiboxClientApp.class
 			.getName());
 
-	private ClassPathXmlApplicationContext ctx;
+	private final ClassPathXmlApplicationContext ctx;
 
 	/**
 	 * hide constructor, because this is an utility class.
@@ -61,8 +61,67 @@ public final class MiboxClientApp {
 		this.ctx = ctx;
 	}
 
-	@Inject
+	private MiboxTray miboxTray;
+
+	/**
+	 * @param miboxTray
+	 *            the miboxTray to set
+	 */
+	public void setMiboxTray(MiboxTray miboxTray) {
+		this.miboxTray = miboxTray;
+	}
+
+	MetadataRepository metadataRepository;
+
+	/**
+	 * @param metadataRepository
+	 *            the metadataRepository to set
+	 */
+	public void setMetadataRepository(MetadataRepository metadataRepository) {
+		this.metadataRepository = metadataRepository;
+	}
+
 	private AppSettingsDao appSettingsDao;
+
+	/**
+	 * @param appSettingsDao
+	 *            the appSettingsDao to set
+	 */
+	public void setAppSettingsDao(AppSettingsDao appSettingsDao) {
+		this.appSettingsDao = appSettingsDao;
+	}
+
+	private TransportProvider<ChunkUploadRequest> chunkTransportProvider;
+
+	/**
+	 * @param chunkTransportProvider
+	 *            the chunkTransportProvider to set
+	 */
+	public void setChunkTransportProvider(
+			TransportProvider<ChunkUploadRequest> chunkTransportProvider) {
+		this.chunkTransportProvider = chunkTransportProvider;
+	}
+
+	TransportProvider<EncryptedMiTreeUploadRequest> encryptedMiTreeTransportProvider;
+
+	/**
+	 * @param encryptedMiTreeTransportProvider
+	 *            the encryptedMiTreeTransportProvider to set
+	 */
+	public void setEncryptedMiTreeTransportProvider(
+			TransportProvider<EncryptedMiTreeUploadRequest> encryptedMiTreeTransportProvider) {
+		this.encryptedMiTreeTransportProvider = encryptedMiTreeTransportProvider;
+	}
+
+	DirectoryWatchdog directoryWatchdog;
+
+	/**
+	 * @param directoryWatchdog
+	 *            the directoryWatchdog to set
+	 */
+	public void setDirectoryWatchdog(DirectoryWatchdog directoryWatchdog) {
+		this.directoryWatchdog = directoryWatchdog;
+	}
 
 	/**
 	 * Main entry point for the MiboxClientApplication.
@@ -83,19 +142,13 @@ public final class MiboxClientApp {
 	}
 
 	private void run() {
-		log.debug("Creating mibox tray");
-		// Start tray
-		ctx.getBean("miboxTray", MiboxTray.class);
 
 		// start the metadatarepo
-		MetadataRepository mp = ctx.getBean("metadataRepositoryImpl",
-				MetadataRepositoryImpl.class);
-		mp.startProcessing();
+		metadataRepository.startProcessing();
 
 		// start TransportProvider
-		TransportProvider tp = ctx.getBean("transportProviderSingleThread",
-				TransportProviderSingleThread.class);
-		tp.startProcessing();
+		chunkTransportProvider.startProcessing();
+		encryptedMiTreeTransportProvider.startProcessing();
 
 		// start the watchdog
 		startWatchdog();
@@ -105,8 +158,6 @@ public final class MiboxClientApp {
 	 * 
 	 */
 	protected void startWatchdog() {
-		DirectoryWatchdog directoryWatchdog = ctx.getBean("directoryWatchdog",
-				DirectoryWatchdog.class);
 		AppSettings appSettings = appSettingsDao.load();
 		directoryWatchdog.setDirectory(appSettings.getWatchDirectory());
 		directoryWatchdog.setActive(appSettings.getMonitoringActive());

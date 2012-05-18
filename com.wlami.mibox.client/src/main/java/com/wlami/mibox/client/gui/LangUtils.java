@@ -20,10 +20,6 @@ package com.wlami.mibox.client.gui;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
 
@@ -31,8 +27,6 @@ import com.wlami.mibox.client.application.AppSettingsDao;
  * @author Wladislaw Mitzel
  * 
  */
-@Singleton
-@Named
 public final class LangUtils {
 
 	/**
@@ -44,7 +38,6 @@ public final class LangUtils {
 	/**
 	 * 
 	 */
-	@Inject
 	public LangUtils(AppSettingsDao appSettingsDao) {
 		this.appSettingsDao = appSettingsDao;
 	}

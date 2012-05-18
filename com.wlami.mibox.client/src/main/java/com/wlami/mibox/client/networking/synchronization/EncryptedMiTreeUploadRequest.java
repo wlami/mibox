@@ -17,6 +17,8 @@
  */
 package com.wlami.mibox.client.networking.synchronization;
 
+import com.wlami.mibox.client.metadata2.EncryptedMiTree;
+import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
 import com.wlami.mibox.client.networking.transporter.Transportable;
 
 /**
@@ -25,6 +27,13 @@ import com.wlami.mibox.client.networking.transporter.Transportable;
  */
 public class EncryptedMiTreeUploadRequest extends
 UploadRequest<EncryptedMiTreeUploadRequest> {
+
+	private final EncryptedMiTreeRepository encryptedMiTreeRepository;
+
+	public EncryptedMiTreeUploadRequest(
+			EncryptedMiTreeRepository encryptedMiTreeRepository) {
+		this.encryptedMiTreeRepository = encryptedMiTreeRepository;
+	}
 
 	/**
 	 * Return the name of the EncryptedMiTree file.
@@ -53,7 +62,6 @@ UploadRequest<EncryptedMiTreeUploadRequest> {
 	 */
 	@Override
 	public Transportable getTransportable() {
-		// TODO
-		return null;
+		return encryptedMiTreeRepository.loadEncryptedMiTree(file.getName());
 	}
 }

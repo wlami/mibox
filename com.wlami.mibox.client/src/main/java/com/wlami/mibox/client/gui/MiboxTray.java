@@ -21,9 +21,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ResourceBundle;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -37,7 +34,6 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
-import org.springframework.context.annotation.Lazy;
 
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
@@ -46,8 +42,6 @@ import com.wlami.mibox.client.application.AppSettingsDao;
  * @author Wladislaw Mitzel
  * 
  */
-@Named
-@Lazy
 public class MiboxTray {
 
 	/**
@@ -101,11 +95,11 @@ public class MiboxTray {
 	 * Public constructor to create a new MiboxTray. It loads the translated
 	 * strings during creation.
 	 */
-	@Inject
 	public MiboxTray(final LangUtils langUtils, AppSettingsDao appSettingsDao) {
 		this.appSettingsDao = appSettingsDao;
 		this.langUtils = langUtils;
 		new Thread() {
+			@Override
 			public void run() {
 				strings = langUtils.getTranslationBundle();
 				setupTray();
@@ -136,6 +130,7 @@ public class MiboxTray {
 	private void createMenu() {
 		menu = new Menu(shell, SWT.POP_UP);
 		trayItem.addListener(SWT.MenuDetect, new Listener() {
+			@Override
 			public void handleEvent(final Event arg0) {
 				menu.setVisible(true);
 			}
@@ -241,6 +236,7 @@ public class MiboxTray {
 		final MenuItem menuItemClose = new MenuItem(menu, SWT.PUSH);
 		menuItemClose.setText(strings.getString("Tray.menu.shutdown_client"));
 		menuItemClose.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event arg0) {
 				System.exit(0);
 			}
