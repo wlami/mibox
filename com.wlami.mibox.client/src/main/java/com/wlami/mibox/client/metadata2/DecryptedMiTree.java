@@ -37,7 +37,7 @@ import com.wlami.mibox.core.encryption.AesEncryption;
  * 
  */
 public class DecryptedMiTree {
-	
+
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(DecryptedMiTree.class);
 
@@ -62,8 +62,8 @@ public class DecryptedMiTree {
 	public void setFolderName(String folderName) {
 		this.folderName = folderName;
 	}
-	
-	
+
+
 
 	/**
 	 * @return the subfolder
@@ -99,12 +99,12 @@ public class DecryptedMiTree {
 	 * @param iv IV to use for encryption
 	 * @return an {@link EncryptedMiTree} representing this MiTree
 	 */
-	public EncryptedMiTree encrypt(byte[] key, byte[] iv) {
+	public EncryptedMiTree encrypt(String filename, byte[] key, byte[] iv) {
 		ObjectMapper objectMapper = new ObjectMapper();
 		try {
 			byte[] data = objectMapper.writeValueAsBytes(this);
 			byte[] encrypted = AesEncryption.crypt(true, data, iv, key);
-			return new EncryptedMiTree(encrypted);
+			return new EncryptedMiTree(filename, encrypted);
 		} catch ( IOException | CryptoException e) {
 			log.error("Error during encryption of MiTree",e);
 			return null;

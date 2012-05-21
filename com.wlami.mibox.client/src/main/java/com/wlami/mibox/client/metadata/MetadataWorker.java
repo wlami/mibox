@@ -242,6 +242,7 @@ class MetadataWorker extends Thread {
 
 		// Save the tree
 		EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt(
+				miTreeInformation.getFileName(),
 				miTreeInformation.getKey(), miTreeInformation.getIv());
 		encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree,
 				miTreeInformation.getFileName());

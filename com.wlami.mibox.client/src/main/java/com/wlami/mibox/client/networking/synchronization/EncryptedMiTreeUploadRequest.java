@@ -17,7 +17,6 @@
  */
 package com.wlami.mibox.client.networking.synchronization;
 
-import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
 import com.wlami.mibox.client.networking.transporter.Transportable;
 

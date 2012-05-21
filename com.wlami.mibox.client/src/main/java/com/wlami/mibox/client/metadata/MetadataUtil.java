@@ -95,8 +95,11 @@ public class MetadataUtil {
 				LOG.debug("Create new subtree, didn't find it.");
 				DecryptedMiTree decryptedSubTree = new DecryptedMiTree();
 				subTreeInformation = EncryptedMiTreeInformation.createRandom();
-				subTree = decryptedSubTree.encrypt(subTreeInformation.getKey(),
+				subTree = decryptedSubTree
+						.encrypt(subTreeInformation.getFileName(),
+								subTreeInformation.getKey(),
 						subTreeInformation.getIv());
+				subTree.setName(subTreeInformation.getFileName());
 				decryptedMiTree.getSubfolder().put(folder[1],
 						subTreeInformation);
 				// Save the new subtree
@@ -104,8 +107,9 @@ public class MetadataUtil {
 						subTreeInformation.getFileName());
 				// Save the new metadata for the current tree
 				encryptedMiTreeRepository.saveEncryptedMiTree(decryptedMiTree
-						.encrypt(information.getKey(), information.getIv()),
-						information.getFileName());
+						.encrypt(information.getFileName(),
+								information.getKey(), information.getIv()),
+								information.getFileName());
 			} else {
 				LOG.debug("Found subtree, loading it from repository.");
 				subTree = encryptedMiTreeRepository

@@ -72,7 +72,7 @@ public class EncryptedMiTreeRepository {
 		try (FileInputStream fileInputStream = new FileInputStream(file)) {
 			byte[] content = new byte[(int) file.length()];
 			fileInputStream.read(content);
-			return new EncryptedMiTree(content);
+			return new EncryptedMiTree(file.getName(), content);
 		} catch (IOException e) {
 			log.info("Error during load of encrypted MiTree [{}]",
 					file.getName());

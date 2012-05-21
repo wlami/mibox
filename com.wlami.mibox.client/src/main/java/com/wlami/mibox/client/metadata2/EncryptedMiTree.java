@@ -49,10 +49,13 @@ public class EncryptedMiTree implements Transportable {
 	 * EncryptedChunkTransporter Create a new encrypted for a encrypted byte
 	 * array.
 	 * 
+	 * @param name
+	 *            The filename of the encrypted mi tree.
 	 * @param content
 	 *            The encrypted data.
 	 */
-	public EncryptedMiTree(byte[] content) {
+	public EncryptedMiTree(String name, byte[] content) {
+		this.name = name;
 		this.content = content;
 	}
 
@@ -101,7 +104,7 @@ public class EncryptedMiTree implements Transportable {
 	 */
 	@Override
 	public String getName() {
-		return "TEST"; // TODO
+		return name;
 	}
 
 }

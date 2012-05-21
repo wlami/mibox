@@ -51,14 +51,11 @@ public final class MiboxClientApp {
 	protected static Logger log = LoggerFactory.getLogger(MiboxClientApp.class
 			.getName());
 
-	private final ClassPathXmlApplicationContext ctx;
-
 	/**
 	 * hide constructor, because this is an utility class.
 	 */
 	@Inject
-	private MiboxClientApp(ClassPathXmlApplicationContext ctx) {
-		this.ctx = ctx;
+	private MiboxClientApp() {
 	}
 
 	private MiboxTray miboxTray;
