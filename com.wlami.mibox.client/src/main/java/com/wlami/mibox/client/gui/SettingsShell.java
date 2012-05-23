@@ -17,8 +17,6 @@
  */
 package com.wlami.mibox.client.gui;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ResourceBundle;
 
 import org.eclipse.swt.SWT;
@@ -70,7 +68,7 @@ public class SettingsShell extends Shell {
 	/**
 	 * ResourceBundle which stores all translated strings.
 	 */
-	private ResourceBundle strings;
+	private final ResourceBundle strings;
 
 	/**
 	 * Bool which tells us whether there habe been made changes since the last
@@ -103,17 +101,17 @@ public class SettingsShell extends Shell {
 	/**
 	 * Reference to singleton langUtils.
 	 */
-	private LangUtils langUtils;
+	private final LangUtils langUtils;
 
 	/**
 	 * Checkbutton for enabling desktop notifications.
 	 */
-	private Button btnShowDesktopNotification;
+	private final Button btnShowDesktopNotification;
 
 	/**
 	 * Checkbutton for enabling automatic startup of mibox.
 	 */
-	private Button btnStartAtSystemStartup;
+	private final Button btnStartAtSystemStartup;
 
 	/**
 	 * Text-field for entering the synchronization path.
@@ -149,12 +147,9 @@ public class SettingsShell extends Shell {
 	 * Create the shell. Auto-generated code.
 	 * 
 	 * @param display
-	 * @throws FileNotFoundException
-	 * @throws IOException
 	 */
 	public SettingsShell(Display display, final LangUtils langUtils,
-			final AppSettingsDao appSettingsDao) throws FileNotFoundException,
-			IOException {
+			final AppSettingsDao appSettingsDao) {
 		super(display, SWT.CLOSE | SWT.TITLE);
 		this.langUtils = langUtils;
 		final Shell shell = this;
@@ -181,9 +176,9 @@ public class SettingsShell extends Shell {
 		Group grpBehavior = new Group(composite_2, SWT.NONE);
 		grpBehavior.setText(strings.getString("Settings.tab.general.behavior"));
 		grpBehavior.setLayout(new GridLayout(2, false));
-		new Label(grpBehavior, SWT.NONE);
-		new Label(grpBehavior, SWT.NONE);
-		new Label(grpBehavior, SWT.NONE);
+		for (int i = 0; i < 3; i++) {
+			new Label(grpBehavior, SWT.NONE);
+		}
 
 		setupBtnShowDesktopNotification(appSettings, grpBehavior);
 		btnShowDesktopNotification = new Button(grpBehavior, SWT.CHECK);
@@ -192,8 +187,8 @@ public class SettingsShell extends Shell {
 			public void widgetSelected(SelectionEvent arg0) {
 				setUnsavedChanges(true);
 				appSettings
-						.setShowDesktopNotification(btnShowDesktopNotification
-								.getSelection());
+				.setShowDesktopNotification(btnShowDesktopNotification
+						.getSelection());
 			}
 		});
 		btnShowDesktopNotification.setText(strings
@@ -222,25 +217,10 @@ public class SettingsShell extends Shell {
 		grpSynchronization.setText(strings
 				.getString("Settings.tab.general.synchronization"));
 		grpSynchronization.setLayout(new GridLayout(17, false));
-		new Label(grpSynchronization, SWT.NONE); // TODO: Change this auto
-													// generated code!!
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
-		new Label(grpSynchronization, SWT.NONE);
+		for (int i = 0; i < 18; i++)
+		{
+			new Label(grpSynchronization, SWT.NONE);
+		}
 
 		Label lblSyncDir = new Label(grpSynchronization, SWT.NONE);
 		lblSyncDir.setText(strings.getString("Settings.tab.general.sync_dir")
@@ -263,18 +243,14 @@ public class SettingsShell extends Shell {
 		tbtmAccount.setControl(grpAccountInformation);
 		GridLayout gl_grpAccountInformation = new GridLayout(4, false);
 		grpAccountInformation.setLayout(gl_grpAccountInformation);
-		new Label(grpAccountInformation, SWT.NONE);
-		new Label(grpAccountInformation, SWT.NONE);
-		new Label(grpAccountInformation, SWT.NONE);
-		new Label(grpAccountInformation, SWT.NONE);
-		new Label(grpAccountInformation, SWT.NONE);
+		for (int i = 0; i < 5; i++) {
+			new Label(grpAccountInformation, SWT.NONE);
+		}
 
 		setupTxtUsername(appSettings, grpAccountInformation);
-		new Label(grpAccountInformation, SWT.NONE);
-		new Label(grpAccountInformation, SWT.NONE);
-		new Label(grpAccountInformation, SWT.NONE);
-		new Label(grpAccountInformation, SWT.NONE);
-		new Label(grpAccountInformation, SWT.NONE);
+		for (int i = 0; i < 5; i++) {
+			new Label(grpAccountInformation, SWT.NONE);
+		}
 
 		setupTxtPassword(appSettings, grpAccountInformation);
 
@@ -309,6 +285,7 @@ public class SettingsShell extends Shell {
 	private void setupTxtSyncDir(Group grpSynchronization) {
 		txtSyncDir = new Text(grpSynchronization, SWT.BORDER);
 		txtSyncDir.addModifyListener(new ModifyListener() {
+			@Override
 			public void modifyText(ModifyEvent arg0) {
 				setUnsavedChanges(true);
 				appSettings.setWatchDirectory(txtSyncDir.getText());
@@ -374,6 +351,7 @@ public class SettingsShell extends Shell {
 
 		txtUsername = new Text(grpAccountInformation, SWT.BORDER);
 		txtUsername.addModifyListener(new ModifyListener() {
+			@Override
 			public void modifyText(ModifyEvent arg0) {
 				setUnsavedChanges(true);
 				settings.setUsername(txtUsername.getText());
@@ -396,6 +374,7 @@ public class SettingsShell extends Shell {
 
 		txtPassword = new Text(grpAccountInformation, SWT.BORDER | SWT.PASSWORD);
 		txtPassword.addModifyListener(new ModifyListener() {
+			@Override
 			public void modifyText(ModifyEvent arg0) {
 				setUnsavedChanges(true);
 				settings.setPassword(txtPassword.getText());
@@ -416,7 +395,7 @@ public class SettingsShell extends Shell {
 		btnSave.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-					appSettingsDao.save(settings);
+				appSettingsDao.save(settings);
 				setUnsavedChanges(false);
 				shell.close();
 			}
@@ -481,7 +460,8 @@ public class SettingsShell extends Shell {
 	 */
 	private void checkSaveBeforeClose() {
 		final SettingsShell shell = this;
-		this.addListener(SWT.Close, new Listener() {
+		addListener(SWT.Close, new Listener() {
+			@Override
 			public void handleEvent(Event event) {
 				if (shell.isUnsavedChanges()) {
 					int style = SWT.APPLICATION_MODAL | SWT.YES | SWT.NO;

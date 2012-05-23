@@ -67,7 +67,7 @@ public class EncryptedMiTree implements Transportable {
 	 */
 	@Override
 	public byte[] getContent() {
-		return content; //TODO Check whether a deep copy is required at this point.
+		return content;
 	}
 
 	/**

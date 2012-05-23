@@ -24,6 +24,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.commons.io.FilenameUtils;
@@ -309,10 +310,7 @@ class MetadataWorker extends Thread {
 						createUploadRequest(chunk, f);
 					}
 					currentChunk++;
-
 				}
-				// TODO split hashing and chunk-upload
-
 				mFile.setFileHash(HashUtil.digestToString(fileDigest.digest()));
 				mFile.setLastModified(filesystemLastModified);
 
@@ -351,16 +349,9 @@ class MetadataWorker extends Thread {
 	public UploadCallback createDefaultUploadCallback() {
 		return new UploadCallback() {
 			@Override
-			public void uploadCallback(MChunk mChunk, String result) {
-				mChunk.setEncryptedChunkHash(result);
-				mChunk.setLastSync(new Date());
-				// try {
-				// //TODO writeMetadata(true);
-				// } catch (IOException e) {
-				// log.error(
-				// "Could not persist metadata. Maybe you have to toggle this process manually.",
-				// e);
-				// }
+			public void uploadCallback(Map<String, Object> parameter) {
+				// TODO Auto-generated method stub
+
 			}
 		};
 	}

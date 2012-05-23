@@ -17,7 +17,7 @@
  */
 package com.wlami.mibox.client.networking.synchronization;
 
-import com.wlami.mibox.client.metadata.MChunk;
+import java.util.Map;
 
 /**
  * This callback interfaces defines a processing method which is called when the
@@ -30,11 +30,10 @@ public interface UploadCallback {
 	/**
 	 * This method gets called when the upload method has finished.
 	 * 
-	 * @param mChunk
-	 *            the chunk which got uploaded.
-	 * @param result
-	 *            the hash result from encrypted chunk.
+	 * @param parameter
+	 *            A Map of parameter objects. Each parameter has a unique name
+	 *            (String-Key).
 	 */
-	public void uploadCallback(MChunk mChunk, String result);
+	public void uploadCallback(Map<String, Object> parameter);
 
 }

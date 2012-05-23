@@ -21,12 +21,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.application.AppFolders;
-import com.wlami.mibox.client.metadata.MChunk;
 import com.wlami.mibox.client.networking.synchronization.EncryptedMiTreeUploadRequest;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 import com.wlami.mibox.client.networking.synchronization.UploadCallback;
@@ -111,9 +111,9 @@ public class EncryptedMiTreeRepository {
 		request.setFile(file);
 		request.setUploadCallback(new UploadCallback() {
 			@Override
-			public void uploadCallback(MChunk mChunk, String result) {
-				log.debug("Execute the callback");
-				// TODO
+			public void uploadCallback(Map<String, Object> parameter) {
+				// TODO Auto-generated method stub
+
 			}
 		});
 		return request;

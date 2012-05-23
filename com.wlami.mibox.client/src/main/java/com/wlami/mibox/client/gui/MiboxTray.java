@@ -17,8 +17,6 @@
  */
 package com.wlami.mibox.client.gui;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ResourceBundle;
 
 import org.eclipse.swt.SWT;
@@ -208,23 +206,14 @@ public class MiboxTray {
 			@Override
 			public void handleEvent(final Event arg0) {
 				SettingsShell settingsShell;
-				try {
-					settingsShell = SettingsShellFactory.getSettingsShell(
-							langUtils, appSettingsDao);
-					while (!settingsShell.isDisposed()) {
-						if (!display.readAndDispatch()) {
-							display.sleep();
-						}
+				settingsShell = SettingsShellFactory.getSettingsShell(
+						langUtils, appSettingsDao);
+				while (!settingsShell.isDisposed()) {
+					if (!display.readAndDispatch()) {
+						display.sleep();
 					}
-					SettingsShellFactory.invalidateShell();
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
-
+				SettingsShellFactory.invalidateShell();
 			}
 		});
 	}
