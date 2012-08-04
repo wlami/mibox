@@ -58,6 +58,7 @@ public final class MiboxClientApp {
 	private MiboxClientApp() {
 	}
 
+	@SuppressWarnings("unused")
 	private MiboxTray miboxTray;
 
 	/**
