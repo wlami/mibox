@@ -21,22 +21,43 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
- * @author Wladislaw Mitzel
- * @author Stefan Baust
- * 
+ * @author wladislaw
+ *
  */
-public class EncryptedMiTree extends EncryptedAbstractObject<DecryptedMiTree> {
+public class DecryptedMetaMetaData extends
+DecryptedAbstractObject<EncryptedMetaMetaData> {
 
 	/** internal logger */
-	private static Logger log = LoggerFactory.getLogger(EncryptedMiTree.class);
+	Logger log = LoggerFactory.getLogger(DecryptedMetaMetaData.class);
 
 	/**
-	 * Default constructor.
+	 * Default constructor
 	 */
-	public EncryptedMiTree() {
-		super(DecryptedMiTree.class);
-		log.debug("Creating new instance of EncryptedMiTree");
+	public DecryptedMetaMetaData() {
+		super(EncryptedMetaMetaData.class);
 	}
+
+	/**
+	 * this is the filename of the encrypted root metadata file.<br/>
+	 * 
+	 * @see {@link EncryptedMiTree}
+	 */
+	private String rootName;
+
+	/**
+	 * @return the rootName
+	 */
+	public String getRootName() {
+		return rootName;
+	}
+
+	/**
+	 * @param rootName
+	 *            the rootName to set
+	 */
+	public void setRootName(String rootName) {
+		this.rootName = rootName;
+	}
+
 
 }

@@ -26,17 +26,18 @@ import org.slf4j.LoggerFactory;
  * @author Stefan Baust
  * 
  */
-public class EncryptedMiTree extends EncryptedAbstractObject<DecryptedMiTree> {
+public class EncryptedMetaMetaData extends
+		EncryptedAbstractObject<DecryptedMetaMetaData> {
 
 	/** internal logger */
-	private static Logger log = LoggerFactory.getLogger(EncryptedMiTree.class);
+	private static Logger log = LoggerFactory.getLogger(EncryptedMetaMetaData.class);
 
 	/**
 	 * Default constructor.
 	 */
-	public EncryptedMiTree() {
-		super(DecryptedMiTree.class);
-		log.debug("Creating new instance of EncryptedMiTree");
+	public EncryptedMetaMetaData() {
+		super(DecryptedMetaMetaData.class);
+		log.debug("Creating new instance of EncryptedMetaMetaData");
 	}
 
 }

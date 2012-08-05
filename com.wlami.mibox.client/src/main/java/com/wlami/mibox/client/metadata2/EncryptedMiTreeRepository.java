@@ -72,7 +72,10 @@ public class EncryptedMiTreeRepository {
 		try (FileInputStream fileInputStream = new FileInputStream(file)) {
 			byte[] content = new byte[(int) file.length()];
 			fileInputStream.read(content);
-			return new EncryptedMiTree(file.getName(), content);
+			EncryptedMiTree encryptedMiTree = new EncryptedMiTree();
+			encryptedMiTree.setContent(content);
+			encryptedMiTree.setName(fileName);
+			return encryptedMiTree;
 		} catch (IOException e) {
 			log.info("Error during load of encrypted MiTree [{}]",
 					file.getName());
@@ -83,8 +86,9 @@ public class EncryptedMiTreeRepository {
 	/**
 	 * Save an encrypted MiTree to local file system
 	 * 
-	 * @param encryptedMiTree
-	 *            The tree which shall be saved.
+	 * @param encryptedMiT
+	 *            log.debug("Creating new instance of EncryptedMiTree");ree The
+	 *            tree which shall be saved.
 	 * @param fileName
 	 *            filename of the MiTree.
 	 */

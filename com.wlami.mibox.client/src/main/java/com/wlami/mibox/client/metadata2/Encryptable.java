@@ -17,26 +17,12 @@
  */
 package com.wlami.mibox.client.metadata2;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
- * 
- * @author Wladislaw Mitzel
- * @author Stefan Baust
- * 
+ * @author wladislaw
+ *
  */
-public class EncryptedMiTree extends EncryptedAbstractObject<DecryptedMiTree> {
-
-	/** internal logger */
-	private static Logger log = LoggerFactory.getLogger(EncryptedMiTree.class);
-
-	/**
-	 * Default constructor.
-	 */
-	public EncryptedMiTree() {
-		super(DecryptedMiTree.class);
-		log.debug("Creating new instance of EncryptedMiTree");
-	}
+public interface Encryptable<T extends Decryptable<?>> {
+	
+	public T encrypt(String filename, byte[] key, byte[] iv);
 
 }

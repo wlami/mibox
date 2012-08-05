@@ -17,26 +17,19 @@
  */
 package com.wlami.mibox.client.metadata2;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+
+import org.bouncycastle.crypto.CryptoException;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 
 /**
- * 
- * @author Wladislaw Mitzel
- * @author Stefan Baust
- * 
+ * @author wladislaw
+ *
  */
-public class EncryptedMiTree extends EncryptedAbstractObject<DecryptedMiTree> {
+public interface Decryptable<T extends Encryptable<?>> {
 
-	/** internal logger */
-	private static Logger log = LoggerFactory.getLogger(EncryptedMiTree.class);
-
-	/**
-	 * Default constructor.
-	 */
-	public EncryptedMiTree() {
-		super(DecryptedMiTree.class);
-		log.debug("Creating new instance of EncryptedMiTree");
-	}
+	public T decrypt(byte[] key, byte[] iv) throws CryptoException,
+	JsonParseException, JsonMappingException, IOException;
 
 }
