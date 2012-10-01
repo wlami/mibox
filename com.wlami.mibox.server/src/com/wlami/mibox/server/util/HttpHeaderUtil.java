@@ -17,6 +17,8 @@
  */
 package com.wlami.mibox.server.util;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.ws.rs.core.HttpHeaders;
@@ -37,7 +39,11 @@ public class HttpHeaderUtil {
 	public static User getUserFromHttpHeaders(HttpHeaders headers,
 			EntityManager em) {
 		try {
-			String username = HttpHeaderUtil.getAuthorization(headers)[0];
+			String[] auth = HttpHeaderUtil.getAuthorization(headers);
+			if (auth == null) {
+				return null;
+			}
+			String username = auth[0];
 			return User.loadUserByUsername(username, em);
 		} catch (NoResultException e) {
 			return null;
@@ -45,8 +51,11 @@ public class HttpHeaderUtil {
 	}
 
 	public static String[] getAuthorization(HttpHeaders httpHeaders) {
-		String authorization = httpHeaders.getRequestHeader("authorization")
-				.get(0);
+		List<String> headers = httpHeaders.getRequestHeader("authorization");
+		if (headers == null) {
+			return null;
+		}
+		String authorization = headers.get(0);
 		// Remove the "BASIC " prefix
 		authorization = authorization.substring(6);
 		authorization = Base64.base64Decode(authorization);

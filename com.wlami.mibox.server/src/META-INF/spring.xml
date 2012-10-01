@@ -1,6 +1,4 @@
-
 <!-- DO NOT MODIFY THIS FILE UNLESS YOU REALLY KNOW WHAT YOU ARE DOING! -->
-
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
@@ -12,6 +10,14 @@
 		<property name="chunkManagerResponseBuilder" ref="chunkManagerResponseBuilder" />
 		<property name="chunkPersistenceProvider" ref="chunkPersistenceProvider" />
 	</bean>
+	
+	<bean id="metadataManager" class="com.wlami.mibox.server.services.MetadataManager">
+		<property name="metadataPersistenceProvider" ref="metadataPersistenceProvider"></property>
+	</bean>
+	
+	<bean id="metadataPersistenceProvider" class="com.wlami.mibox.server.services.metadata.FilesystemMetadataPersistenceProvider">
+		<property name="storagePath" value="/tmp/mibox"></property>
+	</bean>
 
 	<bean id="chunkManagerResponseBuilder"
 		class="com.wlami.mibox.server.services.chunk.ChunkManagerProxyResponseBuilder">
@@ -20,7 +26,7 @@
 
 	<bean id="chunkPersistenceProvider"
 		class="com.wlami.mibox.server.services.chunk.FilesystemChunkPersistenceProvider">
-		<property name="storagePath" value="C:\temp\mibox" />
+		<property name="storagePath" value="/tmp/mibox" />
 	</bean>
 
 

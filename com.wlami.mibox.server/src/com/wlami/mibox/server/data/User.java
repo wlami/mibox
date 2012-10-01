@@ -40,16 +40,22 @@ public class User {
 	@JoinTable(name = "UUSER_CHUNK", joinColumns = @JoinColumn(name = "UUSER_USERNAME"), inverseJoinColumns = @JoinColumn(name = "CHUNK_HASH"))
 	private Set<Chunk> chunks;
 
+	@ManyToMany(cascade = CascadeType.ALL)
+	@JoinTable(name = "UUSER_METADATA", joinColumns = @JoinColumn(name = "UUSER_USERNAME"), inverseJoinColumns = @JoinColumn(name = "METADATA_NAME"))
+	private Set<Metadata> metadatas;
+
 	@Deprecated
 	public User() {
 		chunks = new HashSet<Chunk>();
+		metadatas = new HashSet<Metadata>();
 	}
 
 	public User(String username, String eMail, String password) {
 		this.username = username;
 		this.eMail = eMail;
 		this.password = password;
-		this.chunks = new HashSet<Chunk>();
+		chunks = new HashSet<Chunk>();
+		metadatas = new HashSet<Metadata>();
 	}
 
 	/**
@@ -102,6 +108,13 @@ public class User {
 	}
 
 	/**
+	 * @return the metadatas
+	 */
+	public Set<Metadata> getMetadatas() {
+		return metadatas;
+	}
+
+	/**
 	 * @param username
 	 * @return
 	 */
@@ -109,7 +122,7 @@ public class User {
 		return (User) em
 				.createQuery(
 						"SELECT u from User u WHERE u.username = :username")
-				.setParameter("username", username).getSingleResult();
+						.setParameter("username", username).getSingleResult();
 	}
 
 }

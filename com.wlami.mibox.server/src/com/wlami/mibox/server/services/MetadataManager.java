@@ -17,11 +17,18 @@
  */
 package com.wlami.mibox.server.services;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.NoSuchAlgorithmException;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.servlet.ServletContext;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -30,6 +37,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +48,11 @@ import com.wlami.mibox.server.util.HttpHeaderUtil;
 import com.wlami.mibox.server.util.PersistenceUtil;
 
 /**
- * @author wladislaw
- *
+ * @author wladislaw mitzel
+ * @author stefan baust
+ * 
  */
+@Path("/metadatamanager/{name}")
 public class MetadataManager {
 
 	/** internal logger */
@@ -83,10 +93,7 @@ public class MetadataManager {
 		if (user == null) {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}
-		Metadata metadata = null;
-		metadata = (Metadata) em.createQuery(
-				"SELECT m FROM Metadata m WHERE m.name = :name").setParameter(
-						"name", name);
+		Metadata metadata = Metadata.getByName(name, em);
 		// TODO evtl. check access
 		if (metadata == null) {
 			return Response.status(Status.NOT_FOUND).build();
@@ -100,5 +107,48 @@ public class MetadataManager {
 		}
 		return Response.ok().header("Content-length", data.length).entity(data)
 				.build();
+	}
+
+	@PUT
+	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+	public Response saveMetadata(@PathParam("name") String name,
+			@Context HttpHeaders headers, final InputStream inputStream)
+					throws NoSuchAlgorithmException {
+		User user = HttpHeaderUtil.getUserFromHttpHeaders(headers, em);
+		if (user == null) {
+			return Response.status(Status.UNAUTHORIZED).build();
+		}
+
+		byte[] input;
+		try {
+			input = IOUtils.toByteArray(inputStream);
+		} catch (IOException exception) {
+			log.error("", exception);
+			em.getTransaction().rollback();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+
+		Metadata metadata = Metadata.getByName(name, em);
+
+		em.getTransaction().begin();
+
+		if (metadata == null) {
+			metadata = new Metadata(name);
+		}
+		try {
+			metadataPersistenceProvider.persistMetadata(name, input);
+		} catch (IOException e) {
+			log.error("Could not persist metadata", e);
+			em.getTransaction().rollback();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+
+		if (!user.getMetadatas().contains(metadata)) {
+			user.getMetadatas().add(metadata);
+		}
+		em.persist(metadata);
+		em.getTransaction().commit();
+
+		return Response.ok().build();
 	}
 }

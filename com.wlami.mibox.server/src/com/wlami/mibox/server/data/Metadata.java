@@ -4,12 +4,20 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.Id;
+import javax.persistence.NoResultException;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Entity
 public class Metadata implements Comparable<Metadata> {
+
+	/** internal logger */
+	public static final Logger log = LoggerFactory.getLogger(Metadata.class);
 
 	@Id
 	@Column(nullable = false, columnDefinition = "char(36)")
@@ -76,6 +84,29 @@ public class Metadata implements Comparable<Metadata> {
 	@Override
 	public int compareTo(Metadata o) {
 		return name.compareTo(o.getName());
+	}
+
+	/**
+	 * Get a {@link Metadata} by its name.
+	 * 
+	 * @param name
+	 *            The search parameter.
+	 * @param em
+	 *            An entity manager for db access.
+	 * @return The Metadata from the db or <code>null</code> if nothing is
+	 *         found.
+	 */
+	public static Metadata getByName(String name, EntityManager em) {
+		Metadata metadata = null;
+		try {
+			metadata = (Metadata) em
+					.createQuery(
+							"SELECT m FROM Metadata m WHERE m.name = :name")
+							.setParameter("name", name).getSingleResult();
+		} catch (NoResultException e) {
+			log.debug("Could not get Metadata by name for [{}]", name);
+		}
+		return metadata;
 	}
 
 }
