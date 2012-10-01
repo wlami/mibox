@@ -17,15 +17,32 @@
  */
 package com.wlami.mibox.server.util;
 
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.ws.rs.core.HttpHeaders;
 
 import com.sun.jersey.core.util.Base64;
+import com.wlami.mibox.server.data.User;
 
 /**
  * @author Wladislaw Mitzel
  * 
  */
 public class HttpHeaderUtil {
+
+	/**
+	 * @param headers
+	 * @return
+	 */
+	public static User getUserFromHttpHeaders(HttpHeaders headers,
+			EntityManager em) {
+		try {
+			String username = HttpHeaderUtil.getAuthorization(headers)[0];
+			return User.loadUserByUsername(username, em);
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
 
 	public static String[] getAuthorization(HttpHeaders httpHeaders) {
 		String authorization = httpHeaders.getRequestHeader("authorization")

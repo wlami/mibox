@@ -82,7 +82,7 @@ public class ChunkManager {
 			@Context HttpHeaders headers) {
 
 		// Check whether user is properly logged in
-		User user = getUserFromHttpHeaders(headers);
+		User user = HttpHeaderUtil.getUserFromHttpHeaders(headers, em);
 		if (user == null) {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}
@@ -109,8 +109,8 @@ public class ChunkManager {
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	public Response saveChunk(@PathParam("hash") String hash,
 			@Context HttpHeaders headers, final InputStream inputStream)
-			throws NoSuchAlgorithmException {
-		User user = getUserFromHttpHeaders(headers);
+					throws NoSuchAlgorithmException {
+		User user = HttpHeaderUtil.getUserFromHttpHeaders(headers, em);
 		if (user == null) {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}
@@ -179,17 +179,6 @@ public class ChunkManager {
 		this.chunkPersistenceProvider = chunkPersistenceProvider;
 	}
 
-	/**
-	 * @param headers
-	 * @return
-	 */
-	protected User getUserFromHttpHeaders(HttpHeaders headers) {
-		try {
-			String username = HttpHeaderUtil.getAuthorization(headers)[0];
-			return User.loadUserByUsername(username, em);
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+
 
 }

@@ -30,10 +30,11 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class FilesystemChunkPersistenceProvider implements
-		ChunkPersistenceProvider {
+ChunkPersistenceProvider {
 
 	/** internal logger */
-	Logger log = LoggerFactory.getLogger(getClass().getName());
+	public static final Logger log = LoggerFactory
+			.getLogger(FilesystemChunkPersistenceProvider.class);
 
 	/** This path is used to store the chunks */
 	String storagePath;

@@ -7,13 +7,14 @@
 		<class>com.wlami.mibox.server.data.Groups</class>
 		<class>com.wlami.mibox.server.data.GroupsPK</class>
 		<class>com.wlami.mibox.server.data.Chunk</class>
+		<class>com.wlami.mibox.server.data.Metadata</class>
 		<properties>
 			<property name="eclipselink.logging.level" value="FINE"/>
 			<property name="eclipselink.ddl-generation" value="drop-and-create-tables"/> 
 			<property name="eclipselink.ddl-generation.output-mode" value="sql-script"/>
 			<property name="eclipselink.create-ddl-jdbc-file-name" value="create.sql"/>
 			<property name="eclipselink.drop-ddl-jdbc-file-name" value="drop.sql"/>
-			<property name="eclipselink.application-location" value="C:\\mibox-ddl"/>
+			<property name="eclipselink.application-location" value="/tmp/mibox-ddl"/>
 		 	<property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/mibox"/>
 			<property name="javax.persistence.jdbc.user" value="root"/>
 			<property name="javax.persistence.jdbc.password" value=""/>
