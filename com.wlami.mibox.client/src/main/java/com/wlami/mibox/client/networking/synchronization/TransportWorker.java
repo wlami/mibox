@@ -75,7 +75,7 @@ extends Thread {
 		while (this.active) {
 			// Process the upload requests
 			for (UploadRequest<?> uploadRequest : uploads) {
-				log.debug("Processing MChunkUpload for file ");
+				log.debug("Processing UploadRequest for file ");
 				try {
 					Transportable transportable = uploadRequest
 							.getTransportable();
@@ -83,7 +83,7 @@ extends Thread {
 					// String result = encryptAndUploadChunk(chunk, file);
 					// mChunkUpload.getUploadCallback().uploadCallback(chunk,
 					// result);
-					log.debug("Processing of MChunkUpload successfully.");
+					log.debug("Processing of UploadRequest successfully.");
 				} catch (CryptoException e) {
 					log.error(
 							"There has been en error while encrypting the chunk",
