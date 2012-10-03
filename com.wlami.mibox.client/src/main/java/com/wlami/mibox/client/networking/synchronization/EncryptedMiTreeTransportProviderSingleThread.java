@@ -42,6 +42,11 @@ import com.wlami.mibox.client.networking.transporter.Transporter;
 public class EncryptedMiTreeTransportProviderSingleThread implements
 TransportProvider<EncryptedMiTreeUploadRequest> {
 
+	/**
+	 * 
+	 */
+	protected static final String SERVER_URL_SUFFIX_REST_INTERFACE = "rest/metadatamanager/";
+
 	/** internal logger. */
 	Logger log = LoggerFactory
 			.getLogger(EncryptedMiTreeTransportProviderSingleThread.class);
@@ -76,7 +81,7 @@ TransportProvider<EncryptedMiTreeUploadRequest> {
 		if (transportWorker == null) {
 			AppSettings appSettings = appSettingsDao.load();
 			String dataStoreUrl = appSettings.getServerUrl()
-					+ "rest/metamanager/";
+					+ SERVER_URL_SUFFIX_REST_INTERFACE;
 			RestTransporter restTransporter = new RestTransporter(dataStoreUrl);
 			Transporter transporter = new Transporter(restTransporter);
 			transportWorker = new TransportWorker<>(transporter, uploads);
