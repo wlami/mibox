@@ -15,6 +15,10 @@
 		<property name="metadataPersistenceProvider" ref="metadataPersistenceProvider"></property>
 	</bean>
 	
+	<bean id="metaMetaDataManager" class="com.wlami.mibox.server.services.MetaMetaDataManager">
+		<property name="metadataPersistenceProvider" ref="metaMetaDataPersistenceProvider"></property>
+	</bean>
+	
 	<bean id="metadataPersistenceProvider" class="com.wlami.mibox.server.services.metadata.FilesystemMetadataPersistenceProvider">
 		<property name="storagePath" value="G:/Data/mibox_data"></property>
 	</bean>

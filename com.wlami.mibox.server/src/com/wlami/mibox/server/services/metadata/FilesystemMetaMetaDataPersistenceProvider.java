@@ -65,7 +65,7 @@ MetaMetaDataPersistenceProvider {
 			fis.close();
 			return data;
 		} catch (IOException e) {
-			log.error("", e);
+			log.error(e.getMessage());
 		}
 		return null;
 	}
