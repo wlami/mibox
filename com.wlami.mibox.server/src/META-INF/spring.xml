@@ -16,7 +16,10 @@
 	</bean>
 	
 	<bean id="metadataPersistenceProvider" class="com.wlami.mibox.server.services.metadata.FilesystemMetadataPersistenceProvider">
-		<property name="storagePath" value="/tmp/mibox"></property>
+		<property name="storagePath" value="G:/Data/mibox_data"></property>
+	</bean>
+	<bean id="metaMetaDataPersistenceProvider" class="com.wlami.mibox.server.services.metadata.FilesystemMetaMetaDataPersistenceProvider">
+		<property name="storagePath" value="G:/Data/mibox_data"></property>
 	</bean>
 
 	<bean id="chunkManagerResponseBuilder"
@@ -26,7 +29,7 @@
 
 	<bean id="chunkPersistenceProvider"
 		class="com.wlami.mibox.server.services.chunk.FilesystemChunkPersistenceProvider">
-		<property name="storagePath" value="/tmp/mibox" />
+		<property name="storagePath" value="G:/Data/mibox_data" />
 	</bean>
 
 
