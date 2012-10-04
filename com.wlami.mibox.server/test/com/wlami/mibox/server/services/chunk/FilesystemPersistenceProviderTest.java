@@ -27,13 +27,15 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.wlami.mibox.server.services.persistence.FileSystemPersistenceProvider;
+
 /**
  * @author Wladislaw Mitzel
  * 
  */
-public class FilesystemChunkPersistenceProviderTest {
+public class FilesystemPersistenceProviderTest {
 
-	FilesystemChunkPersistenceProvider fcpp;
+	FileSystemPersistenceProvider fcpp;
 
 	byte[] testData;
 
@@ -44,8 +46,9 @@ public class FilesystemChunkPersistenceProviderTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		fcpp = new FilesystemChunkPersistenceProvider();
+		fcpp = new FileSystemPersistenceProvider();
 		fcpp.setStoragePath(".");
+		fcpp.setName("Chunk");
 		testData = new byte[] { 't', 'e', 's', 't' };
 	}
 
@@ -74,7 +77,7 @@ public class FilesystemChunkPersistenceProviderTest {
 		f.close();
 		f = null;
 
-		byte[] result = fcpp.retrieveChunk(FILENAME);
+		byte[] result = fcpp.retrieveFile(FILENAME);
 		Assert.assertArrayEquals(testData, result);
 
 		Assert.assertTrue(file.delete());
@@ -96,7 +99,7 @@ public class FilesystemChunkPersistenceProviderTest {
 					+ file.getAbsolutePath());
 		}
 
-		fcpp.persistChunk(FILENAME, testData);
+		fcpp.persistFile(FILENAME, testData);
 
 		FileInputStream fileInputStream = new FileInputStream(file);
 		byte[] read = new byte[testData.length];

@@ -23,17 +23,19 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.wlami.mibox.server.services.persistence.PersistenceProvider;
+
 /**
  * @author Wladislaw Mitzel
  * 
  */
 public class ChunkManagerProxyResponseBuilder implements
-		ChunkManagerResponseBuilder {
+ChunkManagerResponseBuilder {
 
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(getClass().getName());
 
-	ChunkPersistenceProvider chunkPersistenceProvider;
+	PersistenceProvider chunkPersistenceProvider;
 
 	/*
 	 * (non-Javadoc)
@@ -44,7 +46,7 @@ public class ChunkManagerProxyResponseBuilder implements
 	@Override
 	public Response buildGetChunkResponse(String hash) {
 
-		byte[] data = chunkPersistenceProvider.retrieveChunk(hash);
+		byte[] data = chunkPersistenceProvider.retrieveFile(hash);
 
 		if (data == null) {
 			return Response.status(Status.NOT_FOUND).build();
@@ -59,7 +61,7 @@ public class ChunkManagerProxyResponseBuilder implements
 	 *            the chunkPersistenceProvider to set
 	 */
 	public void setChunkPersistenceProvider(
-			ChunkPersistenceProvider chunkPersistenceProvider) {
+			PersistenceProvider chunkPersistenceProvider) {
 		this.chunkPersistenceProvider = chunkPersistenceProvider;
 	}
 

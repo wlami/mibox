@@ -15,33 +15,35 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wlami.mibox.server.services.metadata;
+package com.wlami.mibox.server.services.persistence;
 
 import java.io.IOException;
 
 /**
- * @author wladislaw
- *
+ * @author wladislaw mitzel
+ * @author stefan baust
+ * 
  */
-public interface MetadataPersistenceProvider {
+public interface PersistenceProvider {
 
 	/**
-	 * Retrieve metadata from the persistent storage.
+	 * Retrieve a file from a persistent storage.
 	 * 
 	 * @param name
-	 *            Name which is used for identification of the metadata
-	 * @return Returns a {@link Byte}-Array which contains the metadata.
+	 *            Filename, which identifies the file.
+	 * @return The content of the file as byte array.
 	 */
-	public abstract byte[] retrieveMetadata(String name);
+	public byte[] retrieveFile(String name);
 
 	/**
-	 * Persist a metadata to the storage.
+	 * Persist a file to a persistent storage.
 	 * 
 	 * @param name
-	 *            Name which is used for identification of the metadata.
-	 * @param data
-	 *            A {@link Byte}-Array which contains the metadata.
+	 *            FIlename, which identifies the file.
+	 * @param content
+	 *            THe content of the file as byte array.
+	 * @throws IOException
+	 *             Thrown on errors during the write
 	 */
-	public void persistMetadata(String name, byte[] data) throws IOException;
-
+	public void persistFile(String name, byte[] content) throws IOException;
 }

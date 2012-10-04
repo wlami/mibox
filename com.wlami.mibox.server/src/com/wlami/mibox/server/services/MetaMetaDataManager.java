@@ -29,7 +29,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -41,10 +40,8 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.wlami.mibox.server.data.Metadata;
 import com.wlami.mibox.server.data.User;
-import com.wlami.mibox.server.services.metadata.MetaMetaDataPersistenceProvider;
-import com.wlami.mibox.server.services.metadata.MetadataPersistenceProvider;
+import com.wlami.mibox.server.services.persistence.PersistenceProvider;
 import com.wlami.mibox.server.util.HttpHeaderUtil;
 import com.wlami.mibox.server.util.PersistenceUtil;
 
@@ -63,15 +60,15 @@ public class MetaMetaDataManager {
 	private EntityManager em;
 
 	/** This object is responsible for reading and writing the metadata. */
-	private MetaMetaDataPersistenceProvider metaMetaDataPersistenceProvider;
+	private PersistenceProvider metaMetaDataPersistenceProvider;
 
 	/**
 	 * @param metadataPersistenceProvider
 	 *            the metadataPersistenceProvider to set
 	 */
 	public void setMetadataPersistenceProvider(
-			MetaMetaDataPersistenceProvider metadataPersistenceProvider) {
-		this.metaMetaDataPersistenceProvider = metadataPersistenceProvider;
+			PersistenceProvider metadataPersistenceProvider) {
+		metaMetaDataPersistenceProvider = metadataPersistenceProvider;
 	}
 
 	@Context
@@ -93,9 +90,10 @@ public class MetaMetaDataManager {
 		if (user == null) {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}
-		
+
 		// TODO evtl. check access
-		byte[] data = metaMetaDataPersistenceProvider.retrieveMetaMetaData(user.getUsername());
+		byte[] data = metaMetaDataPersistenceProvider.retrieveFile(user
+				.getUsername());
 		if (data == null) {
 			log.error("There is no metametadata entry "
 					+ "from the persistent storage! Name: [{}]",
@@ -109,7 +107,7 @@ public class MetaMetaDataManager {
 	@PUT
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	public Response saveMetaMetadata(@Context HttpHeaders headers, final InputStream inputStream)
-					throws NoSuchAlgorithmException {
+			throws NoSuchAlgorithmException {
 		User user = HttpHeaderUtil.getUserFromHttpHeaders(headers, em);
 		if (user == null) {
 			return Response.status(Status.UNAUTHORIZED).build();
@@ -124,7 +122,8 @@ public class MetaMetaDataManager {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 		try {
-			metaMetaDataPersistenceProvider.persistMetaMetaData(user.getUsername(), input);
+			metaMetaDataPersistenceProvider.persistFile(user.getUsername(),
+					input);
 		} catch (IOException e) {
 			log.error("Could not persist metadata", e);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();

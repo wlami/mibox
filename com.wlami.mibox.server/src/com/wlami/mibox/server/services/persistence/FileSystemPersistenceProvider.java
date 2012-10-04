@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wlami.mibox.server.services.metadata;
+package com.wlami.mibox.server.services.persistence;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,15 +30,43 @@ import org.slf4j.LoggerFactory;
  * @author stefan baust
  * 
  */
-public class FilesystemMetadataPersistenceProvider implements
-MetadataPersistenceProvider {
+public class FileSystemPersistenceProvider implements PersistenceProvider {
 
 	/** internal logger */
 	public static final Logger log = LoggerFactory
-			.getLogger(FilesystemMetadataPersistenceProvider.class);
+			.getLogger(FileSystemPersistenceProvider.class);
+
+	/**
+	 * this name is used for logging. It is possible to instantiate several
+	 * {@link FileSystemPersistenceProvider}. This name can be used to
+	 * distinguish them in the logs.
+	 */
+	private String name;
+
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @param name
+	 *            the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	/**
+	 * @return the storagePath
+	 */
+	public String getStoragePath() {
+		return storagePath;
+	}
 
 	/** This path is used to store the chunks */
-	String storagePath;
+	private String storagePath;
 
 	/**
 	 * @param storagePath
@@ -48,12 +76,15 @@ MetadataPersistenceProvider {
 		this.storagePath = storagePath;
 	}
 
-
-	/* (non-Javadoc)
-	 * @see com.wlami.mibox.server.services.metadata.MetadataPersistenceProvider#retrieveMetadata(java.lang.String)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.server.services.persistence.PersistenceProvider#retrieveFile
+	 * (java.lang.String)
 	 */
 	@Override
-	public byte[] retrieveMetadata(String name) {
+	public byte[] retrieveFile(String name) {
 		File file = new File(storagePath, name);
 		try {
 			log.debug("reading chunk " + name);
@@ -70,14 +101,13 @@ MetadataPersistenceProvider {
 		return null;
 	}
 
-
 	/* (non-Javadoc)
-	 * @see com.wlami.mibox.server.services.metadata.MetadataPersistenceProvider#persistMetadata(java.lang.String, byte[])
+	 * @see com.wlami.mibox.server.services.persistence.PersistenceProvider#persistFile(java.lang.String, byte[])
 	 */
 	@Override
-	public void persistMetadata(String name, byte[] data) throws IOException {
+	public void persistFile(String name, byte[] content) throws IOException {
 		FileOutputStream fos = new FileOutputStream(new File(storagePath, name));
-		fos.write(data);
+		fos.write(content);
 		fos.close();
 	}
 

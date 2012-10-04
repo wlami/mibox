@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.server.data.Metadata;
 import com.wlami.mibox.server.data.User;
-import com.wlami.mibox.server.services.metadata.MetadataPersistenceProvider;
+import com.wlami.mibox.server.services.persistence.PersistenceProvider;
 import com.wlami.mibox.server.util.HttpHeaderUtil;
 import com.wlami.mibox.server.util.PersistenceUtil;
 
@@ -62,14 +62,15 @@ public class MetadataManager {
 	private EntityManager em;
 
 	/** This object is responsible for reading and writing the metadata. */
-	private MetadataPersistenceProvider metadataPersistenceProvider;
+	private PersistenceProvider metadataPersistenceProvider;
+
 
 	/**
 	 * @param metadataPersistenceProvider
 	 *            the metadataPersistenceProvider to set
 	 */
 	public void setMetadataPersistenceProvider(
-			MetadataPersistenceProvider metadataPersistenceProvider) {
+			PersistenceProvider metadataPersistenceProvider) {
 		this.metadataPersistenceProvider = metadataPersistenceProvider;
 	}
 
@@ -98,7 +99,7 @@ public class MetadataManager {
 		if (metadata == null) {
 			return Response.status(Status.NOT_FOUND).build();
 		}
-		byte[] data = metadataPersistenceProvider.retrieveMetadata(name);
+		byte[] data = metadataPersistenceProvider.retrieveFile(name);
 		if (data == null) {
 			log.error("There is a metadata entry in the db which could not "
 					+ "be retrieved from the persistent storage! Name: [{}]",
@@ -136,7 +137,7 @@ public class MetadataManager {
 			metadata = new Metadata(name);
 		}
 		try {
-			metadataPersistenceProvider.persistMetadata(name, input);
+			metadataPersistenceProvider.persistFile(name, input);
 		} catch (IOException e) {
 			log.error("Could not persist metadata", e);
 			em.getTransaction().rollback();

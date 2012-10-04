@@ -5,35 +5,41 @@
 	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd 
 	http://www.springframework.org/schema/context
 	http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+	
+	<context:property-placeholder location="classpath:META-INF/server.properties"/>
 
 	<bean id="chunkManager" class="com.wlami.mibox.server.services.ChunkManager">
 		<property name="chunkManagerResponseBuilder" ref="chunkManagerResponseBuilder" />
-		<property name="chunkPersistenceProvider" ref="chunkPersistenceProvider" />
+		<property name="chunkPersistenceProvider" ref="chunkFileSystemPersistenceProvider" />
 	</bean>
 	
 	<bean id="metadataManager" class="com.wlami.mibox.server.services.MetadataManager">
-		<property name="metadataPersistenceProvider" ref="metadataPersistenceProvider"></property>
+		<property name="metadataPersistenceProvider">
+			<bean class="com.wlami.mibox.server.services.persistence.FileSystemPersistenceProvider">
+				<property name="name" value="metaData" />
+				<property name="storagePath" value="${fileSystemPersistenceProvider.metaData.storagePath}"/>
+			</bean>
+		</property>
 	</bean>
 	
 	<bean id="metaMetaDataManager" class="com.wlami.mibox.server.services.MetaMetaDataManager">
-		<property name="metadataPersistenceProvider" ref="metaMetaDataPersistenceProvider"></property>
+		<property name="metadataPersistenceProvider" >
+			<bean class="com.wlami.mibox.server.services.persistence.FileSystemPersistenceProvider">
+				<property name="name" value="metaMetaData" />
+				<property name="storagePath" value="${fileSystemPersistenceProvider.metaMetaData.storagePath}"/>
+			</bean>
+		</property>
 	</bean>
 	
-	<bean id="metadataPersistenceProvider" class="com.wlami.mibox.server.services.metadata.FilesystemMetadataPersistenceProvider">
-		<property name="storagePath" value="G:/Data/mibox_data"></property>
-	</bean>
-	<bean id="metaMetaDataPersistenceProvider" class="com.wlami.mibox.server.services.metadata.FilesystemMetaMetaDataPersistenceProvider">
-		<property name="storagePath" value="G:/Data/mibox_data"></property>
-	</bean>
 
 	<bean id="chunkManagerResponseBuilder"
 		class="com.wlami.mibox.server.services.chunk.ChunkManagerProxyResponseBuilder">
-		<property name="chunkPersistenceProvider" ref="chunkPersistenceProvider" />
+		<property name="chunkPersistenceProvider" ref="chunkFileSystemPersistenceProvider" />
 	</bean>
 
-	<bean id="chunkPersistenceProvider"
-		class="com.wlami.mibox.server.services.chunk.FilesystemChunkPersistenceProvider">
-		<property name="storagePath" value="G:/Data/mibox_data" />
+	<bean id="chunkFileSystemPersistenceProvider" class="com.wlami.mibox.server.services.persistence.FileSystemPersistenceProvider">
+			<property name="name" value="chunk" />
+			<property name="storagePath" value="${fileSystemPersistenceProvider.chunk.storagePath}"/>
 	</bean>
 
 

@@ -47,7 +47,7 @@ import com.wlami.mibox.core.util.HashUtil;
 import com.wlami.mibox.server.data.Chunk;
 import com.wlami.mibox.server.data.User;
 import com.wlami.mibox.server.services.chunk.ChunkManagerResponseBuilder;
-import com.wlami.mibox.server.services.chunk.ChunkPersistenceProvider;
+import com.wlami.mibox.server.services.persistence.PersistenceProvider;
 import com.wlami.mibox.server.util.HttpHeaderUtil;
 import com.wlami.mibox.server.util.PersistenceUtil;
 
@@ -67,7 +67,7 @@ public class ChunkManager {
 	ChunkManagerResponseBuilder chunkManagerResponseBuilder;
 
 	/** this reference is used to persist and retrieve the chunk data */
-	ChunkPersistenceProvider chunkPersistenceProvider;
+	PersistenceProvider chunkPersistenceProvider;
 
 	/** Default constructor */
 	public ChunkManager() {
@@ -143,7 +143,7 @@ public class ChunkManager {
 		if (chunk == null) {
 			chunk = new Chunk(newHash);
 			try {
-				chunkPersistenceProvider.persistChunk(newHash, input);
+				chunkPersistenceProvider.persistFile(newHash, input);
 			} catch (IOException e) {
 				log.error("", e);
 				em.getTransaction().rollback();
@@ -175,7 +175,7 @@ public class ChunkManager {
 	 *            the chunkPersistenceProvider to set
 	 */
 	public void setChunkPersistenceProvider(
-			ChunkPersistenceProvider chunkPersistenceProvider) {
+			PersistenceProvider chunkPersistenceProvider) {
 		this.chunkPersistenceProvider = chunkPersistenceProvider;
 	}
 
