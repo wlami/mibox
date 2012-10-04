@@ -88,9 +88,13 @@ public class RestTransporter extends LowLevelTransporter {
 	 * @see com.wlami.mibox.client.networking.adapter.Transporter#download(com.wlami.mibox.client.networking.adapter.TransportInfo)
 	 */
 	@Override
-	public void download(TransportInfo transportInfo) {
-		// TODO Auto-generated method stub
-
+	public byte[] download(TransportInfo transportInfo) {
+		assert transportInfo != null;
+		assert transportInfo.getResourceName() != null;
+		WebResource webResource = getWebResource(transportInfo
+				.getResourceName());
+		log.debug("Execute HTTP GET: " + webResource.getURI().toString());
+		return webResource.get(byte[].class);
 	}
 
 }

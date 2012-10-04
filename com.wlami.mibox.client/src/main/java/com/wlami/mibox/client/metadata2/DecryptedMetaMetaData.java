@@ -21,8 +21,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author wladislaw
- *
+ * This class represents the highest root object in the metadata hierarchy. It
+ * contains the name of the "normal" root metadata.
+ * 
+ * @see {@link EncryptedMiTree}
+ * 
+ * @author wladislaw mitzel
+ * @author stefan baust
+ * 
  */
 public class DecryptedMetaMetaData extends
 DecryptedAbstractObject<EncryptedMetaMetaData> {

@@ -24,7 +24,7 @@ package com.wlami.mibox.client.networking.adapter;
  * @author Wladislaw Mitzel
  * @author Stefan Baust
  */
-public abstract class TransportInfo {
+public class TransportInfo {
 
 	/**
 	 * This field describes the name of the resource.<br/>

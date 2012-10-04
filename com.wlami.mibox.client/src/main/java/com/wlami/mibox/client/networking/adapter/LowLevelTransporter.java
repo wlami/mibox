@@ -39,8 +39,9 @@ public abstract class LowLevelTransporter {
 	 * 
 	 * @param transportInfo
 	 *            Data object containing information on the target storage.
+	 * @return returns the remote resource as byte array.
 	 */
-	public abstract void download(TransportInfo transportInfo);
+	public abstract byte[] download(TransportInfo transportInfo);
 
 	/**
 	 * This variable contains the uniform resource name of the data store.<br/>
