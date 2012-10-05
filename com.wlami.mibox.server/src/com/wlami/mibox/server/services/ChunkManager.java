@@ -23,9 +23,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
-import javax.persistence.Persistence;
+import javax.persistence.PersistenceContext;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -42,6 +41,9 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.wlami.mibox.core.util.HashUtil;
 import com.wlami.mibox.server.data.Chunk;
@@ -49,7 +51,7 @@ import com.wlami.mibox.server.data.User;
 import com.wlami.mibox.server.services.chunk.ChunkManagerResponseBuilder;
 import com.wlami.mibox.server.services.persistence.PersistenceProvider;
 import com.wlami.mibox.server.util.HttpHeaderUtil;
-import com.wlami.mibox.server.util.PersistenceUtil;
+import com.wlami.mibox.server.util.SpringTxHelper;
 
 @Path("/chunkmanager/{hash}")
 public class ChunkManager {
@@ -57,24 +59,27 @@ public class ChunkManager {
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(getClass().getName());
 
-	EntityManagerFactory emf;
 	EntityManager em;
 
+	@PersistenceContext
+	public void setEm(EntityManager em) {
+		this.em = em;
+	}
 	@Context
 	ServletContext context;
+
+	private JpaTransactionManager jpaTransactionManager;
+
+	public void setJpaTransactionManager(
+			JpaTransactionManager jpaTransactionManager) {
+		this.jpaTransactionManager = jpaTransactionManager;
+	}
 
 	/** this reference is used to create the responses */
 	ChunkManagerResponseBuilder chunkManagerResponseBuilder;
 
 	/** this reference is used to persist and retrieve the chunk data */
 	PersistenceProvider chunkPersistenceProvider;
-
-	/** Default constructor */
-	public ChunkManager() {
-		String pu = PersistenceUtil.getPersistenceUnitName();
-		emf = Persistence.createEntityManagerFactory(pu);
-		em = emf.createEntityManager();
-	}
 
 	@GET
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
@@ -107,6 +112,7 @@ public class ChunkManager {
 
 	@PUT
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+	@Transactional
 	public Response saveChunk(@PathParam("hash") String hash,
 			@Context HttpHeaders headers, final InputStream inputStream)
 					throws NoSuchAlgorithmException {
@@ -120,7 +126,6 @@ public class ChunkManager {
 			input = IOUtils.toByteArray(inputStream);
 		} catch (IOException e1) {
 			log.error("", e1);
-			em.getTransaction().rollback();
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 		String newHash = HashUtil.calculateSha256(input);
@@ -139,14 +144,15 @@ public class ChunkManager {
 			chunk = null;
 		}
 
-		em.getTransaction().begin();
+		TransactionStatus ts = SpringTxHelper.startTransaction("chunk_add",
+				jpaTransactionManager);
 		if (chunk == null) {
 			chunk = new Chunk(newHash);
 			try {
 				chunkPersistenceProvider.persistFile(newHash, input);
 			} catch (IOException e) {
 				log.error("", e);
-				em.getTransaction().rollback();
+				jpaTransactionManager.rollback(ts);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		} else {
@@ -156,7 +162,7 @@ public class ChunkManager {
 			user.getChunks().add(chunk);
 		}
 		em.persist(chunk);
-		em.getTransaction().commit();
+		jpaTransactionManager.commit(ts);
 
 		return Response.ok().build();
 	}

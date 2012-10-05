@@ -22,8 +22,7 @@ import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import javax.persistence.PersistenceContext;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -39,11 +38,11 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.wlami.mibox.server.data.User;
 import com.wlami.mibox.server.services.persistence.PersistenceProvider;
 import com.wlami.mibox.server.util.HttpHeaderUtil;
-import com.wlami.mibox.server.util.PersistenceUtil;
 
 /**
  * @author wladislaw mitzel
@@ -56,8 +55,12 @@ public class MetaMetaDataManager {
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(MetaMetaDataManager.class);
 
-	private EntityManagerFactory emf;
 	private EntityManager em;
+
+	@PersistenceContext
+	public void setEm(EntityManager em) {
+		this.em = em;
+	}
 
 	/** This object is responsible for reading and writing the metadata. */
 	private PersistenceProvider metaMetaDataPersistenceProvider;
@@ -73,13 +76,6 @@ public class MetaMetaDataManager {
 
 	@Context
 	ServletContext context;
-
-	/** Default constructor */
-	public MetaMetaDataManager() {
-		String pu = PersistenceUtil.getPersistenceUnitName();
-		emf = Persistence.createEntityManagerFactory(pu);
-		em = emf.createEntityManager();
-	}
 
 	@GET
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
@@ -106,6 +102,7 @@ public class MetaMetaDataManager {
 
 	@PUT
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+	@Transactional
 	public Response saveMetaMetadata(@Context HttpHeaders headers, final InputStream inputStream)
 			throws NoSuchAlgorithmException {
 		User user = HttpHeaderUtil.getUserFromHttpHeaders(headers, em);
@@ -118,7 +115,6 @@ public class MetaMetaDataManager {
 			input = IOUtils.toByteArray(inputStream);
 		} catch (IOException exception) {
 			log.error("", exception);
-			em.getTransaction().rollback();
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 		try {

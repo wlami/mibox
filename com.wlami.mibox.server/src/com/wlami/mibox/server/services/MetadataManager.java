@@ -22,8 +22,7 @@ import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import javax.persistence.PersistenceContext;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -40,12 +39,15 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.wlami.mibox.server.data.Metadata;
 import com.wlami.mibox.server.data.User;
 import com.wlami.mibox.server.services.persistence.PersistenceProvider;
 import com.wlami.mibox.server.util.HttpHeaderUtil;
-import com.wlami.mibox.server.util.PersistenceUtil;
+import com.wlami.mibox.server.util.SpringTxHelper;
 
 /**
  * @author wladislaw mitzel
@@ -58,12 +60,33 @@ public class MetadataManager {
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(MetadataManager.class);
 
-	private EntityManagerFactory emf;
 	private EntityManager em;
+
+	private JpaTransactionManager jpaTransactionManager;
+
+	/**
+	 * @return the jpaTransactionManager
+	 */
+	public JpaTransactionManager getJpaTransactionManager() {
+		return jpaTransactionManager;
+	}
+
+	/**
+	 * @param jpaTransactionManager
+	 *            the jpaTransactionManager to set
+	 */
+	public void setJpaTransactionManager(
+			JpaTransactionManager jpaTransactionManager) {
+		this.jpaTransactionManager = jpaTransactionManager;
+	}
+
+	@PersistenceContext
+	public void setEm(EntityManager em) {
+		this.em = em;
+	}
 
 	/** This object is responsible for reading and writing the metadata. */
 	private PersistenceProvider metadataPersistenceProvider;
-
 
 	/**
 	 * @param metadataPersistenceProvider
@@ -76,13 +99,6 @@ public class MetadataManager {
 
 	@Context
 	ServletContext context;
-
-	/** Default constructor */
-	public MetadataManager() {
-		String pu = PersistenceUtil.getPersistenceUnitName();
-		emf = Persistence.createEntityManagerFactory(pu);
-		em = emf.createEntityManager();
-	}
 
 	@GET
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
@@ -112,6 +128,7 @@ public class MetadataManager {
 
 	@PUT
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+	@Transactional
 	public Response saveMetadata(@PathParam("name") String name,
 			@Context HttpHeaders headers, final InputStream inputStream)
 					throws NoSuchAlgorithmException {
@@ -125,13 +142,13 @@ public class MetadataManager {
 			input = IOUtils.toByteArray(inputStream);
 		} catch (IOException exception) {
 			log.error("", exception);
-			em.getTransaction().rollback();
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
 		Metadata metadata = Metadata.getByName(name, em);
-
-		em.getTransaction().begin();
+		String transactionName = "wurstsalat";
+		TransactionStatus transactionStatus = SpringTxHelper.startTransaction(
+				transactionName, jpaTransactionManager);
 
 		if (metadata == null) {
 			metadata = new Metadata(name);
@@ -140,7 +157,7 @@ public class MetadataManager {
 			metadataPersistenceProvider.persistFile(name, input);
 		} catch (IOException e) {
 			log.error("Could not persist metadata", e);
-			em.getTransaction().rollback();
+			jpaTransactionManager.rollback(transactionStatus);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
@@ -148,8 +165,9 @@ public class MetadataManager {
 			user.getMetadatas().add(metadata);
 		}
 		em.persist(metadata);
-		em.getTransaction().commit();
+		jpaTransactionManager.commit(transactionStatus);
 
 		return Response.ok().build();
 	}
+
 }

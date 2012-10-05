@@ -1,46 +1,97 @@
 <!-- DO NOT MODIFY THIS FILE UNLESS YOU REALLY KNOW WHAT YOU ARE DOING! -->
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
-	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd 
-	http://www.springframework.org/schema/context
-	http://www.springframework.org/schema/context/spring-context-3.1.xsd">
-	
-	<context:property-placeholder location="classpath:META-INF/server.properties"/>
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/aop
+http://www.springframework.org/schema/aop/spring-aop.xsd
+http://www.springframework.org/schema/tx
+http://www.springframework.org/schema/tx/spring-tx.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<context:property-placeholder location="classpath:META-INF/server.properties" />
 
 	<bean id="chunkManager" class="com.wlami.mibox.server.services.ChunkManager">
 		<property name="chunkManagerResponseBuilder" ref="chunkManagerResponseBuilder" />
 		<property name="chunkPersistenceProvider" ref="chunkFileSystemPersistenceProvider" />
+		<property name="jpaTransactionManager" ref="transactionManager" />
 	</bean>
-	
+
 	<bean id="metadataManager" class="com.wlami.mibox.server.services.MetadataManager">
 		<property name="metadataPersistenceProvider">
-			<bean class="com.wlami.mibox.server.services.persistence.FileSystemPersistenceProvider">
+			<bean
+				class="com.wlami.mibox.server.services.persistence.FileSystemPersistenceProvider">
 				<property name="name" value="metaData" />
-				<property name="storagePath" value="${fileSystemPersistenceProvider.metaData.storagePath}"/>
+				<property name="storagePath"
+					value="${fileSystemPersistenceProvider.metaData.storagePath}" />
 			</bean>
 		</property>
+		<property name="jpaTransactionManager" ref="transactionManager" />
 	</bean>
-	
+
 	<bean id="metaMetaDataManager" class="com.wlami.mibox.server.services.MetaMetaDataManager">
-		<property name="metadataPersistenceProvider" >
-			<bean class="com.wlami.mibox.server.services.persistence.FileSystemPersistenceProvider">
+		<property name="metadataPersistenceProvider">
+			<bean
+				class="com.wlami.mibox.server.services.persistence.FileSystemPersistenceProvider">
 				<property name="name" value="metaMetaData" />
-				<property name="storagePath" value="${fileSystemPersistenceProvider.metaMetaData.storagePath}"/>
+				<property name="storagePath"
+					value="${fileSystemPersistenceProvider.metaMetaData.storagePath}" />
 			</bean>
 		</property>
 	</bean>
-	
+
 
 	<bean id="chunkManagerResponseBuilder"
 		class="com.wlami.mibox.server.services.chunk.ChunkManagerProxyResponseBuilder">
 		<property name="chunkPersistenceProvider" ref="chunkFileSystemPersistenceProvider" />
 	</bean>
 
-	<bean id="chunkFileSystemPersistenceProvider" class="com.wlami.mibox.server.services.persistence.FileSystemPersistenceProvider">
-			<property name="name" value="chunk" />
-			<property name="storagePath" value="${fileSystemPersistenceProvider.chunk.storagePath}"/>
+	<bean id="chunkFileSystemPersistenceProvider"
+		class="com.wlami.mibox.server.services.persistence.FileSystemPersistenceProvider">
+		<property name="name" value="chunk" />
+		<property name="storagePath"
+			value="${fileSystemPersistenceProvider.chunk.storagePath}" />
 	</bean>
+
+	<bean id="entityManagerFactory" lazy-init="false"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="persistenceUnitName" value="com.wlami.mibox.server" />
+		<property name="dataSource" ref="dataSource" />
+		<property name="jpaVendorAdapter">
+			<bean
+				class="org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter">
+				<property name="showSql" value="true" />
+				<property name="generateDdl" value="true" />
+				<property name="databasePlatform"
+					value="org.eclipse.persistence.platform.database.MySQLPlatform" />
+			</bean>
+		</property>
+		<property name="jpaProperties">
+			<props>
+				<prop key="eclipselink.ddl-generation">create-tables</prop>
+			</props>
+		</property>
+	</bean>
+
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://localhost:3306/mibox" />
+		<property name="username" value="root" />
+		<property name="password" value="123456" />
+	</bean>
+
+	<tx:annotation-driven />
+
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<bean id="persistenceAnnotation"
+		class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />
 
 
 </beans>

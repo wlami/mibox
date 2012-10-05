@@ -20,8 +20,7 @@ package com.wlami.mibox.server.services;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -29,7 +28,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.wlami.mibox.server.data.User;
-import com.wlami.mibox.server.util.PersistenceUtil;
 
 /**
  * @author Wladislaw Mitzel
@@ -38,13 +36,11 @@ import com.wlami.mibox.server.util.PersistenceUtil;
 @Path("/usermanager")
 public class UserManager {
 
-	EntityManagerFactory emf;
 	EntityManager em;
 
-	public UserManager() {
-		emf = Persistence.createEntityManagerFactory(PersistenceUtil
-				.getPersistenceUnitName());
-		em = emf.createEntityManager();
+	@PersistenceContext
+	public void setEm(EntityManager em) {
+		this.em = em;
 	}
 
 	@GET
