@@ -45,7 +45,7 @@ public class AesChunkEncryption implements ChunkEncryption {
 	 * @see com.wlami.mibox.client.networking.encryption.ChunkEncryption#encryptChunk(com.wlami.mibox.client.metadata.MChunk, java.io.File)
 	 */
 	@Override
-	public EncryptedChunk encryptChunk(MChunk chunk, File file)
+	public DataChunk encryptChunk(MChunk chunk, File file)
 			throws IOException, CryptoException {
 		// read the chunk
 		try (FileInputStream fis = new FileInputStream(file)) {
@@ -73,7 +73,7 @@ public class AesChunkEncryption implements ChunkEncryption {
 			// calculate the encrypted hash
 			String encryptedHash = HashUtil.calculateSha256(encryptedChunkData);
 			log.debug("Calculate Encrypted Hash: " + encryptedHash);
-			return new EncryptedChunk(encryptedHash, encryptedChunkData);
+			return new DataChunk(encryptedHash, encryptedChunkData);
 		}
 	}
 

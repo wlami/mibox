@@ -41,8 +41,10 @@ public interface ChunkEncryption {
 	 *             If file is not found or cannot be read.
 	 * @throws CryptoException
 	 *             If anything goes wrong during encryption.
-	 * @return An {@link EncryptedChunk} which contains the ciphertext.
+	 * @return An {@link DataChunk} which contains the ciphertext.
 	 */
-	public EncryptedChunk encryptChunk(MChunk mChunk, File file)
+	public DataChunk encryptChunk(MChunk mChunk, File file)
 			throws IOException, CryptoException;
+
+	// public
 }

@@ -29,7 +29,7 @@ import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.client.metadata.MChunk;
 import com.wlami.mibox.client.networking.adapter.RestTransporter;
-import com.wlami.mibox.client.networking.encryption.EncryptedChunk;
+import com.wlami.mibox.client.networking.encryption.DataChunk;
 import com.wlami.mibox.client.networking.transporter.Transporter;
 
 /**
@@ -50,7 +50,7 @@ TransportProvider<ChunkUploadRequest> {
 	AppSettingsDao appSettingsDao;
 
 	/** reference to our only working thread */
-	TransportWorker<ChunkUploadRequest, EncryptedChunk> transportWorker;
+	TransportWorker<ChunkUploadRequest, DataChunk> transportWorker;
 
 	/** collection of {@link MChunk}s which shall be uploaded. */
 	ConcurrentSkipListSet<ChunkUploadRequest> mChunkUploads;

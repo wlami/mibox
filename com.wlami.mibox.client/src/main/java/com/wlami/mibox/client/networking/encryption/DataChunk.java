@@ -24,7 +24,7 @@ import com.wlami.mibox.client.networking.transporter.Transportable;
  * 
  * @author wladislaw mitzel
  */
-public class EncryptedChunk implements Transportable {
+public class DataChunk implements Transportable {
 
 	/** hash of the #content */
 	private String hash;
@@ -70,7 +70,7 @@ public class EncryptedChunk implements Transportable {
 	/**
 	 * Convenience constructor.
 	 */
-	public EncryptedChunk(String hash, byte[] content) {
+	public DataChunk(String hash, byte[] content) {
 		this.hash = hash;
 		this.content = content;
 	}
