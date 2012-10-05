@@ -78,10 +78,10 @@ http://www.springframework.org/schema/context/spring-context.xsd">
 
 	<bean id="dataSource"
 		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
-		<property name="url" value="jdbc:mysql://localhost:3306/mibox" />
-		<property name="username" value="root" />
-		<property name="password" value="123456" />
+		<property name="driverClassName" value="${dataSource.driverClassName}" />
+		<property name="url" value="${dataSource.url}" />
+		<property name="username" value="${dataSource.username}" />
+		<property name="password" value="${dataSource.password}" />
 	</bean>
 
 	<tx:annotation-driven />
