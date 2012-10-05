@@ -25,7 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.application.AppSettingsDao;
+import com.wlami.mibox.client.metadata2.DecryptedMetaMetaData;
+import com.wlami.mibox.client.metadata2.EncryptedMetaMetaDataRepository;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
+import com.wlami.mibox.client.metadata2.MetaMetaDataSetup;
 import com.wlami.mibox.client.networking.synchronization.ChunkUploadRequest;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 
@@ -48,6 +51,9 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	/** Reference to the {@link MetadataUtil} bean. */
 	private final MetadataUtil metadataUtil;
 
+	/** Reference to the {@link EncryptedMetaMetaDataRepository} bean. */
+	private final EncryptedMetaMetaDataRepository encryptedMetaMetaDataRepository;
+
 	/**
 	 * reference to a {@link MetadataWorker} instance which handles the file
 	 * structure.
@@ -56,6 +62,8 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 
 	/** loader reference which is needed for the worker */
 	private final EncryptedMiTreeRepository encryptedMiTreeRepo;
+
+	DecryptedMetaMetaData decryptedMetaMetaData;
 
 	/**
 	 * set of incoming {@link ObservedFilesystemEvent} instances which shall be
@@ -70,11 +78,17 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	public MetadataRepositoryImpl(AppSettingsDao appSettingsDao,
 			TransportProvider<ChunkUploadRequest> chunkTransport,
 			EncryptedMiTreeRepository encryptedMiTreeRepository,
-			MetadataUtil metadataUtil) {
+			MetadataUtil metadataUtil,
+			EncryptedMetaMetaDataRepository encryptedMetaMetaDataRepository) {
 		this.appSettingsDao = appSettingsDao;
 		this.chunkTransport = chunkTransport;
 		encryptedMiTreeRepo = encryptedMiTreeRepository;
 		this.metadataUtil = metadataUtil;
+		this.encryptedMetaMetaDataRepository = encryptedMetaMetaDataRepository;
+		MetaMetaDataSetup metaMetaDataSetup = new MetaMetaDataSetup();
+		metaMetaDataSetup.setRepository(encryptedMetaMetaDataRepository);
+		decryptedMetaMetaData = metaMetaDataSetup
+				.setupMetaMetaData(appSettingsDao.load());
 	}
 
 	/*
@@ -86,7 +100,8 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	public void startProcessing() {
 		if (worker == null) {
 			worker = new MetadataWorker(appSettingsDao, chunkTransport,
-					incomingEvents, encryptedMiTreeRepo, metadataUtil);
+					incomingEvents, encryptedMiTreeRepo, metadataUtil,
+					decryptedMetaMetaData);
 			worker.start();
 			log.info("Starting MetadataRepository");
 		} else {

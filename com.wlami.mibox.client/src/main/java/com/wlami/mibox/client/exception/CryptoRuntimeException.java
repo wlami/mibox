@@ -1,3 +1,4 @@
+package com.wlami.mibox.client.exception;
 /**
  *     MiBox Client - folder synchronization client
  *  Copyright (C) 2012 wladislaw
@@ -15,50 +16,57 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wlami.mibox.client.metadata2;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * This class represents the highest root object in the metadata hierarchy. It
- * contains the name of the "normal" root metadata.
- * 
- * @see {@link EncryptedMiTree}
- * 
  * @author wladislaw mitzel
  * @author stefan baust
  * 
  */
-public class DecryptedMetaMetaData extends
-DecryptedAbstractObject<EncryptedMetaMetaData> {
-
-	/** internal logger */
-	Logger log = LoggerFactory.getLogger(DecryptedMetaMetaData.class);
-
-	/** this object contains information on the root metadata node */
-	private EncryptedMiTreeInformation root;
+public class CryptoRuntimeException extends RuntimeException {
 
 	/**
-	 * Default constructor
+	 * default serialVersionUID
 	 */
-	public DecryptedMetaMetaData() {
-		super(EncryptedMetaMetaData.class);
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * 
+	 */
+	public CryptoRuntimeException() {
+		super();
 	}
 
 	/**
-	 * @return the root
+	 * @param message
+	 * @param cause
+	 * @param enableSuppression
+	 * @param writableStackTrace
 	 */
-	public EncryptedMiTreeInformation getRoot() {
-		return root;
+	public CryptoRuntimeException(String message, Throwable cause,
+			boolean enableSuppression, boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
 	}
 
 	/**
-	 * @param root
-	 *            the root to set
+	 * @param message
+	 * @param cause
 	 */
-	public void setRoot(EncryptedMiTreeInformation root) {
-		this.root = root;
+	public CryptoRuntimeException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	/**
+	 * @param message
+	 */
+	public CryptoRuntimeException(String message) {
+		super(message);
+	}
+
+	/**
+	 * @param cause
+	 */
+	public CryptoRuntimeException(Throwable cause) {
+		super(cause);
 	}
 
 }

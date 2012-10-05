@@ -17,9 +17,6 @@
  */
 package com.wlami.mibox.client.metadata2;
 
-import java.io.IOException;
-
-import org.bouncycastle.crypto.CryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,20 +69,15 @@ public class MetaMetaDataSetup {
 				.getBytes());
 		if (encryptedMetaMetaData != null) {
 
-			try {
-				decryptedMetaMetaData = encryptedMetaMetaData.decrypt(key, iv);
-			} catch (CryptoException e) {
-				log.error("Could not decrypt meta meta data!", e);
-			} catch (IOException e) {
-				log.error("IO exception during decryption of meta meta data!",
-						e);
-			}
+			decryptedMetaMetaData = encryptedMetaMetaData.decrypt(key, iv);
 			if (decryptedMetaMetaData == null) {
 				// TODO This is a really big problem!! maybe ask the user for
 				// another password?
 			}
 		} else {
 			decryptedMetaMetaData = new DecryptedMetaMetaData();
+			decryptedMetaMetaData.setRoot(EncryptedMiTreeInformation
+					.createRandom());
 			String filename = appSettings.getUsername();
 			encryptedMetaMetaData = decryptedMetaMetaData.encrypt(filename,
 					key, iv);

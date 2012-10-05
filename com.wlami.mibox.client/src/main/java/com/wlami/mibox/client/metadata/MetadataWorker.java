@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
+import com.wlami.mibox.client.metadata2.DecryptedMetaMetaData;
 import com.wlami.mibox.client.metadata2.DecryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeInformation;
@@ -96,6 +97,8 @@ class MetadataWorker extends Thread {
 
 	private final MetadataUtil metadataUtil;
 
+	private DecryptedMetaMetaData decryptedMetaMetaData;
+
 	/**
 	 * Default constructor. Loads appSettings from {@link AppSettingsDao} and
 	 * the metadata from disk.
@@ -104,12 +107,14 @@ class MetadataWorker extends Thread {
 			TransportProvider<ChunkUploadRequest> transportProvider,
 			ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents,
 			EncryptedMiTreeRepository encryptedMiTreeRepo,
-			MetadataUtil metadataUtil) {
+			MetadataUtil metadataUtil,
+			DecryptedMetaMetaData decryptedMetaMetaData) {
 		this.incomingEvents = incomingEvents;
 		this.appSettingsDao = appSettingsDao;
 		this.transportProvider = transportProvider;
 		this.encryptedMiTreeRepo = encryptedMiTreeRepo;
 		this.metadataUtil = metadataUtil;
+		this.decryptedMetaMetaData = decryptedMetaMetaData;
 	}
 
 	/**
@@ -134,7 +139,8 @@ class MetadataWorker extends Thread {
 		AppSettings appSettings = appSettingsDao.load();
 		String watchDir = appSettings.getWatchDirectory();
 
-		EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(appSettings);
+		EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(
+				appSettings, decryptedMetaMetaData);
 
 		EncryptedMiTree encryptedRoot = encryptedMiTreeRepo
 				.loadEncryptedMiTree(miTreeInformation.getFileName());
@@ -143,13 +149,8 @@ class MetadataWorker extends Thread {
 			root = new DecryptedMiTree();
 			root.setFolderName("/");
 		} else {
-			try {
-				root = encryptedRoot.decrypt(miTreeInformation.getKey(),
-						miTreeInformation.getIv());
-			} catch (CryptoException e) {
-				log.error("Error during decrypting the root metadata!", e);
-				return;
-			}
+			root = encryptedRoot.decrypt(miTreeInformation.getKey(),
+					miTreeInformation.getIv());
 		}
 		traverseFileSystem(new File(watchDir), root, miTreeInformation);
 	}
@@ -159,16 +160,14 @@ class MetadataWorker extends Thread {
 	 * @return
 	 */
 	public EncryptedMiTreeInformation retrieveRootMiTreeInformation(
-			AppSettings appSettings) {
-		EncryptedMiTreeInformation miTreeInformation = new EncryptedMiTreeInformation();
+			AppSettings appSettings,
+			DecryptedMetaMetaData decryptedMetaMetaData) {
 		byte[] key = PBKDF2.getKeyFromPasswordAndSalt(
 				appSettings.getPassword(), appSettings.getUsername());
 		byte[] iv = HashUtil.calculateMD5Bytes(appSettings.getUsername()
 				.getBytes());
-		miTreeInformation.setKey(key);
-		miTreeInformation.setIv(iv);
-		miTreeInformation.setFileName("root");
-		return miTreeInformation;
+
+		return decryptedMetaMetaData.getRoot();
 	}
 
 	/**
@@ -228,15 +227,11 @@ class MetadataWorker extends Thread {
 							.loadEncryptedMiTree(encryptedMiTreeInformation
 									.getFileName());
 					log.debug("Trying to decrypt the metadata now.");
-					try {
-						DecryptedMiTree subTree = encryptedMiTree.decrypt(
-								encryptedMiTreeInformation.getKey(),
-								encryptedMiTreeInformation.getIv());
-						traverseFileSystem(file, subTree,
-								encryptedMiTreeInformation);
-					} catch (CryptoException | IOException e) {
-						log.error("Could not decrypt subfolder metadata", e);
-					}
+					DecryptedMiTree subTree = encryptedMiTree.decrypt(
+							encryptedMiTreeInformation.getKey(),
+							encryptedMiTreeInformation.getIv());
+					traverseFileSystem(file, subTree,
+							encryptedMiTreeInformation);
 				}
 			}
 		}
@@ -378,7 +373,8 @@ class MetadataWorker extends Thread {
 										.getWatchDirectory());
 						System.out.println(relativePath);
 
-						EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(appSettings);
+						EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(
+								appSettings, decryptedMetaMetaData);
 						EncryptedMiTree encryptedRoot = encryptedMiTreeRepo
 								.loadEncryptedMiTree(miTreeInformation.getFileName());
 						MFile mFile = metadataUtil.locateMFile(encryptedRoot,

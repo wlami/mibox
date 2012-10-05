@@ -21,7 +21,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.client.application.PropertyAppSettings;
 import com.wlami.mibox.client.networking.adapter.RestTransporter;
 
@@ -50,12 +52,17 @@ public class EncryptedMetaMetaDataRepositoryTest {
 	 */
 	@Test
 	public void testRetrieveMetaMetaData() {
-		EncryptedMetaMetaDataRepository repository = new EncryptedMetaMetaDataRepository();
+		PropertyAppSettings settings = new PropertyAppSettings();
+		settings.setUsername("horst");
+		AppSettingsDao appSettingsDao = Mockito.mock(AppSettingsDao.class);
+		Mockito.when(appSettingsDao.load()).thenReturn(settings);
+
+		EncryptedMetaMetaDataRepository repository = new EncryptedMetaMetaDataRepository(
+				appSettingsDao);
 		RestTransporter transporter = new RestTransporter(
 				"http://localhost:8080/com.wlami.mibox.server/rest/metametadatamanager/");
 		repository.setRestTransporter(transporter);
-		PropertyAppSettings settings = new PropertyAppSettings();
-		settings.setUsername("horst");
+
 		EncryptedMetaMetaData data = repository.retrieveMetaMetaData(settings);
 		Assert.assertNotNull(data);
 	}

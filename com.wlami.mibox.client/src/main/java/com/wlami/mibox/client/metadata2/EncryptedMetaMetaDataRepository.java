@@ -31,6 +31,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.wlami.mibox.client.application.AppFolders;
 import com.wlami.mibox.client.application.AppSettings;
+import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.client.networking.adapter.RestTransporter;
 import com.wlami.mibox.client.networking.adapter.TransportInfo;
 
@@ -49,6 +50,19 @@ public class EncryptedMetaMetaDataRepository {
 	private RestTransporter restTransporter;
 
 	/**
+	 * Default constructor.
+	 * 
+	 * @param appSettings
+	 *            This object contains the server url which is required.
+	 */
+	public EncryptedMetaMetaDataRepository(AppSettingsDao appSettingsDao) {
+		AppSettings appSettings = appSettingsDao.load();
+		String dataStoreUrl = appSettings.getServerUrl()
+				+ "rest/metametadatamanager";
+		restTransporter = new RestTransporter(dataStoreUrl);
+	}
+
+	/**
 	 * @param restTransporter
 	 *            the restTransporter to set
 	 */
@@ -61,7 +75,7 @@ public class EncryptedMetaMetaDataRepository {
 	 * @param appSettings
 	 * @return
 	 */
-	protected EncryptedMetaMetaData retrieveMetaMetaData(AppSettings appSettings) {
+	public EncryptedMetaMetaData retrieveMetaMetaData(AppSettings appSettings) {
 		TransportInfo transportInfo = new TransportInfo();
 		transportInfo.setResourceName("");
 		EncryptedMetaMetaData encryptedMetaMetaData = null;
@@ -136,9 +150,9 @@ public class EncryptedMetaMetaDataRepository {
 	 */
 	public void persistMetaMetaData(EncryptedMetaMetaData data) {
 		log.debug("Persisting meta meta data");
-		persistMetaMetaData(data);
+		persistMetaMetaDataLocal(data);
 		try {
-			restTransporter.upload(data.getName(), data.getContent());
+			restTransporter.upload("", data.getContent());
 		} catch (UniformInterfaceException exception) {
 			log.error("could not persist meta meta data to server [{}]",
 					exception.getMessage());

@@ -19,13 +19,12 @@ package com.wlami.mibox.client.metadata2;
 
 import java.io.IOException;
 
-import org.bouncycastle.crypto.CryptoException;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.wlami.mibox.client.exception.CryptoRuntimeException;
 import com.wlami.mibox.client.networking.transporter.Transportable;
 import com.wlami.mibox.core.encryption.AesEncryption;
 
@@ -34,7 +33,7 @@ import com.wlami.mibox.core.encryption.AesEncryption;
  *
  */
 public abstract class EncryptedAbstractObject<T extends DecryptedAbstractObject<?>>
-		implements Decryptable<Encryptable<?>>, Transportable {
+implements Decryptable<Encryptable<?>>, Transportable {
 
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(EncryptedAbstractObject.class);
@@ -53,6 +52,7 @@ public abstract class EncryptedAbstractObject<T extends DecryptedAbstractObject<
 	/**
 	 * @return the content
 	 */
+	@Override
 	public byte[] getContent() {
 		return content;
 	}
@@ -70,6 +70,7 @@ public abstract class EncryptedAbstractObject<T extends DecryptedAbstractObject<
 	/**
 	 * @return the name
 	 */
+	@Override
 	public String getName() {
 		return name;
 	}
@@ -88,13 +89,18 @@ public abstract class EncryptedAbstractObject<T extends DecryptedAbstractObject<
 	 * @see com.wlami.mibox.client.metadata2.Decryptable#decrypt(byte[], byte[])
 	 */
 	@Override
-	public T decrypt(byte[] key, byte[] iv) throws CryptoException,
-	JsonParseException, JsonMappingException, IOException {
+	public T decrypt(byte[] key, byte[] iv) {
 		ObjectMapper objectMapper = new ObjectMapper();
 		log.debug("decrypting MiTree");
-		byte[] decrypted = AesEncryption.crypt(false, content, iv, key);
-		log.debug("Decryption done. Trying now to read the data.");
-		return objectMapper.readValue(decrypted, clazz);
+		byte[] decrypted;
+		try {
+			decrypted = AesEncryption.crypt(false, content, iv, key);
+
+			log.debug("Decryption done. Trying now to read the data.");
+			return objectMapper.readValue(decrypted, clazz);
+		} catch (InvalidCipherTextException | IOException e) {
+			throw new CryptoRuntimeException(e);
+		}
 	}
 
 }
