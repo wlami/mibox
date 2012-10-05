@@ -72,8 +72,37 @@ public class AesChunkEncryption implements ChunkEncryption {
 			log.debug("Finished encryption");
 			// calculate the encrypted hash
 			String encryptedHash = HashUtil.calculateSha256(encryptedChunkData);
-			log.debug("Calculate Encrypted Hash: " + encryptedHash);
-			return new DataChunk(encryptedHash, encryptedChunkData);
+			log.debug("Calculate Encrypted Hash: [{}]", encryptedHash);
+			return new DataChunk(true, encryptedHash, encryptedChunkData);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.networking.encryption.ChunkEncryption#decryptChunk
+	 * (com.wlami.mibox.client.metadata.MChunk, java.io.File)
+	 */
+	@Override
+	public DataChunk decryptChunk(MChunk mChunk, File file) throws IOException,
+	CryptoException {
+		try (FileInputStream fis = new FileInputStream(file)) {
+			int length = (int) file.length(); // Warning: 2GB!
+			log.debug("Decrypting chunk. Using arraySize of [{}]", length);
+			byte[] encryptedChunkData = new byte[length];
+			fis.read(encryptedChunkData);
+			log.debug("Starting decryption");
+			byte[] decryptedChunkData = AesEncryption.decrypt(
+					encryptedChunkData, mChunk.getDecryptedChunkHash(),
+					mChunk.getPosition());
+			String decryptedHash = HashUtil.calculateSha256(decryptedChunkData);
+			log.debug("Calculate decrypted hash: [{}]", decryptedHash);
+			if (!decryptedChunkData.equals(mChunk.getDecryptedChunkHash())) {
+				throw new CryptoException(
+						"Hash of decrypted data does not match");
+			}
+			return new DataChunk(false, decryptedHash, decryptedChunkData);
 		}
 	}
 

@@ -26,10 +26,45 @@ import com.wlami.mibox.client.networking.transporter.Transportable;
  */
 public class DataChunk implements Transportable {
 
-	/** hash of the #content */
+	/** hash of the #content / could also be the "name" of the chunk. */
 	private String hash;
 	/** contains the encrypted content of a chunk. */
 	private byte[] content;
+	/** indicates whether this DataChunk is encrypted */
+	private boolean encrypted;
+
+	/**
+	 * Default constructor.
+	 * 
+	 * @param encrypted
+	 *            sets property {@link #encrypted}.
+	 */
+	public DataChunk(boolean encrypted) {
+		this.encrypted = encrypted;
+	}
+
+	/**
+	 * Default constructor.
+	 * 
+	 * @param encrypted
+	 *            sets property {@link #encrypted}.
+	 * @param hash
+	 *            sets {@link #hash}
+	 * @param content
+	 *            sets {@link #content}
+	 */
+	public DataChunk(boolean encrypted, String hash, byte[] content) {
+		this.encrypted = encrypted;
+		this.hash = hash;
+		this.content = content;
+	}
+
+	/**
+	 * @return the encrypted
+	 */
+	public boolean isEncrypted() {
+		return encrypted;
+	}
 
 	/**
 	 * @return the hash
@@ -64,14 +99,6 @@ public class DataChunk implements Transportable {
 	 *            the content to set
 	 */
 	public void setContent(byte[] content) {
-		this.content = content;
-	}
-
-	/**
-	 * Convenience constructor.
-	 */
-	public DataChunk(String hash, byte[] content) {
-		this.hash = hash;
 		this.content = content;
 	}
 

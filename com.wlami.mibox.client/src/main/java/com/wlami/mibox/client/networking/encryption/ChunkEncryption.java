@@ -26,7 +26,7 @@ import com.wlami.mibox.client.metadata.MChunk;
 
 /**
  * @author wladislaw mitzel
- * 
+ * @author stefan baust
  */
 public interface ChunkEncryption {
 
@@ -46,5 +46,20 @@ public interface ChunkEncryption {
 	public DataChunk encryptChunk(MChunk mChunk, File file)
 			throws IOException, CryptoException;
 
-	// public
+	/**
+	 * Decrypts the content of an encrypted chunk (file). The mChunk contains
+	 * the key and iv for decryption.
+	 * 
+	 * @param mChunk
+	 *            Metadata con the chunk used for decryption
+	 * @param file
+	 *            the encrypted chunk file which shall be decrypted.
+	 * @return A Datachunk with decrypted data.
+	 * @throws IOException
+	 *             If file is not found or cannot be read.
+	 * @throws CryptoException
+	 *             If anything goes wrong during decryption.
+	 */
+	public DataChunk decryptChunk(MChunk mChunk, File file) throws IOException,
+	CryptoException;
 }
