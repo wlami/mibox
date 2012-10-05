@@ -66,11 +66,12 @@ public class MetaMetaDataSetup {
 		EncryptedMetaMetaData encryptedMetaMetaData = repository
 				.retrieveMetaMetaData(appSettings);
 		DecryptedMetaMetaData decryptedMetaMetaData = null;
+		byte[] key = PBKDF2.getKeyFromPasswordAndSalt(
+				appSettings.getPassword(), appSettings.getUsername());
+		byte[] iv = HashUtil.calculateMD5Bytes(appSettings.getUsername()
+				.getBytes());
 		if (encryptedMetaMetaData != null) {
-			byte[] key = PBKDF2.getKeyFromPasswordAndSalt(
-					appSettings.getPassword(), appSettings.getUsername());
-			byte[] iv = HashUtil.calculateMD5Bytes(appSettings.getUsername()
-					.getBytes());
+
 			try {
 				decryptedMetaMetaData = encryptedMetaMetaData.decrypt(key, iv);
 			} catch (CryptoException e) {
@@ -85,6 +86,10 @@ public class MetaMetaDataSetup {
 			}
 		} else {
 			decryptedMetaMetaData = new DecryptedMetaMetaData();
+			String filename = appSettings.getUsername();
+			encryptedMetaMetaData = decryptedMetaMetaData.encrypt(filename,
+					key, iv);
+			repository.persistMetaMetaData(encryptedMetaMetaData);
 		}
 		return decryptedMetaMetaData;
 	}
