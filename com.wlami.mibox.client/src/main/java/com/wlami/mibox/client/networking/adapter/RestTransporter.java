@@ -29,6 +29,8 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.wlami.mibox.core.encryption.PBKDF2;
+import com.wlami.mibox.core.util.HashUtil;
 
 /**
  * @author wladislaw
@@ -40,14 +42,27 @@ public class RestTransporter extends LowLevelTransporter {
 	private static final Logger log = LoggerFactory
 			.getLogger(RestTransporter.class);
 
+	/** username used for http basic auth */
+	private String username;
+	/** password used for http basic auth */
+	private String password;
+
 	/**
 	 * Creates a new RestTramsporter
 	 * 
 	 * @param dataStoreUrl
 	 *            This is the base url for the rest interface.
+	 * @param username
+	 *            sets {@link #username}
+	 * @param password
+	 *            sets {@link #password}
 	 */
-	public RestTransporter(String dataStoreUrl) {
+	public RestTransporter(String dataStoreUrl, String username, String password) {
 		setDataStoreUrl(dataStoreUrl);
+		this.username = username;
+		this.password = HashUtil.digestToString(PBKDF2
+				.getKeyFromPasswordAndSalt(password, username
+						+ "REST-INTERFACE"));
 	}
 
 	/**
@@ -60,7 +75,7 @@ public class RestTransporter extends LowLevelTransporter {
 	private WebResource getWebResource(String resourceName) {
 		ClientConfig clientConfig = new DefaultClientConfig();
 		Client client = Client.create(clientConfig);
-		client.addFilter(new HTTPBasicAuthFilter("user", "user"));// TODO
+		client.addFilter(new HTTPBasicAuthFilter(username, password));
 		URI uri = null;
 		try {
 			uri = UriBuilder.fromUri(getDataStoreUrl() + resourceName).build();

@@ -59,7 +59,8 @@ public class EncryptedMetaMetaDataRepository {
 		AppSettings appSettings = appSettingsDao.load();
 		String dataStoreUrl = appSettings.getServerUrl()
 				+ "rest/metametadatamanager";
-		restTransporter = new RestTransporter(dataStoreUrl);
+		restTransporter = new RestTransporter(dataStoreUrl,
+				appSettings.getUsername(), appSettings.getPassword());
 	}
 
 	/**

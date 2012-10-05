@@ -82,7 +82,8 @@ TransportProvider<EncryptedMiTreeUploadRequest> {
 			AppSettings appSettings = appSettingsDao.load();
 			String dataStoreUrl = appSettings.getServerUrl()
 					+ SERVER_URL_SUFFIX_REST_INTERFACE;
-			RestTransporter restTransporter = new RestTransporter(dataStoreUrl);
+			RestTransporter restTransporter = new RestTransporter(dataStoreUrl,
+					appSettings.getUsername(), appSettings.getPassword());
 			Transporter transporter = new Transporter(restTransporter);
 			transportWorker = new TransportWorker<>(transporter, uploads);
 			transportWorker.start();

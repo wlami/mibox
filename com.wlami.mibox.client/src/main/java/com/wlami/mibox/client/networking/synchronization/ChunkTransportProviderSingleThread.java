@@ -74,7 +74,8 @@ TransportProvider<ChunkUploadRequest> {
 			AppSettings appSettings = appSettingsDao.load();
 			String dataStoreUrl = appSettings.getServerUrl()
 					+ "rest/chunkmanager/";
-			RestTransporter restTransporter = new RestTransporter(dataStoreUrl);
+			RestTransporter restTransporter = new RestTransporter(dataStoreUrl,
+					appSettings.getUsername(), appSettings.getPassword());
 			Transporter transporter = new Transporter(restTransporter);
 			transportWorker = new TransportWorker<>(transporter, mChunkUploads);
 			transportWorker.start();
