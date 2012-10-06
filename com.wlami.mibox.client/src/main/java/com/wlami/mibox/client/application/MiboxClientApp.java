@@ -51,11 +51,8 @@ public final class MiboxClientApp {
 	protected static Logger log = LoggerFactory.getLogger(MiboxClientApp.class
 			.getName());
 
-	/**
-	 * hide constructor, because this is an utility class.
-	 */
 	@Inject
-	private MiboxClientApp() {
+	public MiboxClientApp() {
 	}
 
 	@SuppressWarnings("unused")

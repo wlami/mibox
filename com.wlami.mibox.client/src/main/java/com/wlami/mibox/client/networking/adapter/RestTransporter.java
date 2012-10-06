@@ -63,6 +63,7 @@ public class RestTransporter extends LowLevelTransporter {
 		this.password = HashUtil.digestToString(PBKDF2
 				.getKeyFromPasswordAndSalt(password, username
 						+ "REST-INTERFACE"));
+		this.password = password;
 	}
 
 	/**

@@ -60,7 +60,7 @@ import com.wlami.mibox.core.util.HashUtil;
  * @author Wladislaw Mitzel
  * 
  */
-class MetadataWorker extends Thread {
+public class MetadataWorker extends Thread {
 
 	/** Defines the period between writes of metadata in seconds. */
 	protected static final int WRITE_PERIOD_SECONDS = 60;
@@ -272,7 +272,7 @@ class MetadataWorker extends Thread {
 	 * 
 	 * 
 	 */
-	protected void updateFileFromMetadata(final File file, final MFile localMFile, final MFile incomingMFile) {
+	public void updateFileFromMetadata(final File file, final MFile localMFile, final MFile incomingMFile) {
 		if (localMFile == null && incomingMFile == null) {
 			return;
 		}

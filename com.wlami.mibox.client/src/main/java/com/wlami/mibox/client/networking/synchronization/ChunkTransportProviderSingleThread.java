@@ -62,6 +62,7 @@ TransportProvider<ChunkUploadRequest> {
 	public ChunkTransportProviderSingleThread(AppSettingsDao appSettingsDao) {
 		this.appSettingsDao = appSettingsDao;
 		mChunkUploads = new ConcurrentSkipListSet<ChunkUploadRequest>();
+		downloadRequests = new ConcurrentSkipListSet<DownloadRequest>();
 	}
 
 	/*
