@@ -19,6 +19,7 @@ package com.wlami.mibox.client.metadata;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -41,9 +42,12 @@ import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeInformation;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
 import com.wlami.mibox.client.networking.encryption.AesChunkEncryption;
+import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
+import com.wlami.mibox.client.networking.encryption.DataChunk;
 import com.wlami.mibox.client.networking.synchronization.ChunkUploadRequest;
+import com.wlami.mibox.client.networking.synchronization.DownloadRequest;
+import com.wlami.mibox.client.networking.synchronization.TransportCallback;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
-import com.wlami.mibox.client.networking.synchronization.UploadCallback;
 import com.wlami.mibox.core.encryption.PBKDF2;
 import com.wlami.mibox.core.util.HashUtil;
 
@@ -82,10 +86,13 @@ class MetadataWorker extends Thread {
 	private ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents = new ConcurrentSkipListSet<ObservedFilesystemEvent>();
 
 	/** Reference to the {@link AppSettingsDao} bean. */
-	AppSettingsDao appSettingsDao;
+	final AppSettingsDao appSettingsDao;
 
 	/** Reference to the {@link TransportProvider} bean. */
 	TransportProvider<ChunkUploadRequest> transportProvider;
+
+	/** Reference to a encryption implementation */
+	final ChunkEncryption chunkEncryption;
 
 	/**
 	 * @param active
@@ -108,13 +115,14 @@ class MetadataWorker extends Thread {
 			ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents,
 			EncryptedMiTreeRepository encryptedMiTreeRepo,
 			MetadataUtil metadataUtil,
-			DecryptedMetaMetaData decryptedMetaMetaData) {
+			DecryptedMetaMetaData decryptedMetaMetaData, ChunkEncryption chunkEncryption) {
 		this.incomingEvents = incomingEvents;
 		this.appSettingsDao = appSettingsDao;
 		this.transportProvider = transportProvider;
 		this.encryptedMiTreeRepo = encryptedMiTreeRepo;
 		this.metadataUtil = metadataUtil;
 		this.decryptedMetaMetaData = decryptedMetaMetaData;
+		this.chunkEncryption = chunkEncryption;
 	}
 
 	/**
@@ -244,6 +252,59 @@ class MetadataWorker extends Thread {
 				miTreeInformation.getFileName());
 	}
 
+	/**
+	 * Synchronizes incoming MFile with the local metadata.
+	 * 
+	 * If the file already exists on the filesystem it gets updated. Otherwise
+	 * the file is created.
+	 * 
+	 * <b>Warning: both params must not be null at the same time!</b>
+	 * 
+	 * @param file
+	 *            File to update. May be non-existent.
+	 * @param localMFile
+	 *            the local metadata. may be null if there is no local file yet.
+	 * @param incomingMFile
+	 *            the incoming metadata. may be null if a local file shall be
+	 *            deleted.
+	 * 
+	 * 
+	 */
+	protected void updateFileFromMetadata(final File file, final MFile localMFile, final MFile incomingMFile) {
+		if (localMFile == null && incomingMFile == null) {
+			return;
+		}
+		if (localMFile != null) {
+			// probably a change to local file
+		} else {
+			// probably a new file
+			final MFile mFile = incomingMFile;
+			final AppSettings appSettings = appSettingsDao.load();
+			for (MChunk currentMChunk : incomingMFile.getChunks()) {
+				final MChunk mChunk = currentMChunk;
+				DownloadRequest request = new DownloadRequest(currentMChunk.getEncryptedChunkHash(),
+						new TransportCallback() {
+					@Override
+					public void transportCallback(Map<String, Object> parameter) {
+						byte[] content = (byte[]) parameter.get("content");
+						DataChunk decrypted = chunkEncryption.decryptChunk(mChunk, content);
+						String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
+						String tmpfilename = pathHash + "." + mChunk.getPosition();
+						File decryptedChunkFile = new File(appSettings.getTempDirectory(), tmpfilename);
+						try (FileOutputStream fos = new FileOutputStream(decryptedChunkFile)) {
+							fos.write(decrypted.getContent());
+						} catch (IOException e) {
+							throw new RuntimeException(e);
+						}
+
+					}
+				});
+			}
+		}
+
+		log.debug("start file update from incoming metadata! [{}]",
+				incomingMFile != null ? incomingMFile.getName() : "");
+	}
 
 	/**
 	 * Synchronizes the file system state with the metadata.<br/>
@@ -330,21 +391,22 @@ class MetadataWorker extends Thread {
 		log.debug("Creating upload request for chunk [{}]",
 				chunk.getDecryptedChunkHash());
 		ChunkUploadRequest mChunkUpload = new ChunkUploadRequest(chunk, file,
-				createDefaultUploadCallback(), new AesChunkEncryption());
+ createDefaultUploadCallback(),
+				new AesChunkEncryption()); // TODO inject encryption provider
 		transportProvider.addChunkUpload(mChunkUpload);
 		log.debug("Added upload request to the processing queue");
 	}
 
 	/**
-	 * Returns an {@link UploadCallback} which is executed on finished upload of
+	 * Returns an {@link TransportCallback} which is executed on finished upload of
 	 * a chunk.
 	 * 
 	 * @return Default upload callback which updated the metadata.
 	 */
-	public UploadCallback createDefaultUploadCallback() {
-		return new UploadCallback() {
+	public TransportCallback createDefaultUploadCallback() {
+		return new TransportCallback() {
 			@Override
-			public void uploadCallback(Map<String, Object> parameter) {
+			public void transportCallback(Map<String, Object> parameter) {
 				// TODO Auto-generated method stub
 
 			}

@@ -18,6 +18,7 @@
 package com.wlami.mibox.client.networking.transporter;
 
 import com.wlami.mibox.client.networking.adapter.LowLevelTransporter;
+import com.wlami.mibox.client.networking.adapter.TransportInfo;
 
 /**
  * @author wladislaw
@@ -43,6 +44,18 @@ public class Transporter {
 	public void upload(Transportable uploadObject) {
 		transporter.upload(uploadObject.getName(),
 				uploadObject.getContent());
+	}
+
+	/**
+	 * Download the resource identified by transportInfo using the specified
+	 * transporter.
+	 * 
+	 * @param transportInfo
+	 *            information on the resource to download.
+	 * @return The content of the requested resource.
+	 */
+	public byte[] download(TransportInfo transportInfo) {
+		return transporter.download(transportInfo);
 	}
 
 }

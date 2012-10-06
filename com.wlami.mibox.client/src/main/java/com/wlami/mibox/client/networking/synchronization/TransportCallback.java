@@ -25,7 +25,7 @@ import java.util.Map;
  * 
  * @author Wladislaw Mitzel
  */
-public interface UploadCallback {
+public interface TransportCallback {
 
 	/**
 	 * This method gets called when the upload method has finished.
@@ -34,6 +34,6 @@ public interface UploadCallback {
 	 *            A Map of parameter objects. Each parameter has a unique name
 	 *            (String-Key).
 	 */
-	public void uploadCallback(Map<String, Object> parameter);
+	public void transportCallback(Map<String, Object> parameter);
 
 }

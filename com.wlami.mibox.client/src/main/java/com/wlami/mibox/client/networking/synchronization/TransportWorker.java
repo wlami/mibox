@@ -50,6 +50,11 @@ extends Thread {
 	 */
 	protected ConcurrentSkipListSet<T> uploads;
 
+	/**
+	 * set of download tasks.
+	 */
+	protected ConcurrentSkipListSet<DownloadRequest> downloads;
+
 	/** stops the processing. */
 	public void stopProcessing() {
 		this.active = false;
@@ -63,9 +68,11 @@ extends Thread {
 	 * @param transporter
 	 */
 	public TransportWorker(Transporter transporter,
-			ConcurrentSkipListSet<T> uploads) {
+			ConcurrentSkipListSet<T> uploads,
+			ConcurrentSkipListSet<DownloadRequest> downloads) {
 		this.transporter = transporter;
 		this.uploads = uploads;
+		this.downloads = downloads;
 	}
 
 	/* (non-Javadoc) @see java.lang.Thread#run() */
@@ -105,16 +112,19 @@ extends Thread {
 				// TODO implement "retry later" logic: add to retry collection
 			}
 
-			// TODO Process the download requests
-
-			// Sleep before next iteration
+			for (DownloadRequest downloadRequest : downloads) {
+				log.debug("Processing downloadRequest for resource [{}]", downloadRequest.getTransportInfo());
+				byte[] data = transporter.download(downloadRequest.getTransportInfo());
+				downloadRequest.getTransportCallback().transportCallback(null); //TODO FIXME complete this
+			}
 			try {
 				Thread.sleep(DEFAULT_SLEEP_TIME_MILLIS);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-
 		}
 		this.log.info("Stopped Transporter");
 	}
+
 }
+

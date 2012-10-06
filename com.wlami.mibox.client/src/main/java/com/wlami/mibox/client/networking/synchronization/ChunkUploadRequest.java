@@ -61,7 +61,7 @@ public class ChunkUploadRequest extends UploadRequest<ChunkUploadRequest> {
 	 * @param uploadCallback
 	 *            THe value {@link #uploadCallback} shall be set to.
 	 */
-	public ChunkUploadRequest(MChunk mChunk, File file, UploadCallback uploadCallback, ChunkEncryption chunkEncryption) {
+	public ChunkUploadRequest(MChunk mChunk, File file, TransportCallback uploadCallback, ChunkEncryption chunkEncryption) {
 		this.mChunk = mChunk;
 		this.file = file;
 		this.uploadCallback = uploadCallback;

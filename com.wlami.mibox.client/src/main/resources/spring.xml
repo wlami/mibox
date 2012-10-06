@@ -37,11 +37,14 @@
  	<constructor-arg name="chunkTransport" ref="chunkTransportProvider" />
  	<constructor-arg name="metadataUtil" ref="metadataUtil" />
  	<constructor-arg name="encryptedMetaMetaDataRepository" ref="encryptedMetaMetaDataRepository"/>
+ 	<constructor-arg name="chunkEncryption" ref="aesChunkEncryption"/>
  </bean>
  
  <bean id="encryptedMetaMetaDataRepository" class="com.wlami.mibox.client.metadata2.EncryptedMetaMetaDataRepository">
 	<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
  </bean>
+ 
+ <bean id="aesChunkEncryption" class="com.wlami.mibox.client.networking.encryption.AesChunkEncryption" />
  
  <bean id="encryptedMiTreeRepository" class="com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository">
  	<constructor-arg name="transportProvider" ref="encryptedMiTreeTransportProvider"></constructor-arg>

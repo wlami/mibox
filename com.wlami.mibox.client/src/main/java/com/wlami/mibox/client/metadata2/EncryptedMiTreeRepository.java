@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.wlami.mibox.client.application.AppFolders;
 import com.wlami.mibox.client.networking.synchronization.EncryptedMiTreeUploadRequest;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
-import com.wlami.mibox.client.networking.synchronization.UploadCallback;
+import com.wlami.mibox.client.networking.synchronization.TransportCallback;
 
 /**
  * @author Stefan baust
@@ -113,9 +113,9 @@ public class EncryptedMiTreeRepository {
 	protected EncryptedMiTreeUploadRequest createUploadRequest(File file) {
 		EncryptedMiTreeUploadRequest request = new EncryptedMiTreeUploadRequest(this);
 		request.setFile(file);
-		request.setUploadCallback(new UploadCallback() {
+		request.setUploadCallback(new TransportCallback() {
 			@Override
-			public void uploadCallback(Map<String, Object> parameter) {
+			public void transportCallback(Map<String, Object> parameter) {
 				// TODO Auto-generated method stub
 
 			}

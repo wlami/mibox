@@ -24,7 +24,20 @@ package com.wlami.mibox.client.networking.adapter;
  * @author Wladislaw Mitzel
  * @author Stefan Baust
  */
-public class TransportInfo {
+public class TransportInfo implements Comparable<TransportInfo> {
+
+	/**
+	 * 
+	 */
+	public TransportInfo() {
+	}
+
+	/**
+	 * 
+	 */
+	public TransportInfo(String resourceName) {
+		this.resourceName = resourceName;
+	}
 
 	/**
 	 * This field describes the name of the resource.<br/>
@@ -52,4 +65,23 @@ public class TransportInfo {
 		this.resourceName = resourceName;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(TransportInfo o) {
+		return resourceName.compareTo(o.getResourceName());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return resourceName;
+	}
 }

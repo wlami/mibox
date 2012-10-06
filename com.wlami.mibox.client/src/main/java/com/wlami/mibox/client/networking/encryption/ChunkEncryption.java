@@ -62,4 +62,20 @@ public interface ChunkEncryption {
 	 */
 	public DataChunk decryptChunk(MChunk mChunk, File file) throws IOException,
 	CryptoException;
+
+	/**
+	 * Decrypts the content of an encrypted chunk (file). The mChunk contains
+	 * the key and iv for decryption.
+	 * 
+	 * @param mChunk
+	 *            Metadata con the chunk used for decryption
+	 * @param cipherText
+	 *            the ciphertext which shall be processed
+	 * @return A Datachunk with decrypted data.
+	 * @throws IOException
+	 *             If file is not found or cannot be read.
+	 * @throws CryptoException
+	 *             If anything goes wrong during decryption.
+	 */
+	public DataChunk decryptChunk(MChunk mChunk, byte[] cipherText);
 }

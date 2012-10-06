@@ -95,25 +95,19 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 		bufferedInputStream.close();
 
 		// Read the properties and fill the variables
-		appSettingsTmp
-				.setShowDesktopNotification(Boolean.parseBoolean(properties
-						.getProperty(PropertyAppSettings.SHOW_DESKTOP_NOTIFICATION)));
+		appSettingsTmp.setShowDesktopNotification(Boolean.parseBoolean(properties
+				.getProperty(PropertyAppSettings.SHOW_DESKTOP_NOTIFICATION)));
 		appSettingsTmp.setStartAtSystemStartup(Boolean.parseBoolean(properties
 				.getProperty(PropertyAppSettings.START_AT_SYSTEM_STARTUP)));
-		appSettingsTmp.setUsername(properties
-				.getProperty(PropertyAppSettings.USERNAME));
-		appSettingsTmp.setPassword(properties
-				.getProperty(PropertyAppSettings.PASSWORD));
-		appSettingsTmp.setServerUrl(properties
-				.getProperty(PropertyAppSettings.SERVER_URL));
-		appSettingsTmp.setWatchDirectory(properties
-				.getProperty(PropertyAppSettings.WATCH_DIRECTORY));
+		appSettingsTmp.setUsername(properties.getProperty(PropertyAppSettings.USERNAME));
+		appSettingsTmp.setPassword(properties.getProperty(PropertyAppSettings.PASSWORD));
+		appSettingsTmp.setServerUrl(properties.getProperty(PropertyAppSettings.SERVER_URL));
+		appSettingsTmp.setWatchDirectory(properties.getProperty(PropertyAppSettings.WATCH_DIRECTORY));
 		appSettingsTmp.setMonitoringActive(Boolean.parseBoolean(properties
 				.getProperty(PropertyAppSettings.MONITORING_ACTIVE)));
-		appSettingsTmp.setLanguage(properties
-				.getProperty(PropertyAppSettings.LANGUAGE));
-		appSettingsTmp.setCountry(properties
-				.getProperty(PropertyAppSettings.COUNTRY));
+		appSettingsTmp.setLanguage(properties.getProperty(PropertyAppSettings.LANGUAGE));
+		appSettingsTmp.setCountry(properties.getProperty(PropertyAppSettings.COUNTRY));
+		appSettingsTmp.setTempDirectory(properties.getProperty(PropertyAppSettings.TEMP_DIRECTORY));
 		return appSettingsTmp;
 	}
 
@@ -146,24 +140,18 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 	private void saveToPropertyFile(AppSettings pAppSettings)
 			throws IOException {
 		Properties props = new Properties();
-		props.setProperty(PropertyAppSettings.SHOW_DESKTOP_NOTIFICATION,
-				pAppSettings.getShowDesktopNotification().toString());
-		props.setProperty(PropertyAppSettings.START_AT_SYSTEM_STARTUP,
-				pAppSettings.getStartAtSystemStartup().toString());
-		props.setProperty(PropertyAppSettings.USERNAME,
-				pAppSettings.getUsername());
-		props.setProperty(PropertyAppSettings.PASSWORD,
-				pAppSettings.getPassword());
-		props.setProperty(PropertyAppSettings.SERVER_URL,
-				pAppSettings.getServerUrl());
-		props.setProperty(PropertyAppSettings.WATCH_DIRECTORY,
-				pAppSettings.getWatchDirectory());
-		props.setProperty(PropertyAppSettings.MONITORING_ACTIVE, pAppSettings
-				.getMonitoringActive().toString());
-		props.setProperty(PropertyAppSettings.LANGUAGE,
-				pAppSettings.getLanguage());
-		props.setProperty(PropertyAppSettings.COUNTRY,
-				pAppSettings.getCountry());
+		props.setProperty(PropertyAppSettings.SHOW_DESKTOP_NOTIFICATION, pAppSettings.getShowDesktopNotification()
+				.toString());
+		props.setProperty(PropertyAppSettings.START_AT_SYSTEM_STARTUP, pAppSettings.getStartAtSystemStartup()
+				.toString());
+		props.setProperty(PropertyAppSettings.USERNAME, pAppSettings.getUsername());
+		props.setProperty(PropertyAppSettings.PASSWORD, pAppSettings.getPassword());
+		props.setProperty(PropertyAppSettings.SERVER_URL, pAppSettings.getServerUrl());
+		props.setProperty(PropertyAppSettings.WATCH_DIRECTORY, pAppSettings.getWatchDirectory());
+		props.setProperty(PropertyAppSettings.MONITORING_ACTIVE, pAppSettings.getMonitoringActive().toString());
+		props.setProperty(PropertyAppSettings.LANGUAGE, pAppSettings.getLanguage());
+		props.setProperty(PropertyAppSettings.COUNTRY, pAppSettings.getCountry());
+		props.setProperty(PropertyAppSettings.TEMP_DIRECTORY, pAppSettings.getTempDirectory());
 		log.debug("Persisting AppSettings: " + props.toString());
 		FileOutputStream fileOutputStream = new FileOutputStream(new File(
 				APP_SETTINGS));

@@ -55,6 +55,8 @@ TransportProvider<ChunkUploadRequest> {
 	/** collection of {@link MChunk}s which shall be uploaded. */
 	ConcurrentSkipListSet<ChunkUploadRequest> mChunkUploads;
 
+	ConcurrentSkipListSet<DownloadRequest> downloadRequests;
+
 	/** default constructor. */
 	@Inject
 	public ChunkTransportProviderSingleThread(AppSettingsDao appSettingsDao) {
@@ -77,7 +79,7 @@ TransportProvider<ChunkUploadRequest> {
 			RestTransporter restTransporter = new RestTransporter(dataStoreUrl,
 					appSettings.getUsername(), appSettings.getPassword());
 			Transporter transporter = new Transporter(restTransporter);
-			transportWorker = new TransportWorker<>(transporter, mChunkUploads);
+			transportWorker = new TransportWorker<>(transporter, mChunkUploads, downloadRequests);
 			transportWorker.start();
 			log.info("Starting ChunkTransportProviderSingleThread");
 		} else {
@@ -113,7 +115,7 @@ TransportProvider<ChunkUploadRequest> {
 	 * 
 	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#
 	 * addChunkUpload(com.wlami.mibox.client.metadata.MChunk,
-	 * com.wlami.mibox.client.networking.synchronization.UploadCallback)
+	 * com.wlami.mibox.client.networking.synchronization.TransportCallback)
 	 */
 	@Override
 	public void addChunkUpload(ChunkUploadRequest mChunkUpload) {

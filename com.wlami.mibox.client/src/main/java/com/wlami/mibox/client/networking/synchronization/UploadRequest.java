@@ -34,7 +34,7 @@ Comparable<T> {
 	/**
 	 * the callbackMethod which shall be executed when the upload is finished.
 	 */
-	protected UploadCallback uploadCallback;
+	protected TransportCallback uploadCallback;
 
 	/**
 	 * @return the {@link #file}
@@ -54,7 +54,7 @@ Comparable<T> {
 	/**
 	 * @return the uploadCallback
 	 */
-	public UploadCallback getUploadCallback() {
+	public TransportCallback getUploadCallback() {
 		return uploadCallback;
 	}
 
@@ -62,7 +62,7 @@ Comparable<T> {
 	 * @param uploadCallback
 	 *            the uploadCallback to set
 	 */
-	public void setUploadCallback(UploadCallback uploadCallback) {
+	public void setUploadCallback(TransportCallback uploadCallback) {
 		this.uploadCallback = uploadCallback;
 	}
 

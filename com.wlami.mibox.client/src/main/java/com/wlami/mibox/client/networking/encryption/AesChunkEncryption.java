@@ -25,6 +25,7 @@ import org.bouncycastle.crypto.CryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.wlami.mibox.client.exception.CryptoRuntimeException;
 import com.wlami.mibox.client.metadata.MChunk;
 import com.wlami.mibox.core.encryption.AesEncryption;
 import com.wlami.mibox.core.util.HashUtil;
@@ -85,24 +86,39 @@ public class AesChunkEncryption implements ChunkEncryption {
 	 * (com.wlami.mibox.client.metadata.MChunk, java.io.File)
 	 */
 	@Override
-	public DataChunk decryptChunk(MChunk mChunk, File file) throws IOException,
-	CryptoException {
+	public DataChunk decryptChunk(MChunk mChunk, File file) {
 		try (FileInputStream fis = new FileInputStream(file)) {
 			int length = (int) file.length(); // Warning: 2GB!
 			log.debug("Decrypting chunk. Using arraySize of [{}]", length);
 			byte[] encryptedChunkData = new byte[length];
 			fis.read(encryptedChunkData);
-			log.debug("Starting decryption");
-			byte[] decryptedChunkData = AesEncryption.decrypt(
-					encryptedChunkData, mChunk.getDecryptedChunkHash(),
+			return decryptChunk(mChunk, encryptedChunkData);
+		} catch (IOException e) {
+			throw new CryptoRuntimeException(e);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.wlami.mibox.client.networking.encryption.ChunkEncryption#decryptChunk
+	 * (com.wlami.mibox.client.metadata.MChunk, byte[])
+	 */
+	@Override
+	public DataChunk decryptChunk(MChunk mChunk, byte[] encryptedChunkData) {
+		log.debug("Starting decryption");
+		try {
+			byte[] decryptedChunkData = AesEncryption.decrypt(encryptedChunkData, mChunk.getDecryptedChunkHash(),
 					mChunk.getPosition());
 			String decryptedHash = HashUtil.calculateSha256(decryptedChunkData);
 			log.debug("Calculate decrypted hash: [{}]", decryptedHash);
 			if (!decryptedChunkData.equals(mChunk.getDecryptedChunkHash())) {
-				throw new CryptoException(
-						"Hash of decrypted data does not match");
+				throw new CryptoException("Hash of decrypted data does not match");
 			}
 			return new DataChunk(false, decryptedHash, decryptedChunkData);
+		} catch (CryptoException e) {
+			throw new CryptoRuntimeException(e);
 		}
 	}
 

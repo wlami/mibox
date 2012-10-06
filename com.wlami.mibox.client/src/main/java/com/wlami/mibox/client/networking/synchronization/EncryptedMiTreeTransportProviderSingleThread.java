@@ -63,11 +63,14 @@ TransportProvider<EncryptedMiTreeUploadRequest> {
 	 */
 	ConcurrentSkipListSet<EncryptedMiTreeUploadRequest> uploads;
 
+	ConcurrentSkipListSet<DownloadRequest> downloads;
+
 	/** default constructor. */
 	@Inject
 	public EncryptedMiTreeTransportProviderSingleThread(AppSettingsDao appSettingsDao) {
 		this.appSettingsDao = appSettingsDao;
 		uploads = new ConcurrentSkipListSet<EncryptedMiTreeUploadRequest>();
+		downloads = new ConcurrentSkipListSet<>();
 	}
 
 	/*
@@ -85,7 +88,7 @@ TransportProvider<EncryptedMiTreeUploadRequest> {
 			RestTransporter restTransporter = new RestTransporter(dataStoreUrl,
 					appSettings.getUsername(), appSettings.getPassword());
 			Transporter transporter = new Transporter(restTransporter);
-			transportWorker = new TransportWorker<>(transporter, uploads);
+			transportWorker = new TransportWorker<>(transporter, uploads, downloads);
 			transportWorker.start();
 			log.info("Starting EncryptedMiTreeTransportProviderSingleThread");
 		} else {
@@ -121,7 +124,7 @@ TransportProvider<EncryptedMiTreeUploadRequest> {
 	 * 
 	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#
 	 * addChunkUpload(com.wlami.mibox.client.metadata.MChunk,
-	 * com.wlami.mibox.client.networking.synchronization.UploadCallback)
+	 * com.wlami.mibox.client.networking.synchronization.TransportCallback)
 	 */
 	@Override
 	public void addChunkUpload(EncryptedMiTreeUploadRequest mChunkUpload) {

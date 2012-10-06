@@ -25,7 +25,7 @@ import com.wlami.mibox.client.metadata.MChunk;
  * @author wladislaw
  *
  */
-public class MChunkUploadCallback implements UploadCallback {
+public class MChunkUploadCallback implements TransportCallback {
 
 	MChunk uploadedChunk;
 
@@ -36,11 +36,11 @@ public class MChunkUploadCallback implements UploadCallback {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.wlami.mibox.client.networking.synchronization.UploadCallback#
+	 * @see com.wlami.mibox.client.networking.synchronization.TransportCallback#
 	 * uploadCallback(java.util.Map)
 	 */
 	@Override
-	public void uploadCallback(Map<String, Object> parameter) {
+	public void transportCallback(Map<String, Object> parameter) {
 		// TODO Auto-generated method stub
 
 	}

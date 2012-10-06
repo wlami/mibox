@@ -82,6 +82,10 @@ public interface AppSettings extends Cloneable {
 	 */
 	public abstract void setWatchDirectory(final String watchDirectory);
 
+	String getTempDirectory();
+
+	void setTempDirectory(String tempDirectory);
+
 	/**
 	 * @return the language
 	 */

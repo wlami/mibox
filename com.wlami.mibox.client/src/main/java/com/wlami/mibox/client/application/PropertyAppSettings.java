@@ -108,6 +108,16 @@ public final class PropertyAppSettings implements AppSettings {
 	private String country;
 
 	/**
+	 * Constant for accessing String tempDirectory
+	 */
+	protected static final String TEMP_DIRECTORY = "temp_directory";
+
+	/**
+	 * temp directory
+	 */
+	private String tempDirectory;
+
+	/**
 	 * Constant for accessing monitoringActive
 	 */
 	protected static final String MONITORING_ACTIVE = "monitoring.active";
@@ -285,6 +295,7 @@ public final class PropertyAppSettings implements AppSettings {
 	/**
 	 * @return the monitoringActive
 	 */
+	@Override
 	public Boolean getMonitoringActive() {
 		return monitoringActive;
 	}
@@ -293,6 +304,7 @@ public final class PropertyAppSettings implements AppSettings {
 	 * @param monitoringActive
 	 *            the monitoringActive to set
 	 */
+	@Override
 	public void setMonitoringActive(boolean monitoringActive) {
 		this.monitoringActive = monitoringActive;
 	}
@@ -300,6 +312,7 @@ public final class PropertyAppSettings implements AppSettings {
 	/**
 	 * @return the serverUrl
 	 */
+	@Override
 	public String getServerUrl() {
 		return serverUrl;
 	}
@@ -308,6 +321,7 @@ public final class PropertyAppSettings implements AppSettings {
 	 * @param serverUrl
 	 *            the serverUrl to set
 	 */
+	@Override
 	public void setServerUrl(String serverUrl) {
 		this.serverUrl = serverUrl;
 	}
@@ -326,6 +340,23 @@ public final class PropertyAppSettings implements AppSettings {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	/**
+	 * @return the tempDirectory
+	 */
+	@Override
+	public String getTempDirectory() {
+		return tempDirectory;
+	}
+
+	/**
+	 * @param tempDirectory
+	 *            the tempDirectory to set
+	 */
+	@Override
+	public void setTempDirectory(String tempDirectory) {
+		this.tempDirectory = tempDirectory;
 	}
 
 	// TODO: if app settings are not available then persist default settings

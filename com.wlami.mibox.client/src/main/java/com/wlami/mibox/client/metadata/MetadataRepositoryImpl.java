@@ -29,6 +29,7 @@ import com.wlami.mibox.client.metadata2.DecryptedMetaMetaData;
 import com.wlami.mibox.client.metadata2.EncryptedMetaMetaDataRepository;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
 import com.wlami.mibox.client.metadata2.MetaMetaDataSetup;
+import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
 import com.wlami.mibox.client.networking.synchronization.ChunkUploadRequest;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 
@@ -39,8 +40,7 @@ import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 public class MetadataRepositoryImpl implements MetadataRepository {
 
 	/** internal logging object. */
-	private static final Logger log = LoggerFactory
-			.getLogger(MetadataRepositoryImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(MetadataRepositoryImpl.class);
 
 	/** Reference to the {@link AppSettingsDao} bean. */
 	private final AppSettingsDao appSettingsDao;
@@ -71,24 +71,24 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	 */
 	private final ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents = new ConcurrentSkipListSet<ObservedFilesystemEvent>();
 
+	private ChunkEncryption chunkEncryption;
+
 	/**
 	 * default constructor.
 	 */
 	@Inject()
-	public MetadataRepositoryImpl(AppSettingsDao appSettingsDao,
-			TransportProvider<ChunkUploadRequest> chunkTransport,
-			EncryptedMiTreeRepository encryptedMiTreeRepository,
-			MetadataUtil metadataUtil,
-			EncryptedMetaMetaDataRepository encryptedMetaMetaDataRepository) {
+	public MetadataRepositoryImpl(AppSettingsDao appSettingsDao, TransportProvider<ChunkUploadRequest> chunkTransport,
+			EncryptedMiTreeRepository encryptedMiTreeRepository, MetadataUtil metadataUtil,
+			EncryptedMetaMetaDataRepository encryptedMetaMetaDataRepository, ChunkEncryption chunkEncryption) {
 		this.appSettingsDao = appSettingsDao;
 		this.chunkTransport = chunkTransport;
 		encryptedMiTreeRepo = encryptedMiTreeRepository;
 		this.metadataUtil = metadataUtil;
+		this.chunkEncryption = chunkEncryption;
 		this.encryptedMetaMetaDataRepository = encryptedMetaMetaDataRepository;
 		MetaMetaDataSetup metaMetaDataSetup = new MetaMetaDataSetup();
 		metaMetaDataSetup.setRepository(encryptedMetaMetaDataRepository);
-		decryptedMetaMetaData = metaMetaDataSetup
-				.setupMetaMetaData(appSettingsDao.load());
+		decryptedMetaMetaData = metaMetaDataSetup.setupMetaMetaData(appSettingsDao.load());
 	}
 
 	/*
@@ -99,9 +99,8 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	@Override
 	public void startProcessing() {
 		if (worker == null) {
-			worker = new MetadataWorker(appSettingsDao, chunkTransport,
-					incomingEvents, encryptedMiTreeRepo, metadataUtil,
-					decryptedMetaMetaData);
+			worker = new MetadataWorker(appSettingsDao, chunkTransport, incomingEvents, encryptedMiTreeRepo,
+					metadataUtil, decryptedMetaMetaData, chunkEncryption);
 			worker.start();
 			log.info("Starting MetadataRepository");
 		} else {
