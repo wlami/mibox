@@ -87,7 +87,7 @@ public class FileSystemPersistenceProvider implements PersistenceProvider {
 	public byte[] retrieveFile(String name) {
 		File file = new File(storagePath, name);
 		try {
-			log.debug("reading chunk " + name);
+			log.debug("reading file " + name);
 			FileInputStream fis = new FileInputStream(file);
 			// WARNING! Can only handle chunk sizes up to 2 mb!
 			int fileLength = (int) file.length();
@@ -96,7 +96,7 @@ public class FileSystemPersistenceProvider implements PersistenceProvider {
 			fis.close();
 			return data;
 		} catch (IOException e) {
-			log.error("", e);
+			log.info(e.getMessage());
 		}
 		return null;
 	}
