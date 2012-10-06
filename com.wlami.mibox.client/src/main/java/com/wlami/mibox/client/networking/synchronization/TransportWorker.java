@@ -18,6 +18,8 @@
 package com.wlami.mibox.client.networking.synchronization;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.bouncycastle.crypto.CryptoException;
@@ -26,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.wlami.mibox.client.metadata.MetadataWorker;
 import com.wlami.mibox.client.networking.transporter.Transportable;
 import com.wlami.mibox.client.networking.transporter.Transporter;
 
@@ -87,6 +90,10 @@ extends Thread {
 					Transportable transportable = uploadRequest
 							.getTransportable();
 					transporter.upload(transportable);
+					String encryptedChunkHash = transportable.getName();
+					Map<String,Object> params = new HashMap<>();
+					params.put(MetadataWorker.CALLBACK_PARAM_ENCRYPTED_CHUNK_HASH, encryptedChunkHash);
+					uploadRequest.getUploadCallback().transportCallback(params);
 					// String result = encryptAndUploadChunk(chunk, file);
 					// mChunkUpload.getUploadCallback().uploadCallback(chunk,
 					// result);

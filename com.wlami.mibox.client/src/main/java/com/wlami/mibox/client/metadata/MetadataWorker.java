@@ -62,6 +62,11 @@ import com.wlami.mibox.core.util.HashUtil;
  */
 public class MetadataWorker extends Thread {
 
+	/**
+	 * 
+	 */
+	public static final String CALLBACK_PARAM_ENCRYPTED_CHUNK_HASH = "encryptedChunkHash";
+
 	/** Defines the period between writes of metadata in seconds. */
 	protected static final int WRITE_PERIOD_SECONDS = 60;
 
@@ -413,31 +418,21 @@ public class MetadataWorker extends Thread {
 	 * @param chunk
 	 *            the chunk which shall be uploaded.
 	 */
-	protected void createUploadRequest(MChunk chunk, File file) {
+	protected void createUploadRequest(final MChunk chunk, File file) {
 		log.debug("Creating upload request for chunk [{}]",
 				chunk.getDecryptedChunkHash());
 		ChunkUploadRequest mChunkUpload = new ChunkUploadRequest(chunk, file,
- createDefaultUploadCallback(),
-				new AesChunkEncryption()); // TODO inject encryption provider
+				new TransportCallback() {
+					@Override
+					public void transportCallback(Map<String, Object> parameter) {
+						String encryptedHash = (String) parameter.get(CALLBACK_PARAM_ENCRYPTED_CHUNK_HASH);
+						chunk.setEncryptedChunkHash(encryptedHash);
+					}
+				}, new AesChunkEncryption()); // TODO inject encryption provider
 		transportProvider.addChunkUpload(mChunkUpload);
 		log.debug("Added upload request to the processing queue");
 	}
 
-	/**
-	 * Returns an {@link TransportCallback} which is executed on finished upload of
-	 * a chunk.
-	 * 
-	 * @return Default upload callback which updated the metadata.
-	 */
-	public TransportCallback createDefaultUploadCallback() {
-		return new TransportCallback() {
-			@Override
-			public void transportCallback(Map<String, Object> parameter) {
-				// TODO Auto-generated method stub
-
-			}
-		};
-	}
 
 	/*
 	 * (non-Javadoc)
