@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -46,6 +47,7 @@ import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
 import com.wlami.mibox.client.networking.encryption.DataChunk;
 import com.wlami.mibox.client.networking.synchronization.ChunkUploadRequest;
 import com.wlami.mibox.client.networking.synchronization.DownloadRequest;
+import com.wlami.mibox.client.networking.synchronization.DownloadRequestContainer;
 import com.wlami.mibox.client.networking.synchronization.TransportCallback;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 import com.wlami.mibox.core.encryption.PBKDF2;
@@ -278,12 +280,12 @@ class MetadataWorker extends Thread {
 			// probably a change to local file
 		} else {
 			// probably a new file
-			final MFile mFile = incomingMFile;
 			final AppSettings appSettings = appSettingsDao.load();
+			final DownloadRequestContainer downloadRequestContainer = new DownloadRequestContainer();
 			for (MChunk currentMChunk : incomingMFile.getChunks()) {
 				final MChunk mChunk = currentMChunk;
-				DownloadRequest request = new DownloadRequest(currentMChunk.getEncryptedChunkHash(),
-						new TransportCallback() {
+				final DownloadRequest request = new DownloadRequest(currentMChunk.getEncryptedChunkHash());
+				request.setTransportCallback(new TransportCallback() {
 					@Override
 					public void transportCallback(Map<String, Object> parameter) {
 						byte[] content = (byte[]) parameter.get("content");
@@ -296,10 +298,34 @@ class MetadataWorker extends Thread {
 						} catch (IOException e) {
 							throw new RuntimeException(e);
 						}
-
+						downloadRequestContainer.oneChildCompleted(request);
 					}
 				});
+				downloadRequestContainer.add(request);
 			}
+			downloadRequestContainer.setAllChildrenCompletedCallback(new TransportCallback() {
+				@Override
+				public void transportCallback(Map<String, Object> parameter) {
+					try (FileOutputStream fos = new FileOutputStream(file)) {
+					long position = 0;
+					for (MChunk mChunk : incomingMFile.getChunks()) {
+						String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
+						String tmpfilename = pathHash + "." + mChunk.getPosition();
+						File decryptedChunkFile = new File(appSettings.getTempDirectory(), tmpfilename);
+						try(FileInputStream fis = new FileInputStream(decryptedChunkFile);
+								FileChannel channelSource = fis.getChannel();
+								FileChannel channelDestination = fos.getChannel();) {
+						channelDestination.transferFrom(channelSource, position, decryptedChunkFile.length());
+						position += decryptedChunkFile.length();
+						}
+					
+					}
+					} catch (Exception ioe){
+						throw new RuntimeException(ioe);
+					}
+				}
+			});
+			transportProvider.addDownloadContainer(downloadRequestContainer);
 		}
 
 		log.debug("start file update from incoming metadata! [{}]",

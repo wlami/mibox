@@ -120,8 +120,27 @@ TransportProvider<ChunkUploadRequest> {
 	@Override
 	public void addChunkUpload(ChunkUploadRequest mChunkUpload) {
 		if (!mChunkUploads.add(mChunkUpload)) {
-			log.debug("Upload task not added. Alread existing.");
+			log.debug("Upload task not added. Already existing.");
 		}
 
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#addDownload(com.wlami.mibox.client.networking.synchronization.DownloadRequest)
+	 */
+	@Override
+	public void addDownload(DownloadRequest downloadRequest) {
+		if (!downloadRequests.add(downloadRequest)) {
+			log.debug("Download request not added. Already existing.");
+		}
+	}
+	
+/* (non-Javadoc)
+	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#addDownloadContainer(com.wlami.mibox.client.networking.synchronization.DownloadRequestContainer)
+	 */
+	@Override
+	public void addDownloadContainer(
+			DownloadRequestContainer downloadRequestContainer) {
+		downloadRequests.addAll(downloadRequestContainer.getDownloadRequests());
 	}
 }

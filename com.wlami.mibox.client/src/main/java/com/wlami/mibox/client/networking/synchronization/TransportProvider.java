@@ -20,8 +20,9 @@ package com.wlami.mibox.client.networking.synchronization;
 import com.wlami.mibox.client.metadata.MChunk;
 
 /**
- * This interface defines a class which utilizes one or more {@link TransportWorker}
- * implementations to execute the network and encryption tasks.
+ * This interface defines a class which utilizes one or more
+ * {@link TransportWorker} implementations to execute the network and encryption
+ * tasks.
  * 
  * @author Wladislaw Mitzel
  * 
@@ -49,4 +50,17 @@ public interface TransportProvider<T extends UploadRequest<?>> {
 	 */
 	void addChunkUpload(T uploadRequest);
 
+	/**
+	 * Add a {@link DownloadRequest} to the list of the transporters. After the
+	 * download has been finished the callback is executed.
+	 * 
+	 * @param downloadRequest The request which shall be downlaoded.
+	 */
+	void addDownload(DownloadRequest downloadRequest);
+
+	/**
+	 * Add several download requests by using a container.
+	 * @param downloadRequestContainer The Container which contains the requests.
+	 */
+	void addDownloadContainer(DownloadRequestContainer downloadRequestContainer);
 }

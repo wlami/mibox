@@ -33,6 +33,13 @@ public class DownloadRequest implements Comparable<DownloadRequest> {
 	/**
 	 * 
 	 */
+	public DownloadRequest(String resourceName) {
+		transportInfo = new TransportInfo(resourceName);
+	}
+	
+	/**
+	 * 
+	 */
 	public DownloadRequest(String resourceName,
 			TransportCallback transportCallback) {
 		transportInfo = new TransportInfo(resourceName);
