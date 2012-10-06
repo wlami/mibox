@@ -64,6 +64,7 @@ public class RestTransporter extends LowLevelTransporter {
 				.getKeyFromPasswordAndSalt(password, username
 						+ "REST-INTERFACE"));
 		this.password = password;
+		//FIXME encrypted PWs in database
 	}
 
 	/**
