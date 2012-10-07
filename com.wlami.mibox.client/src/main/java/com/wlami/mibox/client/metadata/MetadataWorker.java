@@ -40,7 +40,9 @@ import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
+import com.wlami.mibox.client.exception.CryptoRuntimeException;
 import com.wlami.mibox.client.metadata2.DecryptedMiTree;
+import com.wlami.mibox.client.metadata2.EncryptableDecryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeInformation;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
@@ -54,6 +56,7 @@ import com.wlami.mibox.client.networking.synchronization.RequestContainer;
 import com.wlami.mibox.client.networking.synchronization.TransportCallback;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 import com.wlami.mibox.core.util.HashUtil;
+
 /**
  * This class represents the worker thread, which is controlled the
  * {@link MetadataRepositoryImpl}.
@@ -117,6 +120,7 @@ public class MetadataWorker extends Thread {
 	private final MetadataUtil metadataUtil;
 
 	private MetaMetaDataHolder metaMetaDataHolder;
+
 	/**
 	 * Default constructor. Loads appSettings from {@link AppSettingsDao} and
 	 * the metadata from disk.
@@ -366,7 +370,7 @@ public class MetadataWorker extends Thread {
 						chunk.setDecryptedChunkHash(newChunkHash);
 						log.debug("New Chunk [{}] finished with hash [{}]", currentChunk, newChunkHash);
 						// Create Upload request
-						uploadContainer.add(createUploadRequest(chunk, f));
+						uploadContainer.add(createUploadRequest(chunk, f, uploadContainer));
 					}
 					currentChunk++;
 				}
@@ -378,7 +382,19 @@ public class MetadataWorker extends Thread {
 					@Override
 					public void transportCallback(Map<String, Object> parameter) {
 						// We should persist the updated metadata now!
-						// DecryptedMiTree decryptedMiTree = root.getRoot();
+						AppSettings appSettings = appSettingsDao.load();
+						try {
+							EncryptableDecryptedMiTree decryptedMiTree = metadataUtil
+									.locateDecryptedMiTree(getRelativePath(appSettings, f.getAbsolutePath()));
+							decryptedMiTree.getDecryptedMiTree().getFiles().put(mFile.getName(), mFile);
+							// TODO encrypt this updated mitree and persist it!
+							EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt();
+							encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree, decryptedMiTree
+									.getEncryptedMiTreeInformation().getFileName());
+						} catch (CryptoException | IOException e) {
+							throw new CryptoRuntimeException(e);
+						}
+
 					}
 				});
 				transportProvider.addUploadContainer(uploadContainer);
@@ -399,23 +415,27 @@ public class MetadataWorker extends Thread {
 	 * @param chunk
 	 *            the chunk which shall be uploaded.
 	 */
-	protected ChunkUploadRequest createUploadRequest(final MChunk chunk, File file) {
+	protected ChunkUploadRequest createUploadRequest(final MChunk chunk, File file,
+			final RequestContainer<ChunkUploadRequest> requestContainer) {
 		log.debug("Creating upload request for chunk [{}]", chunk.getDecryptedChunkHash());
-		ChunkUploadRequest mChunkUpload = new ChunkUploadRequest(chunk, file, new TransportCallback() {
+		// TODO inject encryption provider
+		final ChunkUploadRequest mChunkUpload = new ChunkUploadRequest(chunk, file, null, new AesChunkEncryption());
+		mChunkUpload.setUploadCallback(new TransportCallback() {
 			@Override
 			public void transportCallback(Map<String, Object> parameter) {
 				String encryptedHash = (String) parameter.get(CALLBACK_PARAM_ENCRYPTED_CHUNK_HASH);
 				chunk.setEncryptedChunkHash(encryptedHash);
 				chunk.setLastSync(new Date());
-				ObjectMapper objectMapper = new ObjectMapper();
+				requestContainer.oneChildCompleted(mChunkUpload);
 				if (isDecryptedDebugEnabled()) {
 					try {
+						ObjectMapper objectMapper = new ObjectMapper();
 						System.out.println(objectMapper.writeValueAsString(chunk));
 					} catch (Exception e) {
 					}
 				}
 			}
-		}, new AesChunkEncryption()); // TODO inject encryption provider
+		});
 		log.debug("returning upload request [{}]", mChunkUpload);
 		return mChunkUpload;
 	}
@@ -436,8 +456,8 @@ public class MetadataWorker extends Thread {
 					log.debug("Processing event " + ofe);
 					File f = new File(ofe.getFilename());
 					if (f.isFile()) {
-						String relativePath = StringUtils.substringAfter(
-								FilenameUtils.separatorsToUnix(ofe.getFilename()), appSettings.getWatchDirectory());
+						String filename = ofe.getFilename();
+						String relativePath = getRelativePath(appSettings, filename);
 						System.out.println(relativePath);
 
 						EncryptedMiTreeInformation miTreeInformation = metaMetaDataHolder.getDecryptedMetaMetaData()
@@ -461,5 +481,14 @@ public class MetadataWorker extends Thread {
 			log.error("Cannot decrypt metadata!", e);
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * @param appSettings
+	 * @param filename
+	 * @return
+	 */
+	public String getRelativePath(AppSettings appSettings, String filename) {
+		return StringUtils.substringAfter(FilenameUtils.separatorsToUnix(filename), appSettings.getWatchDirectory());
 	}
 }
