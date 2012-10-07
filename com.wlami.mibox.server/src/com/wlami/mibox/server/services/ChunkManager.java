@@ -99,7 +99,15 @@ public class ChunkManager {
 					.createQuery("SELECT c from Chunk c WHERE c.hash = :hash")
 					.setParameter("hash", hash).getSingleResult();
 			// Check whether this chunk belongs to user
-			if (!user.getChunks().contains(chunk)) {
+			//TODO FIX THIS!
+			boolean userHasHash = false;
+			for(Chunk chunk2 : user.getChunks()) {
+				if(chunk.getHash().equals(chunk2.getHash())) {
+					userHasHash = true;
+					break;
+				}
+			}
+			if (!userHasHash) {
 				return Response.status(Status.NOT_FOUND).build();
 			}
 		} catch (NoResultException e) {
@@ -162,6 +170,7 @@ public class ChunkManager {
 			user.getChunks().add(chunk);
 		}
 		em.persist(chunk);
+		em.persist(user);
 		jpaTransactionManager.commit(ts);
 
 		return Response.ok().build();

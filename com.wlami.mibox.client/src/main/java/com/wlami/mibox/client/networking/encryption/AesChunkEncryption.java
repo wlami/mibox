@@ -113,7 +113,7 @@ public class AesChunkEncryption implements ChunkEncryption {
 					mChunk.getPosition());
 			String decryptedHash = HashUtil.calculateSha256(decryptedChunkData);
 			log.debug("Calculate decrypted hash: [{}]", decryptedHash);
-			if (!decryptedChunkData.equals(mChunk.getDecryptedChunkHash())) {
+			if (!decryptedHash.equals(mChunk.getDecryptedChunkHash())) {
 				throw new CryptoException("Hash of decrypted data does not match");
 			}
 			return new DataChunk(false, decryptedHash, decryptedChunkData);

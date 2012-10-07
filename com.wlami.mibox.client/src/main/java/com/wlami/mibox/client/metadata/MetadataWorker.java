@@ -32,6 +32,9 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bouncycastle.crypto.CryptoException;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,14 +68,18 @@ public class MetadataWorker extends Thread {
 	/**
 	 * 
 	 */
+	public static final String CALLBACK_PARAM_CONTENT = "content";
+
+	/**
+	 * 
+	 */
 	public static final String CALLBACK_PARAM_ENCRYPTED_CHUNK_HASH = "encryptedChunkHash";
 
 	/** Defines the period between writes of metadata in seconds. */
 	protected static final int WRITE_PERIOD_SECONDS = 60;
 
 	/** internal logger. */
-	private static final Logger log = LoggerFactory
-			.getLogger(MetadataWorker.class);
+	private static final Logger log = LoggerFactory.getLogger(MetadataWorker.class);
 
 	/**
 	 * Defines the current state. Thread runs until active is set to false. Then
@@ -117,11 +124,9 @@ public class MetadataWorker extends Thread {
 	 * Default constructor. Loads appSettings from {@link AppSettingsDao} and
 	 * the metadata from disk.
 	 */
-	public MetadataWorker(AppSettingsDao appSettingsDao,
-			TransportProvider<ChunkUploadRequest> transportProvider,
+	public MetadataWorker(AppSettingsDao appSettingsDao, TransportProvider<ChunkUploadRequest> transportProvider,
 			ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents,
-			EncryptedMiTreeRepository encryptedMiTreeRepo,
-			MetadataUtil metadataUtil,
+			EncryptedMiTreeRepository encryptedMiTreeRepo, MetadataUtil metadataUtil,
 			DecryptedMetaMetaData decryptedMetaMetaData, ChunkEncryption chunkEncryption) {
 		this.incomingEvents = incomingEvents;
 		this.appSettingsDao = appSettingsDao;
@@ -154,18 +159,15 @@ public class MetadataWorker extends Thread {
 		AppSettings appSettings = appSettingsDao.load();
 		String watchDir = appSettings.getWatchDirectory();
 
-		EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(
-				appSettings, decryptedMetaMetaData);
+		EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(appSettings, decryptedMetaMetaData);
 
-		EncryptedMiTree encryptedRoot = encryptedMiTreeRepo
-				.loadEncryptedMiTree(miTreeInformation.getFileName());
+		EncryptedMiTree encryptedRoot = encryptedMiTreeRepo.loadEncryptedMiTree(miTreeInformation.getFileName());
 		DecryptedMiTree root;
 		if (encryptedRoot == null) {
 			root = new DecryptedMiTree();
 			root.setFolderName("/");
 		} else {
-			root = encryptedRoot.decrypt(miTreeInformation.getKey(),
-					miTreeInformation.getIv());
+			root = encryptedRoot.decrypt(miTreeInformation.getKey(), miTreeInformation.getIv());
 		}
 		traverseFileSystem(new File(watchDir), root, miTreeInformation);
 	}
@@ -174,13 +176,10 @@ public class MetadataWorker extends Thread {
 	 * @param appSettings
 	 * @return
 	 */
-	public EncryptedMiTreeInformation retrieveRootMiTreeInformation(
-			AppSettings appSettings,
+	public EncryptedMiTreeInformation retrieveRootMiTreeInformation(AppSettings appSettings,
 			DecryptedMetaMetaData decryptedMetaMetaData) {
-		byte[] key = PBKDF2.getKeyFromPasswordAndSalt(
-				appSettings.getPassword(), appSettings.getUsername());
-		byte[] iv = HashUtil.calculateMD5Bytes(appSettings.getUsername()
-				.getBytes());
+		byte[] key = PBKDF2.getKeyFromPasswordAndSalt(appSettings.getPassword(), appSettings.getUsername());
+		byte[] iv = HashUtil.calculateMD5Bytes(appSettings.getUsername().getBytes());
 
 		return decryptedMetaMetaData.getRoot();
 	}
@@ -191,15 +190,13 @@ public class MetadataWorker extends Thread {
 	 * @param decryptedMiTree
 	 *            MUST NOT BE NULL!
 	 */
-	public void traverseFileSystem(File rootFolder,
-			DecryptedMiTree decryptedMiTree,
+	public void traverseFileSystem(File rootFolder, DecryptedMiTree decryptedMiTree,
 			EncryptedMiTreeInformation miTreeInformation) {
 		if (!rootFolder.exists()) {
 			log.error("folder does not exist! [{}]", rootFolder);
 			return;
 		}
-		log.debug("Traversing file system. Processing folder [{}]",
-				rootFolder.getName());
+		log.debug("Traversing file system. Processing folder [{}]", rootFolder.getName());
 		for (File file : rootFolder.listFiles()) {
 			if (file.isFile()) {
 				MFile mFile;
@@ -213,50 +210,40 @@ public class MetadataWorker extends Thread {
 					mFile = new MFile();
 					mFile.setName(file.getName());
 					decryptedMiTree.getFiles().put(mFile.getName(), mFile);
-					log.debug("Creating a new MFile in metadata for [{}]",
-							file.getName());
+					log.debug("Creating a new MFile in metadata for [{}]", file.getName());
 				}
 				synchronizeFileMetadata(file, mFile);
 			} else if (file.isDirectory()) {
 				// find the right metadata
 				log.debug("Search folder metadata for [{}]", file.getName());
-				EncryptedMiTreeInformation encryptedMiTreeInformation = decryptedMiTree
-						.getSubfolder().get(file.getName());
+				EncryptedMiTreeInformation encryptedMiTreeInformation = decryptedMiTree.getSubfolder().get(
+						file.getName());
 				if (encryptedMiTreeInformation == null) {
 					// Let's create a new subtree!
 					DecryptedMiTree subTree = new DecryptedMiTree();
 					subTree.setFolderName(file.getName());
-					encryptedMiTreeInformation = EncryptedMiTreeInformation
-							.createRandom();
-					decryptedMiTree.getSubfolder().put(file.getName(),
-							encryptedMiTreeInformation);
-					log.debug(
-							"No information available yet. Creating new data file [{}]",
+					encryptedMiTreeInformation = EncryptedMiTreeInformation.createRandom();
+					decryptedMiTree.getSubfolder().put(file.getName(), encryptedMiTreeInformation);
+					log.debug("No information available yet. Creating new data file [{}]",
 							encryptedMiTreeInformation.getFileName());
-					traverseFileSystem(file, subTree,
-							encryptedMiTreeInformation);
+					traverseFileSystem(file, subTree, encryptedMiTreeInformation);
 				} else {
 					// load the metadata for the subtree
 					log.debug("Found information for folder. Trying to load it");
 					EncryptedMiTree encryptedMiTree = encryptedMiTreeRepo
-							.loadEncryptedMiTree(encryptedMiTreeInformation
-									.getFileName());
+							.loadEncryptedMiTree(encryptedMiTreeInformation.getFileName());
 					log.debug("Trying to decrypt the metadata now.");
-					DecryptedMiTree subTree = encryptedMiTree.decrypt(
-							encryptedMiTreeInformation.getKey(),
+					DecryptedMiTree subTree = encryptedMiTree.decrypt(encryptedMiTreeInformation.getKey(),
 							encryptedMiTreeInformation.getIv());
-					traverseFileSystem(file, subTree,
-							encryptedMiTreeInformation);
+					traverseFileSystem(file, subTree, encryptedMiTreeInformation);
 				}
 			}
 		}
 
 		// Save the tree
-		EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt(
-				miTreeInformation.getFileName(),
+		EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt(miTreeInformation.getFileName(),
 				miTreeInformation.getKey(), miTreeInformation.getIv());
-		encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree,
-				miTreeInformation.getFileName());
+		encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree, miTreeInformation.getFileName());
 	}
 
 	/**
@@ -293,7 +280,7 @@ public class MetadataWorker extends Thread {
 				request.setTransportCallback(new TransportCallback() {
 					@Override
 					public void transportCallback(Map<String, Object> parameter) {
-						byte[] content = (byte[]) parameter.get("content");
+						byte[] content = (byte[]) parameter.get(CALLBACK_PARAM_CONTENT);
 						DataChunk decrypted = chunkEncryption.decryptChunk(mChunk, content);
 						String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
 						String tmpfilename = pathHash + "." + mChunk.getPosition();
@@ -311,21 +298,28 @@ public class MetadataWorker extends Thread {
 			downloadRequestContainer.setAllChildrenCompletedCallback(new TransportCallback() {
 				@Override
 				public void transportCallback(Map<String, Object> parameter) {
-					try (FileOutputStream fos = new FileOutputStream(file)) {
-					long position = 0;
-					for (MChunk mChunk : incomingMFile.getChunks()) {
-						String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
-						String tmpfilename = pathHash + "." + mChunk.getPosition();
-						File decryptedChunkFile = new File(appSettings.getTempDirectory(), tmpfilename);
-						try(FileInputStream fis = new FileInputStream(decryptedChunkFile);
-								FileChannel channelSource = fis.getChannel();
-								FileChannel channelDestination = fos.getChannel();) {
-						channelDestination.transferFrom(channelSource, position, decryptedChunkFile.length());
-						position += decryptedChunkFile.length();
+					try (FileOutputStream fos = new FileOutputStream(file);
+							FileChannel channelDestination = fos.getChannel()) {
+						long position = 0;
+						for (MChunk mChunk : incomingMFile.getChunks()) {
+							String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
+							String tmpfilename = pathHash + "." + mChunk.getPosition();
+							File decryptedChunkFile = new File(appSettings.getTempDirectory(), tmpfilename);
+							try (FileInputStream fis = new FileInputStream(decryptedChunkFile);
+									FileChannel channelSource = fis.getChannel()) {
+								channelDestination.transferFrom(channelSource, position, decryptedChunkFile.length());
+								position += decryptedChunkFile.length();
+							}
 						}
-					
-					}
-					} catch (Exception ioe){
+
+						for (MChunk mChunk : incomingMFile.getChunks()) {
+							String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
+							String tmpfilename = pathHash + "." + mChunk.getPosition();
+							File decryptedChunkFile = new File(appSettings.getTempDirectory(), tmpfilename);
+							decryptedChunkFile.delete();
+						}
+
+					} catch (Exception ioe) {
 						throw new RuntimeException(ioe);
 					}
 				}
@@ -333,8 +327,8 @@ public class MetadataWorker extends Thread {
 			transportProvider.addDownloadContainer(downloadRequestContainer);
 		}
 
-		log.debug("start file update from incoming metadata! [{}]",
-				incomingMFile != null ? incomingMFile.getName() : "");
+		log.debug("start file update from incoming metadata! [{}]", incomingMFile != null ? incomingMFile.getName()
+				: "");
 	}
 
 	/**
@@ -352,19 +346,14 @@ public class MetadataWorker extends Thread {
 		// Check whether the file has been modified since the last meta sync
 		log.debug("Start synchronization for file [{}]", f.getAbsolutePath());
 		Date filesystemLastModified = new Date(f.lastModified());
-		if ((mFile.getLastModified() == null)
-				|| (filesystemLastModified.after(mFile.getLastModified()))) {
+		if ((mFile.getLastModified() == null) || (filesystemLastModified.after(mFile.getLastModified()))) {
 			// The file has been modified, so we have to update metadata
-			log.debug(
-					"File newer than last modification date. Calculating file and chunk hashes for [{}]",
-					f.getName());
+			log.debug("File newer than last modification date. Calculating file and chunk hashes for [{}]", f.getName());
 			try {
 				// create two digests. One is for the whole file. The other
 				// is for the chunks and gets reseted after each chunk.
-				MessageDigest fileDigest = MessageDigest.getInstance(
-						HashUtil.SHA_256_MESSAGE_DIGEST, "BC");
-				MessageDigest chunkDigest = MessageDigest.getInstance(
-						HashUtil.SHA_256_MESSAGE_DIGEST, "BC");
+				MessageDigest fileDigest = MessageDigest.getInstance(HashUtil.SHA_256_MESSAGE_DIGEST, "BC");
+				MessageDigest chunkDigest = MessageDigest.getInstance(HashUtil.SHA_256_MESSAGE_DIGEST, "BC");
 				FileInputStream fileInputStream = new FileInputStream(f);
 				int readBytes = 0;
 				int currentChunk = 0;
@@ -386,13 +375,11 @@ public class MetadataWorker extends Thread {
 						mFile.getChunks().add(chunk);
 						chunk.setMFile(mFile);
 					}
-					String newChunkHash = HashUtil.digestToString(chunkDigest
-							.digest());
+					String newChunkHash = HashUtil.digestToString(chunkDigest.digest());
 					if (!newChunkHash.equals(chunk.getDecryptedChunkHash())) {
 						chunk.setLastChange(new Date());
 						chunk.setDecryptedChunkHash(newChunkHash);
-						log.debug("Neu Chunk [{}] finished with hash [{}]",
-								currentChunk, newChunkHash);
+						log.debug("Neu Chunk [{}] finished with hash [{}]", currentChunk, newChunkHash);
 						// Create Upload request
 						createUploadRequest(chunk, f);
 					}
@@ -419,20 +406,25 @@ public class MetadataWorker extends Thread {
 	 *            the chunk which shall be uploaded.
 	 */
 	protected void createUploadRequest(final MChunk chunk, File file) {
-		log.debug("Creating upload request for chunk [{}]",
-				chunk.getDecryptedChunkHash());
-		ChunkUploadRequest mChunkUpload = new ChunkUploadRequest(chunk, file,
-				new TransportCallback() {
-					@Override
-					public void transportCallback(Map<String, Object> parameter) {
-						String encryptedHash = (String) parameter.get(CALLBACK_PARAM_ENCRYPTED_CHUNK_HASH);
-						chunk.setEncryptedChunkHash(encryptedHash);
-					}
-				}, new AesChunkEncryption()); // TODO inject encryption provider
+		log.debug("Creating upload request for chunk [{}]", chunk.getDecryptedChunkHash());
+		ChunkUploadRequest mChunkUpload = new ChunkUploadRequest(chunk, file, new TransportCallback() {
+			@Override
+			public void transportCallback(Map<String, Object> parameter) {
+				String encryptedHash = (String) parameter.get(CALLBACK_PARAM_ENCRYPTED_CHUNK_HASH);
+				chunk.setEncryptedChunkHash(encryptedHash);
+
+				ObjectMapper objectMapper = new ObjectMapper();
+				try {
+					System.out.println(objectMapper.writeValueAsString(chunk));
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}, new AesChunkEncryption()); // TODO inject encryption provider
 		transportProvider.addChunkUpload(mChunkUpload);
 		log.debug("Added upload request to the processing queue");
 	}
-
 
 	/*
 	 * (non-Javadoc)
@@ -451,18 +443,14 @@ public class MetadataWorker extends Thread {
 					File f = new File(ofe.getFilename());
 					if (f.isFile()) {
 						String relativePath = StringUtils.substringAfter(
-								FilenameUtils.separatorsToUnix(ofe
-										.getFilename()), appSettings
-										.getWatchDirectory());
+								FilenameUtils.separatorsToUnix(ofe.getFilename()), appSettings.getWatchDirectory());
 						System.out.println(relativePath);
 
-						EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(
-								appSettings, decryptedMetaMetaData);
-						EncryptedMiTree encryptedRoot = encryptedMiTreeRepo
-								.loadEncryptedMiTree(miTreeInformation.getFileName());
-						MFile mFile = metadataUtil.locateMFile(encryptedRoot,
-								miTreeInformation,
-								relativePath);
+						EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(appSettings,
+								decryptedMetaMetaData);
+						EncryptedMiTree encryptedRoot = encryptedMiTreeRepo.loadEncryptedMiTree(miTreeInformation
+								.getFileName());
+						MFile mFile = metadataUtil.locateMFile(encryptedRoot, miTreeInformation, relativePath);
 						synchronizeFileMetadata(f, mFile);
 					}
 
@@ -474,9 +462,7 @@ public class MetadataWorker extends Thread {
 				}
 			}
 		} catch (IOException e) {
-			log.error(
-					"Cannot load Appsettings - MetadataRepository cannot be started!",
-					e);
+			log.error("Cannot load Appsettings - MetadataRepository cannot be started!", e);
 		} catch (CryptoException e) {
 			log.error("Cannot decrypt metadata!", e);
 			e.printStackTrace();

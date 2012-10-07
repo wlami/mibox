@@ -122,7 +122,11 @@ extends Thread {
 			for (DownloadRequest downloadRequest : downloads) {
 				log.debug("Processing downloadRequest for resource [{}]", downloadRequest.getTransportInfo());
 				byte[] data = transporter.download(downloadRequest.getTransportInfo());
-				downloadRequest.getTransportCallback().transportCallback(null); //TODO FIXME complete this
+				
+				Map<String, Object> params = new HashMap<>();
+				params.put(MetadataWorker.CALLBACK_PARAM_CONTENT, data);
+				downloadRequest.getTransportCallback().transportCallback(params); //TODO FIXME complete this
+				downloads.remove(downloadRequest);
 			}
 			try {
 				Thread.sleep(DEFAULT_SLEEP_TIME_MILLIS);
