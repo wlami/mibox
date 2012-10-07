@@ -25,41 +25,41 @@ import java.util.concurrent.ConcurrentSkipListSet;
  * @author Stefan Baust
  * 
  */
-public class DownloadRequestContainer {
+public class RequestContainer<T> {
 
-	Set<DownloadRequest> completedChildren;
+	Set<T> completedChildren;
 
-	Set<DownloadRequest> incompleteChildren;
+	Set<T> incompleteChildren;
 
 	TransportCallback allChildrenCompletedCallback;
 
 	/**
 	 * 
 	 */
-	public DownloadRequestContainer() {
-		completedChildren = new ConcurrentSkipListSet<DownloadRequest>();
-		incompleteChildren = new ConcurrentSkipListSet<DownloadRequest>();
+	public RequestContainer() {
+		completedChildren = new ConcurrentSkipListSet<T>();
+		incompleteChildren = new ConcurrentSkipListSet<T>();
 	}
-	
+
 	/**
 	 * Creates a Download container for chunks/other downloads which belong together
 	 * @param downloads A collection of downloads
-	 * @param childrenCompletedCallback A callback 
+	 * @param childrenCompletedCallback A callback
 	 */
-	public DownloadRequestContainer(Collection<DownloadRequest> downloads, TransportCallback childrenCompletedCallback) {
+	public RequestContainer(Collection<T> downloads, TransportCallback childrenCompletedCallback) {
 		this.incompleteChildren  = new ConcurrentSkipListSet<>(downloads);
 		this.completedChildren = new ConcurrentSkipListSet<>();
 		this.allChildrenCompletedCallback = childrenCompletedCallback;
 	}
 
-	
-	
+
+
 	/**
 	 * @param e
 	 * @return
 	 * @see java.util.Set#add(java.lang.Object)
 	 */
-	public boolean add(DownloadRequest e) {
+	public boolean add(T e) {
 		return incompleteChildren.add(e);
 	}
 
@@ -68,10 +68,10 @@ public class DownloadRequestContainer {
 	 * @return
 	 * @see java.util.Set#addAll(java.util.Collection)
 	 */
-	public boolean addAll(Collection<? extends DownloadRequest> c) {
+	public boolean addAll(Collection<? extends T> c) {
 		return incompleteChildren.addAll(c);
 	}
-	
+
 	/**
 	 * @param allChildrenCompletedCallback the allChildrenCompletedCallback to set
 	 */
@@ -79,20 +79,20 @@ public class DownloadRequestContainer {
 			TransportCallback allChildrenCompletedCallback) {
 		this.allChildrenCompletedCallback = allChildrenCompletedCallback;
 	}
-	
-	public void oneChildCompleted(DownloadRequest downloadRequest) {
-		if (incompleteChildren.remove(downloadRequest) ) {
-			completedChildren.add(downloadRequest);
+
+	public void oneChildCompleted(T request) {
+		if (incompleteChildren.remove(request)) {
+			completedChildren.add(request);
 			if (incompleteChildren.isEmpty()) {
 				this.allChildrenCompletedCallback.transportCallback(null);
 			}
 		}
 	}
-	
+
 	/**
 	 * @return the incompleteChildren
 	 */
-	public Set<DownloadRequest> getDownloadRequests() {
+	public Set<T> getDownloadRequests() {
 		return new ConcurrentSkipListSet<>(incompleteChildren);
 	}
 

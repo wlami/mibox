@@ -32,8 +32,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bouncycastle.crypto.CryptoException;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +48,7 @@ import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
 import com.wlami.mibox.client.networking.encryption.DataChunk;
 import com.wlami.mibox.client.networking.synchronization.ChunkUploadRequest;
 import com.wlami.mibox.client.networking.synchronization.DownloadRequest;
-import com.wlami.mibox.client.networking.synchronization.DownloadRequestContainer;
+import com.wlami.mibox.client.networking.synchronization.RequestContainer;
 import com.wlami.mibox.client.networking.synchronization.TransportCallback;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 import com.wlami.mibox.core.encryption.PBKDF2;
@@ -273,7 +271,7 @@ public class MetadataWorker extends Thread {
 		} else {
 			// probably a new file
 			final AppSettings appSettings = appSettingsDao.load();
-			final DownloadRequestContainer downloadRequestContainer = new DownloadRequestContainer();
+			final RequestContainer<DownloadRequest> downloadRequestContainer = new RequestContainer<>();
 			for (MChunk currentMChunk : incomingMFile.getChunks()) {
 				final MChunk mChunk = currentMChunk;
 				final DownloadRequest request = new DownloadRequest(currentMChunk.getEncryptedChunkHash());

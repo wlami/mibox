@@ -62,5 +62,5 @@ public interface TransportProvider<T extends UploadRequest<?>> {
 	 * Add several download requests by using a container.
 	 * @param downloadRequestContainer The Container which contains the requests.
 	 */
-	void addDownloadContainer(DownloadRequestContainer downloadRequestContainer);
+	void addDownloadContainer(RequestContainer downloadRequestContainer);
 }

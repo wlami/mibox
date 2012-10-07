@@ -137,11 +137,11 @@ TransportProvider<ChunkUploadRequest> {
 	}
 	
 /* (non-Javadoc)
-	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#addDownloadContainer(com.wlami.mibox.client.networking.synchronization.DownloadRequestContainer)
+	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#addDownloadContainer(com.wlami.mibox.client.networking.synchronization.RequestContainer)
 	 */
 	@Override
 	public void addDownloadContainer(
-			DownloadRequestContainer downloadRequestContainer) {
+			RequestContainer downloadRequestContainer) {
 		downloadRequests.addAll(downloadRequestContainer.getDownloadRequests());
 	}
 }
