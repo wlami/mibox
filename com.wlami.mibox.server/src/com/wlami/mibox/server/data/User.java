@@ -37,7 +37,7 @@ public class User {
 	private String password;
 
 	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "UUSER_CHUNK", joinColumns = @JoinColumn(name = "UUSER_USERNAME"), inverseJoinColumns = @JoinColumn(name = "CHUNK_HASH"))
+	@JoinTable(name = "UUSER_CHUNK", joinColumns = @JoinColumn(name = "UUSER_USERNAME", referencedColumnName = "USERNAME"), inverseJoinColumns = @JoinColumn(name = "CHUNK_HASH", referencedColumnName = "HASH"))
 	private Set<Chunk> chunks;
 
 	@ManyToMany(cascade = CascadeType.ALL)
@@ -119,10 +119,16 @@ public class User {
 	 * @return
 	 */
 	public static User loadUserByUsername(String username, EntityManager em) {
-		return (User) em
-				.createQuery(
-						"SELECT u from User u WHERE u.username = :username")
-						.setParameter("username", username).getSingleResult();
+		return (User) em.createQuery("SELECT u from User u WHERE u.username = :username")
+				.setParameter("username", username).getSingleResult();
+	}
+
+	public boolean userHasChunk(Chunk chunk, EntityManager em) {
+		Long count = (Long) em
+				.createNativeQuery(
+						"SELECT count(CHUNK_HASH) from UUSER_CHUNK uc WHERE uc.UUSER_USERNAME = ?1 AND uc.CHUNK_HASH = ?2")
+				.setParameter(1, username).setParameter(2, chunk.getHash()).getSingleResult();
+		return count > 0;
 	}
 
 }

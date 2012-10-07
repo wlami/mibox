@@ -66,8 +66,6 @@ public class Chunk implements Comparable<Chunk> {
 	public boolean equals(Object obj) {
 		if (obj == null) {
 			return false;
-		} else if (!(obj instanceof Chunk)) {
-			return false;
 		} else {
 			return hash.equals(((Chunk) obj).getHash());
 		}

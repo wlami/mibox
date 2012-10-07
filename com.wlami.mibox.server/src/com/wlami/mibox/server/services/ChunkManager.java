@@ -99,15 +99,9 @@ public class ChunkManager {
 					.createQuery("SELECT c from Chunk c WHERE c.hash = :hash")
 					.setParameter("hash", hash).getSingleResult();
 			// Check whether this chunk belongs to user
-			//TODO FIX THIS!
-			boolean userHasHash = false;
-			for(Chunk chunk2 : user.getChunks()) {
-				if(chunk.getHash().equals(chunk2.getHash())) {
-					userHasHash = true;
-					break;
-				}
-			}
-			if (!userHasHash) {
+			//syso
+			
+			if (!user.userHasChunk(chunk, em)) {
 				return Response.status(Status.NOT_FOUND).build();
 			}
 		} catch (NoResultException e) {
