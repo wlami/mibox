@@ -51,6 +51,14 @@ public interface TransportProvider<T extends UploadRequest<?>> {
 	void addChunkUpload(T uploadRequest);
 
 	/**
+	 * Add several upload requests by using a container.
+	 * 
+	 * @param uploadRequestContainer
+	 *            The container which contains the request.
+	 */
+	void addUploadContainer(RequestContainer<T> uploadRequestContainer);
+
+	/**
 	 * Add a {@link DownloadRequest} to the list of the transporters. After the
 	 * download has been finished the callback is executed.
 	 * 
@@ -62,5 +70,5 @@ public interface TransportProvider<T extends UploadRequest<?>> {
 	 * Add several download requests by using a container.
 	 * @param downloadRequestContainer The Container which contains the requests.
 	 */
-	void addDownloadContainer(RequestContainer downloadRequestContainer);
+	void addDownloadContainer(RequestContainer<DownloadRequest> downloadRequestContainer);
 }

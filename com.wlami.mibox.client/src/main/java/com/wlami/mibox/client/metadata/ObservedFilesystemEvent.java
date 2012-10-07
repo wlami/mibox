@@ -30,7 +30,7 @@ import java.nio.file.WatchEvent.Kind;
  * @author Wladislaw Mitzel
  */
 public class ObservedFilesystemEvent implements
-		Comparable<ObservedFilesystemEvent> {
+Comparable<ObservedFilesystemEvent> {
 
 	/**
 	 * This is the complete path of the file or folder which has been changed.
@@ -97,7 +97,7 @@ public class ObservedFilesystemEvent implements
 		if (obj == null) {
 			return false;
 		} else if (obj instanceof ObservedFilesystemEvent) {
-			return (this.toString().equals(obj.toString()));
+			return (toString().equals(obj.toString()));
 		} else {
 			return false;
 		}
@@ -110,7 +110,7 @@ public class ObservedFilesystemEvent implements
 	 */
 	@Override
 	public int compareTo(ObservedFilesystemEvent o) {
-		return this.toString().compareTo(o.toString());
+		return toString().compareTo(o.toString());
 	}
 
 }

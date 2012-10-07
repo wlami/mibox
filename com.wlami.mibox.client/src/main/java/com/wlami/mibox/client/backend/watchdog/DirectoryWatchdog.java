@@ -95,7 +95,7 @@ public class DirectoryWatchdog extends Thread {
 		this.metadataRepository = metadataRepository;
 		keyMap = new HashMap<WatchKey, Path>();
 		this.appSettingsDao
-				.registerNewAppSettingsListener(getNewAppSettingsListener());
+		.registerNewAppSettingsListener(getNewAppSettingsListener());
 	}
 
 	/**

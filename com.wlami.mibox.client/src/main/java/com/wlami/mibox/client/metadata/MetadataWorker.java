@@ -17,6 +17,8 @@
  */
 package com.wlami.mibox.client.metadata;
 
+import static com.wlami.mibox.client.application.DebugUtil.isDecryptedDebugEnabled;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -38,11 +40,11 @@ import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
-import com.wlami.mibox.client.metadata2.DecryptedMetaMetaData;
 import com.wlami.mibox.client.metadata2.DecryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeInformation;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
+import com.wlami.mibox.client.metadata2.MetaMetaDataHolder;
 import com.wlami.mibox.client.networking.encryption.AesChunkEncryption;
 import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
 import com.wlami.mibox.client.networking.encryption.DataChunk;
@@ -51,9 +53,7 @@ import com.wlami.mibox.client.networking.synchronization.DownloadRequest;
 import com.wlami.mibox.client.networking.synchronization.RequestContainer;
 import com.wlami.mibox.client.networking.synchronization.TransportCallback;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
-import com.wlami.mibox.core.encryption.PBKDF2;
 import com.wlami.mibox.core.util.HashUtil;
-
 /**
  * This class represents the worker thread, which is controlled the
  * {@link MetadataRepositoryImpl}.
@@ -116,8 +116,7 @@ public class MetadataWorker extends Thread {
 
 	private final MetadataUtil metadataUtil;
 
-	private DecryptedMetaMetaData decryptedMetaMetaData;
-
+	private MetaMetaDataHolder metaMetaDataHolder;
 	/**
 	 * Default constructor. Loads appSettings from {@link AppSettingsDao} and
 	 * the metadata from disk.
@@ -125,14 +124,14 @@ public class MetadataWorker extends Thread {
 	public MetadataWorker(AppSettingsDao appSettingsDao, TransportProvider<ChunkUploadRequest> transportProvider,
 			ConcurrentSkipListSet<ObservedFilesystemEvent> incomingEvents,
 			EncryptedMiTreeRepository encryptedMiTreeRepo, MetadataUtil metadataUtil,
-			DecryptedMetaMetaData decryptedMetaMetaData, ChunkEncryption chunkEncryption) {
+			MetaMetaDataHolder metaMetaDataHolder, ChunkEncryption chunkEncryption) {
 		this.incomingEvents = incomingEvents;
 		this.appSettingsDao = appSettingsDao;
 		this.transportProvider = transportProvider;
 		this.encryptedMiTreeRepo = encryptedMiTreeRepo;
 		this.metadataUtil = metadataUtil;
-		this.decryptedMetaMetaData = decryptedMetaMetaData;
 		this.chunkEncryption = chunkEncryption;
+		this.metaMetaDataHolder = metaMetaDataHolder;
 	}
 
 	/**
@@ -157,7 +156,7 @@ public class MetadataWorker extends Thread {
 		AppSettings appSettings = appSettingsDao.load();
 		String watchDir = appSettings.getWatchDirectory();
 
-		EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(appSettings, decryptedMetaMetaData);
+		EncryptedMiTreeInformation miTreeInformation = metaMetaDataHolder.getDecryptedMetaMetaData().getRoot();
 
 		EncryptedMiTree encryptedRoot = encryptedMiTreeRepo.loadEncryptedMiTree(miTreeInformation.getFileName());
 		DecryptedMiTree root;
@@ -168,18 +167,6 @@ public class MetadataWorker extends Thread {
 			root = encryptedRoot.decrypt(miTreeInformation.getKey(), miTreeInformation.getIv());
 		}
 		traverseFileSystem(new File(watchDir), root, miTreeInformation);
-	}
-
-	/**
-	 * @param appSettings
-	 * @return
-	 */
-	public EncryptedMiTreeInformation retrieveRootMiTreeInformation(AppSettings appSettings,
-			DecryptedMetaMetaData decryptedMetaMetaData) {
-		byte[] key = PBKDF2.getKeyFromPasswordAndSalt(appSettings.getPassword(), appSettings.getUsername());
-		byte[] iv = HashUtil.calculateMD5Bytes(appSettings.getUsername().getBytes());
-
-		return decryptedMetaMetaData.getRoot();
 	}
 
 	/**
@@ -340,14 +327,15 @@ public class MetadataWorker extends Thread {
 	 * @param mFile
 	 *            Reference to the metadata file.
 	 */
-	private void synchronizeFileMetadata(File f, MFile mFile) {
+	private void synchronizeFileMetadata(final File f, final MFile mFile) {
 		// Check whether the file has been modified since the last meta sync
 		log.debug("Start synchronization for file [{}]", f.getAbsolutePath());
-		Date filesystemLastModified = new Date(f.lastModified());
+		final Date filesystemLastModified = new Date(f.lastModified());
 		if ((mFile.getLastModified() == null) || (filesystemLastModified.after(mFile.getLastModified()))) {
 			// The file has been modified, so we have to update metadata
 			log.debug("File newer than last modification date. Calculating file and chunk hashes for [{}]", f.getName());
 			try {
+				RequestContainer<ChunkUploadRequest> uploadContainer = new RequestContainer<>();
 				// create two digests. One is for the whole file. The other
 				// is for the chunks and gets reseted after each chunk.
 				MessageDigest fileDigest = MessageDigest.getInstance(HashUtil.SHA_256_MESSAGE_DIGEST, "BC");
@@ -375,17 +363,25 @@ public class MetadataWorker extends Thread {
 					}
 					String newChunkHash = HashUtil.digestToString(chunkDigest.digest());
 					if (!newChunkHash.equals(chunk.getDecryptedChunkHash())) {
-						chunk.setLastChange(new Date());
 						chunk.setDecryptedChunkHash(newChunkHash);
-						log.debug("Neu Chunk [{}] finished with hash [{}]", currentChunk, newChunkHash);
+						log.debug("New Chunk [{}] finished with hash [{}]", currentChunk, newChunkHash);
 						// Create Upload request
-						createUploadRequest(chunk, f);
+						uploadContainer.add(createUploadRequest(chunk, f));
 					}
 					currentChunk++;
 				}
 				mFile.setFileHash(HashUtil.digestToString(fileDigest.digest()));
 				mFile.setLastModified(filesystemLastModified);
-
+				// Define a callback which is executed when all chunks have been
+				// uploaded.
+				uploadContainer.setAllChildrenCompletedCallback(new TransportCallback() {
+					@Override
+					public void transportCallback(Map<String, Object> parameter) {
+						// We should persist the updated metadata now!
+						// DecryptedMiTree decryptedMiTree = root.getRoot();
+					}
+				});
+				transportProvider.addUploadContainer(uploadContainer);
 			} catch (NoSuchAlgorithmException e) {
 				log.error("No SHA availabe", e);
 			} catch (IOException | NoSuchProviderException e) {
@@ -403,25 +399,25 @@ public class MetadataWorker extends Thread {
 	 * @param chunk
 	 *            the chunk which shall be uploaded.
 	 */
-	protected void createUploadRequest(final MChunk chunk, File file) {
+	protected ChunkUploadRequest createUploadRequest(final MChunk chunk, File file) {
 		log.debug("Creating upload request for chunk [{}]", chunk.getDecryptedChunkHash());
 		ChunkUploadRequest mChunkUpload = new ChunkUploadRequest(chunk, file, new TransportCallback() {
 			@Override
 			public void transportCallback(Map<String, Object> parameter) {
 				String encryptedHash = (String) parameter.get(CALLBACK_PARAM_ENCRYPTED_CHUNK_HASH);
 				chunk.setEncryptedChunkHash(encryptedHash);
-
+				chunk.setLastSync(new Date());
 				ObjectMapper objectMapper = new ObjectMapper();
-				try {
-					System.out.println(objectMapper.writeValueAsString(chunk));
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				if (isDecryptedDebugEnabled()) {
+					try {
+						System.out.println(objectMapper.writeValueAsString(chunk));
+					} catch (Exception e) {
+					}
 				}
 			}
 		}, new AesChunkEncryption()); // TODO inject encryption provider
-		transportProvider.addChunkUpload(mChunkUpload);
-		log.debug("Added upload request to the processing queue");
+		log.debug("returning upload request [{}]", mChunkUpload);
+		return mChunkUpload;
 	}
 
 	/*
@@ -444,11 +440,11 @@ public class MetadataWorker extends Thread {
 								FilenameUtils.separatorsToUnix(ofe.getFilename()), appSettings.getWatchDirectory());
 						System.out.println(relativePath);
 
-						EncryptedMiTreeInformation miTreeInformation = retrieveRootMiTreeInformation(appSettings,
-								decryptedMetaMetaData);
+						EncryptedMiTreeInformation miTreeInformation = metaMetaDataHolder.getDecryptedMetaMetaData()
+								.getRoot();
 						EncryptedMiTree encryptedRoot = encryptedMiTreeRepo.loadEncryptedMiTree(miTreeInformation
 								.getFileName());
-						MFile mFile = metadataUtil.locateMFile(encryptedRoot, miTreeInformation, relativePath);
+						MFile mFile = metadataUtil.locateMFile(relativePath);
 						synchronizeFileMetadata(f, mFile);
 					}
 

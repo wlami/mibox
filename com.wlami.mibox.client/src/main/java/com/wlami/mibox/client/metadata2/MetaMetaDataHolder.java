@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.application.AppSettings;
+import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.core.encryption.PBKDF2;
 import com.wlami.mibox.core.util.HashUtil;
 
@@ -32,22 +33,37 @@ import com.wlami.mibox.core.util.HashUtil;
  * @author stefan baust
  * 
  */
-public class MetaMetaDataSetup {
+public class MetaMetaDataHolder {
 
 	/** this object handles the persistence of the meta meta data. */
 	EncryptedMetaMetaDataRepository repository;
 
-	/** internal logger */
-	public static final Logger log = LoggerFactory
-			.getLogger(MetaMetaDataSetup.class);
+	private DecryptedMetaMetaData decryptedMetaMetaData;
 
 	/**
-	 * @param repository
-	 *            the repository to set
+	 * @return the decryptedMetaMetaData
 	 */
-	public void setRepository(EncryptedMetaMetaDataRepository repository) {
-		this.repository = repository;
+	public DecryptedMetaMetaData getDecryptedMetaMetaData() {
+		return decryptedMetaMetaData;
 	}
+
+	/**
+	 * Default constructor.
+	 * 
+	 * @param repository
+	 *            sets {@link #repository}
+	 * @param appSettingsDao
+	 *            sets {@link #appSettingsDao}
+	 */
+	public MetaMetaDataHolder(EncryptedMetaMetaDataRepository repository, AppSettingsDao appSettingsDao) {
+		this.repository = repository;
+		AppSettings appSettings = appSettingsDao.load();
+		setupMetaMetaData(appSettings);
+	}
+
+	/** internal logger */
+	public static final Logger log = LoggerFactory.getLogger(MetaMetaDataHolder.class);
+
 
 	/**
 	 * This method sets up metadata for the first time. Therefore it first tries
@@ -59,33 +75,29 @@ public class MetaMetaDataSetup {
 	 *            Application settings containing the username.
 	 * @return
 	 */
-	public DecryptedMetaMetaData setupMetaMetaData(AppSettings appSettings) {
-		EncryptedMetaMetaData encryptedMetaMetaData = repository
-				.retrieveMetaMetaData(appSettings);
-		DecryptedMetaMetaData decryptedMetaMetaData = null;
-		byte[] key = PBKDF2.getKeyFromPasswordAndSalt(
-				appSettings.getPassword(), appSettings.getUsername());
-		byte[] iv = HashUtil.calculateMD5Bytes(appSettings.getUsername()
-				.getBytes());
-		if (encryptedMetaMetaData != null) {
+	protected DecryptedMetaMetaData setupMetaMetaData(AppSettings appSettings) {
+		if (decryptedMetaMetaData == null) {
+			EncryptedMetaMetaData encryptedMetaMetaData = repository.retrieveMetaMetaData(appSettings);
+			decryptedMetaMetaData = null;
+			byte[] key = PBKDF2.getKeyFromPasswordAndSalt(appSettings.getPassword(), appSettings.getUsername());
+			byte[] iv = HashUtil.calculateMD5Bytes(appSettings.getUsername().getBytes());
+			if (encryptedMetaMetaData != null) {
 
-			decryptedMetaMetaData = encryptedMetaMetaData.decrypt(key, iv);
-			if (decryptedMetaMetaData == null) {
-				// TODO This is a really big problem!! maybe ask the user for
-				// another password?
+				decryptedMetaMetaData = encryptedMetaMetaData.decrypt(key, iv);
+				if (decryptedMetaMetaData == null) {
+					// TODO This is a really big problem!! maybe ask the user
+					// for
+					// another password?
+				}
+			} else {
+				decryptedMetaMetaData = new DecryptedMetaMetaData();
+				decryptedMetaMetaData.setRoot(EncryptedMiTreeInformation.createRandom());
+				String filename = appSettings.getUsername();
+				encryptedMetaMetaData = decryptedMetaMetaData.encrypt(filename, key, iv);
+				repository.persistMetaMetaData(encryptedMetaMetaData);
 			}
-		} else {
-			decryptedMetaMetaData = new DecryptedMetaMetaData();
-			decryptedMetaMetaData.setRoot(EncryptedMiTreeInformation
-					.createRandom());
-			String filename = appSettings.getUsername();
-			encryptedMetaMetaData = decryptedMetaMetaData.encrypt(filename,
-					key, iv);
-			repository.persistMetaMetaData(encryptedMetaMetaData);
 		}
 		return decryptedMetaMetaData;
 	}
-
-
 
 }

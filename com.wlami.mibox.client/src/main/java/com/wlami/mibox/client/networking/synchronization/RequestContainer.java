@@ -92,7 +92,7 @@ public class RequestContainer<T> {
 	/**
 	 * @return the incompleteChildren
 	 */
-	public Set<T> getDownloadRequests() {
+	public Set<T> getRequests() {
 		return new ConcurrentSkipListSet<>(incompleteChildren);
 	}
 

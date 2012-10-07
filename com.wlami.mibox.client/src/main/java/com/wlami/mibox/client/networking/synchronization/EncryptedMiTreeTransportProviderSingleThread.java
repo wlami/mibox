@@ -39,8 +39,7 @@ import com.wlami.mibox.client.networking.transporter.Transporter;
  * 
  */
 @Named(value = "metaTransport")
-public class EncryptedMiTreeTransportProviderSingleThread implements
-TransportProvider<EncryptedMiTreeUploadRequest> {
+public class EncryptedMiTreeTransportProviderSingleThread implements TransportProvider<EncryptedMiTreeUploadRequest> {
 
 	/**
 	 * 
@@ -48,8 +47,7 @@ TransportProvider<EncryptedMiTreeUploadRequest> {
 	protected static final String SERVER_URL_SUFFIX_REST_INTERFACE = "rest/metadatamanager/";
 
 	/** internal logger. */
-	Logger log = LoggerFactory
-			.getLogger(EncryptedMiTreeTransportProviderSingleThread.class);
+	Logger log = LoggerFactory.getLogger(EncryptedMiTreeTransportProviderSingleThread.class);
 
 	/** reference to the {@link AppSettingsDao} for retrieving the appSettings */
 	AppSettingsDao appSettingsDao;
@@ -83,10 +81,9 @@ TransportProvider<EncryptedMiTreeUploadRequest> {
 	public void startProcessing() {
 		if (transportWorker == null) {
 			AppSettings appSettings = appSettingsDao.load();
-			String dataStoreUrl = appSettings.getServerUrl()
-					+ SERVER_URL_SUFFIX_REST_INTERFACE;
-			RestTransporter restTransporter = new RestTransporter(dataStoreUrl,
-					appSettings.getUsername(), appSettings.getPassword());
+			String dataStoreUrl = appSettings.getServerUrl() + SERVER_URL_SUFFIX_REST_INTERFACE;
+			RestTransporter restTransporter = new RestTransporter(dataStoreUrl, appSettings.getUsername(),
+					appSettings.getPassword());
 			Transporter transporter = new Transporter(restTransporter);
 			transportWorker = new TransportWorker<>(transporter, uploads, downloads);
 			transportWorker.start();
@@ -132,9 +129,13 @@ TransportProvider<EncryptedMiTreeUploadRequest> {
 			log.debug("Upload task not added. Already existing.");
 		}
 	}
-	
-	/* (non-Javadoc)
-	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#addDownload(com.wlami.mibox.client.networking.synchronization.DownloadRequest)
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#
+	 * addDownload
+	 * (com.wlami.mibox.client.networking.synchronization.DownloadRequest)
 	 */
 	@Override
 	public void addDownload(DownloadRequest downloadRequest) {
@@ -142,14 +143,28 @@ TransportProvider<EncryptedMiTreeUploadRequest> {
 			log.debug("Download task not added. Aldready existing.");
 		}
 	}
-	
-	/* (non-Javadoc)
-	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#addDownloadContainer(com.wlami.mibox.client.networking.synchronization.RequestContainer)
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#
+	 * addDownloadContainer
+	 * (com.wlami.mibox.client.networking.synchronization.RequestContainer)
 	 */
 	@Override
-	public void addDownloadContainer(
-			RequestContainer downloadRequestContainer) {
-		downloads.addAll(downloadRequestContainer.getDownloadRequests());
+	public void addDownloadContainer(RequestContainer<DownloadRequest> downloadRequestContainer) {
+		downloads.addAll(downloadRequestContainer.getRequests());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#
+	 * addUploadContainer
+	 * (com.wlami.mibox.client.networking.synchronization.RequestContainer)
+	 */
+	@Override
+	public void addUploadContainer(RequestContainer<EncryptedMiTreeUploadRequest> uploadRequestContainer) {
+		uploads.addAll(uploadRequestContainer.getRequests());
 	}
 }
- 

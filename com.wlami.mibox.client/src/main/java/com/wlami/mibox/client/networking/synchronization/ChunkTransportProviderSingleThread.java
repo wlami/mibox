@@ -40,8 +40,7 @@ import com.wlami.mibox.client.networking.transporter.Transporter;
  * 
  */
 @Named(value = "chunkTransport")
-public class ChunkTransportProviderSingleThread implements
-TransportProvider<ChunkUploadRequest> {
+public class ChunkTransportProviderSingleThread implements TransportProvider<ChunkUploadRequest> {
 
 	/** internal logger. */
 	Logger log = LoggerFactory.getLogger(getClass());
@@ -75,10 +74,9 @@ TransportProvider<ChunkUploadRequest> {
 	public void startProcessing() {
 		if (transportWorker == null) {
 			AppSettings appSettings = appSettingsDao.load();
-			String dataStoreUrl = appSettings.getServerUrl()
-					+ "rest/chunkmanager/";
-			RestTransporter restTransporter = new RestTransporter(dataStoreUrl,
-					appSettings.getUsername(), appSettings.getPassword());
+			String dataStoreUrl = appSettings.getServerUrl() + "rest/chunkmanager/";
+			RestTransporter restTransporter = new RestTransporter(dataStoreUrl, appSettings.getUsername(),
+					appSettings.getPassword());
 			Transporter transporter = new Transporter(restTransporter);
 			transportWorker = new TransportWorker<>(transporter, mChunkUploads, downloadRequests);
 			transportWorker.start();
@@ -125,9 +123,13 @@ TransportProvider<ChunkUploadRequest> {
 		}
 
 	}
-	
-	/* (non-Javadoc)
-	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#addDownload(com.wlami.mibox.client.networking.synchronization.DownloadRequest)
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#
+	 * addDownload
+	 * (com.wlami.mibox.client.networking.synchronization.DownloadRequest)
 	 */
 	@Override
 	public void addDownload(DownloadRequest downloadRequest) {
@@ -135,13 +137,28 @@ TransportProvider<ChunkUploadRequest> {
 			log.debug("Download request not added. Already existing.");
 		}
 	}
-	
-/* (non-Javadoc)
-	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#addDownloadContainer(com.wlami.mibox.client.networking.synchronization.RequestContainer)
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#
+	 * addDownloadContainer
+	 * (com.wlami.mibox.client.networking.synchronization.RequestContainer)
 	 */
 	@Override
-	public void addDownloadContainer(
-			RequestContainer downloadRequestContainer) {
-		downloadRequests.addAll(downloadRequestContainer.getDownloadRequests());
+	public void addDownloadContainer(RequestContainer<DownloadRequest> downloadRequestContainer) {
+		downloadRequests.addAll(downloadRequestContainer.getRequests());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.wlami.mibox.client.networking.synchronization.TransportProvider#
+	 * addUploadContainer
+	 * (com.wlami.mibox.client.networking.synchronization.RequestContainer)
+	 */
+	@Override
+	public void addUploadContainer(RequestContainer<ChunkUploadRequest> uploadRequestContainer) {
+		mChunkUploads.addAll(uploadRequestContainer.getRequests());
 	}
 }

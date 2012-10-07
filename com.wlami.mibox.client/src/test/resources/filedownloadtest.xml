@@ -6,8 +6,7 @@
 	http://www.springframework.org/schema/context
 	http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
- 
- <bean id="appSettingsDao" class="com.wlami.mibox.client.application.AppSettingsDaoProperty" />
+  <bean id="appSettingsDao" class="com.wlami.mibox.client.application.AppSettingsDaoProperty" />
  
  <bean id="directoryWatchdog" class="com.wlami.mibox.client.backend.watchdog.DirectoryWatchdog">
  	<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
@@ -30,6 +29,7 @@
  	<constructor-arg name="metadataUtil" ref="metadataUtil" />
  	<constructor-arg name="encryptedMetaMetaDataRepository" ref="encryptedMetaMetaDataRepository"/>
  	<constructor-arg name="chunkEncryption" ref="aesChunkEncryption"/>
+ 	<constructor-arg name="metaMetaDataHolder" ref="metaMetaDataHolder"/>
  </bean>
  
  <bean id="encryptedMetaMetaDataRepository" class="com.wlami.mibox.client.metadata2.EncryptedMetaMetaDataRepository">
@@ -52,5 +52,11 @@
  
  <bean id="metadataUtil" class="com.wlami.mibox.client.metadata.MetadataUtil">
  	<constructor-arg name="encryptedMiTreeRepository" ref="encryptedMiTreeRepository" />
+ 	<constructor-arg name="metaMetaDataHolder" ref="metaMetaDataHolder"/>
  </bean>
-</beans>
+ 
+ <bean id="metaMetaDataHolder" class="com.wlami.mibox.client.metadata2.MetaMetaDataHolder">
+ 	<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
+ 	<constructor-arg name="repository" ref="encryptedMetaMetaDataRepository"></constructor-arg>
+ </bean>
+ </beans>
