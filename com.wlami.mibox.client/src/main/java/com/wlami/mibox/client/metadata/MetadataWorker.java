@@ -266,58 +266,104 @@ public class MetadataWorker extends Thread {
 			for (MChunk currentMChunk : incomingMFile.getChunks()) {
 				final MChunk mChunk = currentMChunk;
 				final DownloadRequest request = new DownloadRequest(currentMChunk.getEncryptedChunkHash());
-				request.setTransportCallback(new TransportCallback() {
-					@Override
-					public void transportCallback(Map<String, Object> parameter) {
-						byte[] content = (byte[]) parameter.get(CALLBACK_PARAM_CONTENT);
-						DataChunk decrypted = chunkEncryption.decryptChunk(mChunk, content);
-						String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
-						String tmpfilename = pathHash + "." + mChunk.getPosition();
-						File decryptedChunkFile = new File(appSettings.getTempDirectory(), tmpfilename);
-						try (FileOutputStream fos = new FileOutputStream(decryptedChunkFile)) {
-							fos.write(decrypted.getContent());
-						} catch (IOException e) {
-							throw new RuntimeException(e);
-						}
-						downloadRequestContainer.oneChildCompleted(request);
-					}
-				});
+				request.setTransportCallback(createChunkDownloadCompletedCallback(file, appSettings,
+						downloadRequestContainer, mChunk, request));
 				downloadRequestContainer.add(request);
 			}
-			downloadRequestContainer.setAllChildrenCompletedCallback(new TransportCallback() {
-				@Override
-				public void transportCallback(Map<String, Object> parameter) {
-					try (FileOutputStream fos = new FileOutputStream(file);
-							FileChannel channelDestination = fos.getChannel()) {
-						long position = 0;
-						for (MChunk mChunk : incomingMFile.getChunks()) {
-							String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
-							String tmpfilename = pathHash + "." + mChunk.getPosition();
-							File decryptedChunkFile = new File(appSettings.getTempDirectory(), tmpfilename);
-							try (FileInputStream fis = new FileInputStream(decryptedChunkFile);
-									FileChannel channelSource = fis.getChannel()) {
-								channelDestination.transferFrom(channelSource, position, decryptedChunkFile.length());
-								position += decryptedChunkFile.length();
-							}
-						}
-
-						for (MChunk mChunk : incomingMFile.getChunks()) {
-							String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
-							String tmpfilename = pathHash + "." + mChunk.getPosition();
-							File decryptedChunkFile = new File(appSettings.getTempDirectory(), tmpfilename);
-							decryptedChunkFile.delete();
-						}
-
-					} catch (Exception ioe) {
-						throw new RuntimeException(ioe);
-					}
-				}
-			});
+			downloadRequestContainer.setAllChildrenCompletedCallback(createDownloadContainerFinishedCallback(file, incomingMFile, appSettings));
 			transportProvider.addDownloadContainer(downloadRequestContainer);
 		}
 
 		log.debug("start file update from incoming metadata! [{}]", incomingMFile != null ? incomingMFile.getName()
 				: "");
+	}
+
+	/**
+	 * Creates a callback which is executed when all chunk downloads have been
+	 * successfully processed. In this callback the downloaded and decrypted
+	 * chunks (which are stored in the temp directory) are written to the target
+	 * file in the right order. Afterwards the temporary chunks are delted.
+	 * 
+	 * @param file
+	 *            The target file which is created from all temporary chunks.
+	 * @param incomingMFile
+	 *            Metadata containing information on the file.
+	 * @param appSettings
+	 *            The settings are used for the retrieval of the temp-dir path.
+	 * @return A callback for finished download containers.
+	 */
+	public TransportCallback createDownloadContainerFinishedCallback(final File file, final MFile incomingMFile,
+			final AppSettings appSettings) {
+		return new TransportCallback() {
+			@Override
+			public void transportCallback(Map<String, Object> parameter) {
+				try (FileOutputStream fos = new FileOutputStream(file);
+						FileChannel channelDestination = fos.getChannel()) {
+					long position = 0;
+					for (MChunk mChunk : incomingMFile.getChunks()) {
+						String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
+						String tmpfilename = pathHash + "." + mChunk.getPosition();
+						File decryptedChunkFile = new File(appSettings.getTempDirectory(), tmpfilename);
+						try (FileInputStream fis = new FileInputStream(decryptedChunkFile);
+								FileChannel channelSource = fis.getChannel()) {
+							channelDestination.transferFrom(channelSource, position, decryptedChunkFile.length());
+							position += decryptedChunkFile.length();
+						}
+					}
+
+					for (MChunk mChunk : incomingMFile.getChunks()) {
+						String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
+						String tmpfilename = pathHash + "." + mChunk.getPosition();
+						File decryptedChunkFile = new File(appSettings.getTempDirectory(), tmpfilename);
+						decryptedChunkFile.delete();
+					}
+
+				} catch (Exception ioe) {
+					throw new RuntimeException(ioe);
+				}
+			}
+		};
+	}
+
+	/**
+	 * Creates a callback for {@link DownloadRequest}s. In this callback the
+	 * downloaded chunk content gets decrypted and written to the temporary
+	 * folder.
+	 * 
+	 * @param file
+	 *            this file will contain the decrypted chunk as a part of it.
+	 * @param appSettings
+	 *            The settings are used for the retrieval of the temp directory
+	 *            path.
+	 * @param downloadRequestContainer
+	 *            A reference to the container the chunk belongs to. The
+	 *            callback has to tell the container that the request has been
+	 *            processed.
+	 * @param mChunk
+	 *            The mChunk which has been processed for this callback.
+	 * @param request
+	 *            The request which triggered this callback.
+	 * @return A callback for chunk {@link DownloadRequest}s.
+	 */
+	public TransportCallback createChunkDownloadCompletedCallback(final File file, final AppSettings appSettings,
+			final RequestContainer<DownloadRequest> downloadRequestContainer, final MChunk mChunk,
+			final DownloadRequest request) {
+		return new TransportCallback() {
+			@Override
+			public void transportCallback(Map<String, Object> parameter) {
+				byte[] content = (byte[]) parameter.get(CALLBACK_PARAM_CONTENT);
+				DataChunk decrypted = chunkEncryption.decryptChunk(mChunk, content);
+				String pathHash = HashUtil.calculateSha256(file.getAbsolutePath().getBytes());
+				String tmpfilename = pathHash + "." + mChunk.getPosition();
+				File decryptedChunkFile = new File(appSettings.getTempDirectory(), tmpfilename);
+				try (FileOutputStream fos = new FileOutputStream(decryptedChunkFile)) {
+					fos.write(decrypted.getContent());
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				downloadRequestContainer.oneChildCompleted(request);
+			}
+		};
 	}
 
 	/**
@@ -378,24 +424,7 @@ public class MetadataWorker extends Thread {
 				mFile.setLastModified(filesystemLastModified);
 				// Define a callback which is executed when all chunks have been
 				// uploaded.
-				uploadContainer.setAllChildrenCompletedCallback(new TransportCallback() {
-					@Override
-					public void transportCallback(Map<String, Object> parameter) {
-						// We should persist the updated metadata now!
-						AppSettings appSettings = appSettingsDao.load();
-						try {
-							EncryptableDecryptedMiTree decryptedMiTree = metadataUtil
-									.locateDecryptedMiTree(getRelativePath(appSettings, f.getAbsolutePath()));
-							decryptedMiTree.getDecryptedMiTree().getFiles().put(mFile.getName(), mFile);
-							EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt();
-							encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree, decryptedMiTree
-									.getEncryptedMiTreeInformation().getFileName());
-						} catch (CryptoException | IOException e) {
-							throw new CryptoRuntimeException(e);
-						}
-
-					}
-				});
+				uploadContainer.setAllChildrenCompletedCallback(createUploadContainerFinishedCallback(f, mFile));
 				transportProvider.addUploadContainer(uploadContainer);
 			} catch (NoSuchAlgorithmException e) {
 				log.error("No SHA availabe", e);
@@ -405,6 +434,40 @@ public class MetadataWorker extends Thread {
 		} else {
 			log.debug("The file has not been modified [{}]", f.getName());
 		}
+	}
+
+	/**
+	 * Creates a Callback which is executed when all uploads for a file have
+	 * been successfully executed. The callback persists the metadata (
+	 * {@link MFile} ) which got updated during the upload callback of each
+	 * chunk. At this point the {@link MChunk} inside the mFile contain the new
+	 * encrypted chunk hash.
+	 * 
+	 * @param f
+	 *            The current file which has been uploaded.
+	 * @param mFile
+	 *            The metadata of the file. This metadata gets persisted in the
+	 *            callback.
+	 * @return A callback for finished upload containers.
+	 */
+	public TransportCallback createUploadContainerFinishedCallback(final File f, final MFile mFile) {
+		return new TransportCallback() {
+			@Override
+			public void transportCallback(Map<String, Object> parameter) {
+				AppSettings appSettings = appSettingsDao.load();
+				try {
+					EncryptableDecryptedMiTree decryptedMiTree = metadataUtil
+							.locateDecryptedMiTree(getRelativePath(appSettings, f.getAbsolutePath()));
+					decryptedMiTree.getDecryptedMiTree().getFiles().put(mFile.getName(), mFile);
+					EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt();
+					encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree, decryptedMiTree
+							.getEncryptedMiTreeInformation().getFileName());
+				} catch (CryptoException | IOException e) {
+					throw new CryptoRuntimeException(e);
+				}
+
+			}
+		};
 	}
 
 	/**
