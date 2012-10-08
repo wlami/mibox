@@ -29,8 +29,8 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.wlami.mibox.core.encryption.PBKDF2;
-import com.wlami.mibox.core.util.HashUtil;
+import com.wlami.mibox.client.application.AppSettings;
+import com.wlami.mibox.client.application.AppSettingsDao;
 
 /**
  * @author wladislaw
@@ -60,11 +60,28 @@ public class RestTransporter extends LowLevelTransporter {
 	public RestTransporter(String dataStoreUrl, String username, String password) {
 		setDataStoreUrl(dataStoreUrl);
 		this.username = username;
-		this.password = HashUtil.digestToString(PBKDF2
-				.getKeyFromPasswordAndSalt(password, username
-						+ "REST-INTERFACE"));
+		this.password = calculatePassword(username, password);
 		this.password = password;
 		//FIXME encrypted PWs in database
+	}
+
+	/**
+	 * @param username
+	 * @param password
+	 * @return
+	 */
+	protected String calculatePassword(String username, String password) {
+		// TODO FIXME return HashUtil.digestToString(PBKDF2
+		//				.getKeyFromPasswordAndSalt(password, username
+		//						+ "REST-INTERFACE"));
+		return password;
+	}
+
+	public RestTransporter(AppSettingsDao appSettingsDao, String dataStoreSuffix) {
+		AppSettings appSettings = appSettingsDao.load();
+		username = appSettings.getUsername();
+		password = calculatePassword(username, username);
+		setDataStoreUrl(appSettings.getServerUrl() + dataStoreSuffix);
 	}
 
 	/**

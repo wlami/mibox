@@ -28,7 +28,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.commons.io.FilenameUtils;
@@ -121,6 +123,7 @@ public class MetadataWorker extends Thread {
 
 	private MetaMetaDataHolder metaMetaDataHolder;
 
+	private AppSettings appSettings;
 	/**
 	 * Default constructor. Loads appSettings from {@link AppSettingsDao} and
 	 * the metadata from disk.
@@ -155,7 +158,7 @@ public class MetadataWorker extends Thread {
 	 * @throws IOException
 	 *             Thrown on io errors.
 	 */
-	private void synchronizeMetadata() throws IOException {
+	private void synchronizeFilesystemWithLocalMetadata() throws IOException {
 		log.debug("Synchronizing metadata with filesystem");
 		AppSettings appSettings = appSettingsDao.load();
 		String watchDir = appSettings.getWatchDirectory();
@@ -235,6 +238,89 @@ public class MetadataWorker extends Thread {
 		encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree, miTreeInformation.getFileName());
 	}
 
+	public void synchronizeLocalMetadataWithRemoteMetadata() {
+		EncryptedMiTreeInformation rootInfo = metaMetaDataHolder.getDecryptedMetaMetaData().getRoot();
+		EncryptedMiTree localRootEncrypted = encryptedMiTreeRepo.loadEncryptedMiTree(rootInfo.getFileName());
+		DecryptedMiTree localRoot = localRootEncrypted.decrypt(rootInfo.getKey(), rootInfo.getIv());
+		EncryptedMiTree remoteRootEncrypted = encryptedMiTreeRepo
+				.loadRemoteEncryptedMiTree(rootInfo.getFileName());
+		DecryptedMiTree remoteRoot = remoteRootEncrypted.decrypt(rootInfo.getKey(), rootInfo.getIv());
+		appSettings = appSettingsDao.load();
+		File file = new File(appSettings.getWatchDirectory());
+		synchronizeLocalMetadataWithRemoteMetadata(file, localRoot, remoteRoot);
+	}
+
+	public void synchronizeLocalMetadataWithRemoteMetadata(File f, DecryptedMiTree local, DecryptedMiTree remote) {
+		if (local == null) {
+			// In this case the incoming folder is new and we need to create a
+			// local folder
+			local = new DecryptedMiTree();
+			local.setFolderName(f.getName());
+
+		}
+		// Remember which files got processed in the first loop
+		Set<String> processedFiles = new HashSet<>();
+		// Get all files from the local metadata and compare them to the remote
+		// metadata.
+		for (String localMFileName : local.getFiles().keySet()) {
+			MFile localMFile = local.getFiles().get(localMFileName);
+			MFile remoteMFile = remote.getFiles().get(localMFileName);
+			// if the remote file is newer than the local file we want to update
+			// it
+			if (remoteMFile == null || remoteMFile.getLastModified().after(localMFile.getLastModified())) {
+				File file = new File(f, localMFileName);
+				updateFileFromMetadata(file, localMFile, remoteMFile);
+			}
+			// we remember which files has been processed by us
+			processedFiles.add(localMFileName);
+		}
+		// Now we want to iterate over all remote files which have not been
+		// processed yet. This for we remove already processed files from the
+		// remote files.
+		Set<String> newRemoteFileNames = new HashSet<>(remote.getFiles().keySet());
+		newRemoteFileNames.removeAll(processedFiles);
+		for (String remoteMFileName : newRemoteFileNames) {
+			MFile localMFile = null;
+			MFile remoteFile = remote.getFiles().get(remoteMFileName);
+			File file = new File(f, remoteMFileName);
+			updateFileFromMetadata(file, localMFile, remoteFile);
+		}
+		// TODO don't forget to update the local metadata if a file got
+		// updated!!!
+
+		// And now lets compare the subfolders
+		Map<String, EncryptedMiTreeInformation> localSubFolders = local.getSubfolder();
+		Map<String, EncryptedMiTreeInformation> remoteSubFolders = remote.getSubfolder();
+
+		Set<String> processedFolders = new HashSet<>();
+		for( String localFolderName : localSubFolders.keySet()) {
+			EncryptedMiTreeInformation localMiTreeInfo = localSubFolders.get(localFolderName);
+			DecryptedMiTree localMiTree = encryptedMiTreeRepo.loadEncryptedMiTree(
+					localMiTreeInfo.getFileName()).decrypt(localMiTreeInfo.getKey(), localMiTreeInfo.getIv());
+			// TODO what happens if the folder has been deleted on another
+			// client
+			EncryptedMiTree remoteMiTreeEncrypted = encryptedMiTreeRepo.loadRemoteEncryptedMiTree(localMiTreeInfo
+					.getFileName());
+			DecryptedMiTree remoteMiTree = remoteMiTreeEncrypted.decrypt(localMiTreeInfo.getKey(),
+					localMiTreeInfo.getIv());
+			synchronizeLocalMetadataWithRemoteMetadata(new File(f, localFolderName),
+					localMiTree, remoteMiTree);
+			processedFolders.add(localFolderName);
+		}
+
+		Set<String> newRemoteFolders = new HashSet<>(remoteSubFolders.keySet());
+		newRemoteFolders.removeAll(processedFolders);
+		for (String remoteFolderName : newRemoteFolders) {
+			EncryptedMiTreeInformation localMiTreeInfo = remoteSubFolders.get(remoteFolderName);
+			DecryptedMiTree localMiTree = null;
+			EncryptedMiTree remoteMiTreeEncrypted = encryptedMiTreeRepo.loadRemoteEncryptedMiTree(localMiTreeInfo
+					.getFileName());
+			DecryptedMiTree remoteMiTree = remoteMiTreeEncrypted.decrypt(localMiTreeInfo.getKey(),
+					localMiTreeInfo.getIv());
+			synchronizeLocalMetadataWithRemoteMetadata(new File(f, remoteFolderName), localMiTree, remoteMiTree);
+		}
+	}
+
 	/**
 	 * Synchronizes incoming MFile with the local metadata.
 	 * 
@@ -297,6 +383,10 @@ public class MetadataWorker extends Thread {
 		return new TransportCallback() {
 			@Override
 			public void transportCallback(Map<String, Object> parameter) {
+				File parent = new File(file.getParent());
+				if (!parent.exists()) {
+					parent.mkdirs();
+				}
 				try (FileOutputStream fos = new FileOutputStream(file);
 						FileChannel channelDestination = fos.getChannel()) {
 					long position = 0;
@@ -511,7 +601,7 @@ public class MetadataWorker extends Thread {
 	public void run() {
 		log.debug("Starting");
 		try {
-			synchronizeMetadata();
+			synchronizeFilesystemWithLocalMetadata();
 			AppSettings appSettings = appSettingsDao.load();
 			while (active) {
 				ObservedFilesystemEvent ofe;

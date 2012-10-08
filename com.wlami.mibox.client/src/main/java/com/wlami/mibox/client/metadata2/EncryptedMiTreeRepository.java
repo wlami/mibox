@@ -26,10 +26,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.wlami.mibox.client.application.AppFolders;
+import com.wlami.mibox.client.networking.adapter.LowLevelTransporter;
+import com.wlami.mibox.client.networking.adapter.TransportInfo;
 import com.wlami.mibox.client.networking.synchronization.EncryptedMiTreeUploadRequest;
-import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 import com.wlami.mibox.client.networking.synchronization.TransportCallback;
+import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 
 /**
  * @author Stefan baust
@@ -43,6 +46,12 @@ public class EncryptedMiTreeRepository {
 	 */
 	private final TransportProvider<EncryptedMiTreeUploadRequest> transportProvider;
 
+	/**
+	 * reference to a lowLevel transporter. it is used for synchronous retrieval
+	 * of remote files.
+	 */
+	private final LowLevelTransporter lowLevelTransporter;
+
 	/** interal logger */
 	private static Logger log = LoggerFactory
 			.getLogger(EncryptedMiTreeRepository.class);
@@ -53,10 +62,28 @@ public class EncryptedMiTreeRepository {
 	 * @param transportProvider
 	 *            A reference to a transport provider which is used for uploads
 	 *            and downloads.
+	 * @param lowLevelTransporter
+	 *            sets {@link #lowLevelTransporter}
 	 */
 	public EncryptedMiTreeRepository(
-			TransportProvider<EncryptedMiTreeUploadRequest> transportProvider) {
+			TransportProvider<EncryptedMiTreeUploadRequest> transportProvider,
+			LowLevelTransporter lowLevelTransporter) {
 		this.transportProvider = transportProvider;
+		this.lowLevelTransporter = lowLevelTransporter;
+	}
+
+	public EncryptedMiTree loadRemoteEncryptedMiTree(String fileName) {
+		TransportInfo transportInfo = new TransportInfo(fileName);
+		EncryptedMiTree encryptedMiTree = null;
+		try {
+			byte[] result = lowLevelTransporter.download(transportInfo);
+			encryptedMiTree = new EncryptedMiTree();
+			encryptedMiTree.setContent(result);
+			encryptedMiTree.setName(transportInfo.getResourceName());
+		} catch (UniformInterfaceException e) {
+			throw new RuntimeException(e);
+		}
+		return encryptedMiTree;
 	}
 
 	/**
