@@ -387,7 +387,6 @@ public class MetadataWorker extends Thread {
 							EncryptableDecryptedMiTree decryptedMiTree = metadataUtil
 									.locateDecryptedMiTree(getRelativePath(appSettings, f.getAbsolutePath()));
 							decryptedMiTree.getDecryptedMiTree().getFiles().put(mFile.getName(), mFile);
-							// TODO encrypt this updated mitree and persist it!
 							EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt();
 							encryptedMiTreeRepo.saveEncryptedMiTree(encryptedMiTree, decryptedMiTree
 									.getEncryptedMiTreeInformation().getFileName());
@@ -452,7 +451,8 @@ public class MetadataWorker extends Thread {
 			synchronizeMetadata();
 			AppSettings appSettings = appSettingsDao.load();
 			while (active) {
-				for (ObservedFilesystemEvent ofe : incomingEvents) {
+				ObservedFilesystemEvent ofe;
+				while ((ofe = incomingEvents.pollFirst()) != null) {
 					log.debug("Processing event " + ofe);
 					File f = new File(ofe.getFilename());
 					if (f.isFile()) {

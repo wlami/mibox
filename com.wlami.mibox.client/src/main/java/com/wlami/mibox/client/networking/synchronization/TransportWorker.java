@@ -84,7 +84,8 @@ extends Thread {
 		this.log.info("Start Transporter");
 		while (this.active) {
 			// Process the upload requests
-			for (UploadRequest<?> uploadRequest : uploads) {
+			UploadRequest<?> uploadRequest;
+			while ((uploadRequest = uploads.pollFirst()) != null) {
 				log.debug("Processing UploadRequest for file ");
 				try {
 					Transportable transportable = uploadRequest
@@ -122,7 +123,7 @@ extends Thread {
 			for (DownloadRequest downloadRequest : downloads) {
 				log.debug("Processing downloadRequest for resource [{}]", downloadRequest.getTransportInfo());
 				byte[] data = transporter.download(downloadRequest.getTransportInfo());
-				
+
 				Map<String, Object> params = new HashMap<>();
 				params.put(MetadataWorker.CALLBACK_PARAM_CONTENT, data);
 				downloadRequest.getTransportCallback().transportCallback(params); //TODO FIXME complete this
