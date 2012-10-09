@@ -72,7 +72,14 @@ public class TransportInfo implements Comparable<TransportInfo> {
 	 */
 	@Override
 	public int compareTo(TransportInfo o) {
-		return resourceName.compareTo(o.getResourceName());
+		if (resourceName == null) {
+			return -1;
+		} else if (o == null || o.getResourceName() == null) {
+			return 1;
+		} else {
+			return resourceName.compareTo(o.getResourceName());
+		}
+
 	}
 
 	/*
