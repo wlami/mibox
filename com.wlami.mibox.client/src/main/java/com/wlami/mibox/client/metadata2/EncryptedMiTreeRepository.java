@@ -73,6 +73,11 @@ public class EncryptedMiTreeRepository {
 	}
 
 	public EncryptedMiTree loadRemoteEncryptedMiTree(String fileName) {
+		if (fileName == null) {
+			throw new IllegalArgumentException(
+					"filename must not be null when invoking loadRemoteEncryptedMiTree(String)");
+		}
+		log.debug("loading remote encrypted mitree [{}]", fileName);
 		TransportInfo transportInfo = new TransportInfo(fileName);
 		EncryptedMiTree encryptedMiTree = null;
 		try {

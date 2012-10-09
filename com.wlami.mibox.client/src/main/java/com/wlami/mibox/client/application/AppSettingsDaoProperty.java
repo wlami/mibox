@@ -69,6 +69,7 @@ public class AppSettingsDaoProperty implements AppSettingsDao {
 	 */
 	@Override
 	public AppSettings load() {
+		log.debug("loading appsettings");
 		if (appSettings == null) {
 			try {
 				appSettings = loadFromPropertyFile();

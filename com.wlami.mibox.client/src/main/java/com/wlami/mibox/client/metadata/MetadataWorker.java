@@ -239,9 +239,14 @@ public class MetadataWorker extends Thread {
 	}
 
 	public void synchronizeLocalMetadataWithRemoteMetadata() {
+		log.info("Starting complete synchronization of mibox with remote metadata");
 		EncryptedMiTreeInformation rootInfo = metaMetaDataHolder.getDecryptedMetaMetaData().getRoot();
 		EncryptedMiTree localRootEncrypted = encryptedMiTreeRepo.loadEncryptedMiTree(rootInfo.getFileName());
-		DecryptedMiTree localRoot = localRootEncrypted.decrypt(rootInfo.getKey(), rootInfo.getIv());
+		DecryptedMiTree localRoot = null;
+		if (localRootEncrypted != null) {
+			log.debug("decrypting local root");
+			localRoot = localRootEncrypted.decrypt(rootInfo.getKey(), rootInfo.getIv());
+		}
 		EncryptedMiTree remoteRootEncrypted = encryptedMiTreeRepo
 				.loadRemoteEncryptedMiTree(rootInfo.getFileName());
 		DecryptedMiTree remoteRoot = remoteRootEncrypted.decrypt(rootInfo.getKey(), rootInfo.getIv());
@@ -251,23 +256,26 @@ public class MetadataWorker extends Thread {
 	}
 
 	public void synchronizeLocalMetadataWithRemoteMetadata(File f, DecryptedMiTree local, DecryptedMiTree remote) {
+		log.info("starting incoming synchronization of folder [{}]", f.getAbsolutePath());
 		if (local == null) {
+			log.debug("local metadata not available for folder [{}]", f.getAbsolutePath());
 			// In this case the incoming folder is new and we need to create a
 			// local folder
 			local = new DecryptedMiTree();
 			local.setFolderName(f.getName());
-
 		}
 		// Remember which files got processed in the first loop
 		Set<String> processedFiles = new HashSet<>();
 		// Get all files from the local metadata and compare them to the remote
 		// metadata.
 		for (String localMFileName : local.getFiles().keySet()) {
+			log.debug("Comparing MFiles for [{}]", localMFileName);
 			MFile localMFile = local.getFiles().get(localMFileName);
 			MFile remoteMFile = remote.getFiles().get(localMFileName);
 			// if the remote file is newer than the local file we want to update
 			// it
 			if (remoteMFile == null || remoteMFile.getLastModified().after(localMFile.getLastModified())) {
+				log.info("remote file is newer than local file. will request download for [{}]", localMFileName);
 				File file = new File(f, localMFileName);
 				updateFileFromMetadata(file, localMFile, remoteMFile);
 			}
@@ -280,6 +288,7 @@ public class MetadataWorker extends Thread {
 		Set<String> newRemoteFileNames = new HashSet<>(remote.getFiles().keySet());
 		newRemoteFileNames.removeAll(processedFiles);
 		for (String remoteMFileName : newRemoteFileNames) {
+			log.info("incoming new file [{}]", remoteMFileName);
 			MFile localMFile = null;
 			MFile remoteFile = remote.getFiles().get(remoteMFileName);
 			File file = new File(f, remoteMFileName);
