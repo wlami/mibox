@@ -6,7 +6,7 @@
 	http://www.springframework.org/schema/context
 	http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
-  <bean id="appSettingsDao" class="com.wlami.mibox.client.application.AppSettingsDaoProperty" />
+ <bean id="appSettingsDao" class="com.wlami.mibox.client.application.AppSettingsDaoProperty" />
  
  <bean id="directoryWatchdog" class="com.wlami.mibox.client.backend.watchdog.DirectoryWatchdog">
  	<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
@@ -39,7 +39,8 @@
  <bean id="aesChunkEncryption" class="com.wlami.mibox.client.networking.encryption.AesChunkEncryption" />
  
  <bean id="encryptedMiTreeRepository" class="com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository">
- 	<constructor-arg name="transportProvider" ref="encryptedMiTreeTransportProvider"></constructor-arg>
+ 	<constructor-arg name="transportProvider" ref="encryptedMiTreeTransportProvider" />
+ 	<constructor-arg name="lowLevelTransporter" ref="metadataRestTransporter"/>
  </bean>
  
  <bean id="chunkTransportProvider" class="com.wlami.mibox.client.networking.synchronization.ChunkTransportProviderSingleThread">
@@ -53,6 +54,11 @@
  <bean id="metadataUtil" class="com.wlami.mibox.client.metadata.MetadataUtil">
  	<constructor-arg name="encryptedMiTreeRepository" ref="encryptedMiTreeRepository" />
  	<constructor-arg name="metaMetaDataHolder" ref="metaMetaDataHolder"/>
+ </bean>
+ 
+ <bean id="metadataRestTransporter" class="com.wlami.mibox.client.networking.adapter.RestTransporter">
+ 	<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
+ 	<constructor-arg name="dataStoreSuffix" value="rest/metadatamanager/"></constructor-arg>
  </bean>
  
  <bean id="metaMetaDataHolder" class="com.wlami.mibox.client.metadata2.MetaMetaDataHolder">
