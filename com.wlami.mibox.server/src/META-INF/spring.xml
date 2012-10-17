@@ -42,6 +42,12 @@ http://www.springframework.org/schema/context/spring-context.xsd">
 			</bean>
 		</property>
 	</bean>
+	
+	<bean id="metadataNotifier" class="com.wlami.mibox.server.services.MetadataNotifier">
+	</bean>
+	
+	<bean id="userManager" class="com.wlami.mibox.server.services.UserManager">
+	</bean>
 
 
 	<bean id="chunkManagerResponseBuilder"

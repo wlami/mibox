@@ -16,7 +16,8 @@
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
 
-	<!-- Define our REST service. Tell the servlet which package contains the Services. -->
+	<!-- Define our REST service. Tell the servlet which package contains the 
+		Services. -->
 	<servlet>
 		<servlet-name>Jersey REST Service</servlet-name>
 		<servlet-class>com.sun.jersey.spi.spring.container.servlet.SpringServlet</servlet-class>
@@ -55,7 +56,7 @@
 			<role-name>user</role-name>
 		</auth-constraint>
 	</security-constraint>
-	
+
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name>rest metadatamanager</web-resource-name>
@@ -65,11 +66,21 @@
 			<role-name>user</role-name>
 		</auth-constraint>
 	</security-constraint>
-	
+
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name>rest metametadatamanager</web-resource-name>
 			<url-pattern>/rest/metametadatamanager/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>user</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>rest meta data notifier</web-resource-name>
+			<url-pattern>/rest/metadatanotifier/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>user</role-name>
