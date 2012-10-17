@@ -20,6 +20,7 @@ package com.wlami.mibox.server.services;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -155,6 +156,7 @@ public class MetadataManager {
 		}
 		try {
 			metadataPersistenceProvider.persistFile(name, input);
+			metadata.setLastUpdated(new Date());
 		} catch (IOException e) {
 			log.error("Could not persist metadata", e);
 			jpaTransactionManager.rollback(transactionStatus);

@@ -29,6 +29,10 @@ public class Metadata implements Comparable<Metadata> {
 
 	@Column(nullable = false)
 	@Temporal(TemporalType.TIMESTAMP)
+	private Date lastUpdated;
+
+	@Column(nullable = false)
+	@Temporal(TemporalType.TIMESTAMP)
 	private Date lastAccessed;
 
 	@Deprecated
@@ -84,6 +88,21 @@ public class Metadata implements Comparable<Metadata> {
 	@Override
 	public int compareTo(Metadata o) {
 		return name.compareTo(o.getName());
+	}
+
+	/**
+	 * @return the lastUpdated
+	 */
+	public Date getLastUpdated() {
+		return lastUpdated;
+	}
+
+	/**
+	 * @param lastUpdated
+	 *            the lastUpdated to set
+	 */
+	public void setLastUpdated(Date lastUpdated) {
+		this.lastUpdated = lastUpdated;
 	}
 
 	/**
