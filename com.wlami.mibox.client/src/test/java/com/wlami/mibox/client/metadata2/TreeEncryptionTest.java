@@ -55,8 +55,8 @@ public class TreeEncryptionTest {
 	@Test
 	public void testEncryptionAndDecryption() throws IOException,
 	CryptoException {
-		this.testEncryption();
-		this.testDecryption();
+		testEncryption();
+		testDecryption();
 	}
 
 	/**
@@ -87,7 +87,7 @@ public class TreeEncryptionTest {
 		final byte[] key = PBKDF2.getKeyFromPasswordAndSalt("ultrasecret",
 				"username");
 		final byte[] iv = HashUtil.calculateMD5Bytes("username".getBytes());
-		EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt(key, iv);
+		EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt(mFile.getName(), key, iv);
 
 		FileOutputStream fileOutputStream = new FileOutputStream(
 				"encryptedrootmetadata");
@@ -110,7 +110,8 @@ public class TreeEncryptionTest {
 		FileInputStream fileInputStream = new FileInputStream(file);
 		byte[] content = new byte[(int) file.length()];
 		fileInputStream.read(content);
-		EncryptedMiTree encryptedMiTreeLoader = new EncryptedMiTree(content);
+		EncryptedMiTree encryptedMiTreeLoader = new EncryptedMiTree();
+		encryptedMiTreeLoader.setContent(content);
 		DecryptedMiTree decryptedMiTree = encryptedMiTreeLoader
 				.decrypt(key, iv);
 		ObjectMapper mapper = new ObjectMapper();

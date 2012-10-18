@@ -60,7 +60,7 @@ public class EncryptedMetaMetaDataRepositoryTest {
 		EncryptedMetaMetaDataRepository repository = new EncryptedMetaMetaDataRepository(
 				appSettingsDao);
 		RestTransporter transporter = new RestTransporter(
-				"http://localhost:8080/com.wlami.mibox.server/rest/metametadatamanager/");
+				"http://localhost:8080/com.wlami.mibox.server/rest/metametadatamanager/", "user", "user");
 		repository.setRestTransporter(transporter);
 
 		EncryptedMetaMetaData data = repository.retrieveMetaMetaData(settings);

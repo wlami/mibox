@@ -17,15 +17,22 @@
  */
 package com.wlami.mibox.client.metadata2;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import org.bouncycastle.crypto.CryptoException;
+import org.bouncycastle.util.encoders.Base64;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import com.wlami.mibox.client.metadata.MFile;
 import com.wlami.mibox.core.encryption.PBKDF2;
 import com.wlami.mibox.core.util.HashUtil;
 
@@ -34,12 +41,12 @@ import com.wlami.mibox.core.util.HashUtil;
  *
  */
 public class DecryptUtil {
-	
+
 	public final static byte[] key = PBKDF2.getKeyFromPasswordAndSalt(
 			"secret123", "wlami");
 	public final static byte[] iv = HashUtil.calculateMD5Bytes("wlami"
 			.getBytes());
-	
+
 	/**
 	 * @throws java.lang.Exception
 	 */
@@ -48,18 +55,45 @@ public class DecryptUtil {
 	}
 
 	@Test
-	public void test() throws JsonParseException, JsonMappingException, CryptoException, IOException {
+	public void test1() throws IOException, URISyntaxException {
+		DecryptedMiTree t1 = new DecryptedMiTree();
+		t1.setFolderName("Folder1");
+		t1.getFiles().put("File1", new MFile());
+		t1.getFiles().put("File2", new MFile());
+		t1.getSubfolder().put("subfolder1", new EncryptedMiTreeInformation());
+		t1.getSubfolder().put("subfolder2", new EncryptedMiTreeInformation());
+		EncryptedMiTree e1 = t1.encrypt("Folder1", key, iv);
+		Base64.encode(e1.getContent(), System.out);
+		FileOutputStream fos = new FileOutputStream(
+"DecryptUtil.test");
+		fos.write(e1.getContent());
+	}
+
+	@Test
+	public void test() throws JsonParseException, JsonMappingException, CryptoException, IOException,
+	URISyntaxException {
 		final String filename = "root";
-		EncryptedMiTreeRepository encryptedMiTreeRepository = new EncryptedMiTreeRepository();
+		EncryptedMiTreeRepository encryptedMiTreeRepository = Mockito.mock(EncryptedMiTreeRepository.class);
+		EncryptedMiTree data = new EncryptedMiTree();
+		data.setName("root");
+		File inputFile = new File(DecryptUtil.class.getResource("/DecryptUtil.test").getFile());
+		FileInputStream fis = new FileInputStream(inputFile);
+		byte[] content = new byte[(int) inputFile.length()];
+		fis.read(content);
+		fis.close();
+		data.setContent(content);
+		Mockito.when(encryptedMiTreeRepository.loadEncryptedMiTree(filename)).thenReturn(data);
 		EncryptedMiTree root =  encryptedMiTreeRepository.loadEncryptedMiTree(filename);
 		DecryptedMiTree decryptedMiTreeroot = root.decrypt(key, iv);
 		ObjectMapper mapper = new ObjectMapper();
 		System.out.println(mapper.writeValueAsString(decryptedMiTreeroot));
-		
+
 		for( EncryptedMiTreeInformation encryptedMiTreeInformation : decryptedMiTreeroot.getSubfolder().values()) {
 			EncryptedMiTree encryptedMiTree =  encryptedMiTreeRepository.loadEncryptedMiTree(encryptedMiTreeInformation.getFileName());
-			DecryptedMiTree decryptedMiTree = encryptedMiTree.decrypt(encryptedMiTreeInformation.getKey(), encryptedMiTreeInformation.getIv());
-			System.out.println(mapper.writeValueAsString(decryptedMiTree));
+			if (encryptedMiTree != null) {
+				DecryptedMiTree decryptedMiTree = encryptedMiTree.decrypt(encryptedMiTreeInformation.getKey(), encryptedMiTreeInformation.getIv());
+				System.out.println(mapper.writeValueAsString(decryptedMiTree));
+			}
 		}
 	}
 
