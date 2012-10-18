@@ -22,6 +22,7 @@ import java.security.Security;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.sql.DataSource;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.wlami.mibox.client.backend.watchdog.DirectoryWatchdog;
+import com.wlami.mibox.client.db.DbBootstraper;
 import com.wlami.mibox.client.gui.MiboxTray;
 import com.wlami.mibox.client.metadata.MetadataRepository;
 import com.wlami.mibox.client.networking.synchronization.ChunkUploadRequest;
@@ -67,6 +69,16 @@ public final class MiboxClientApp {
 	}
 
 	MetadataRepository metadataRepository;
+
+	DataSource dataSource;
+
+	/**
+	 * @param dataSource
+	 *            the dataSource to set
+	 */
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
 
 	/**
 	 * @param metadataRepository
@@ -137,7 +149,8 @@ public final class MiboxClientApp {
 	}
 
 	private void run() {
-
+		// Take care that the database schema is available
+		DbBootstraper.bootstrap(dataSource);
 		// start the metadatarepo
 		metadataRepository.startProcessing();
 

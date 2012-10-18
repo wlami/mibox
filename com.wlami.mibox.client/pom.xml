@@ -7,7 +7,8 @@
 	<name>MiBox Client Desktop</name>
 	<build>
 		<plugins>
-			<!-- Bugfix for Java7 with mvn. We turn off the byte code verifier for tests. -->
+			<!-- Bugfix for Java7 with mvn. We turn off the byte code verifier for 
+				tests. -->
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.7.2</version>
@@ -142,7 +143,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<version>3.0.6.RELEASE</version>
+			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.inject</groupId>
@@ -154,7 +155,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-aop</artifactId>
-			<version>3.0.6.RELEASE</version>
+			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
@@ -238,10 +239,24 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
-			<version>3.0.6.RELEASE</version>
+			<version>${spring.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>1.3.168</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+
 	</dependencies>
+	<properties>
+		<spring.version>3.1.2.RELEASE</spring.version>
+	</properties>
 	<repositories>
 		<repository>
 			<id>local-swt</id>
