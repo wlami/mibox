@@ -54,7 +54,6 @@ public class DecryptUtil {
 	public void setUp() throws Exception {
 	}
 
-	@Test
 	public void test1() throws IOException, URISyntaxException {
 		DecryptedMiTree t1 = new DecryptedMiTree();
 		t1.setFolderName("Folder1");
