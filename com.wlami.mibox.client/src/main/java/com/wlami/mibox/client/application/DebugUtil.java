@@ -28,6 +28,7 @@ public final class DebugUtil {
 	 */
 	private static final String SYSTEM_PROPERTY_DECRYPTED_DEBUG = "com.wlami.mibox.client.decryptedDebug";
 
+	private static final String SYSTEM_PROPERTY_H2_WEBCONSOLE = "com.wlami.mibox.db.h2webconsole";
 	/**
 	 * util class.
 	 */
@@ -37,4 +38,9 @@ public final class DebugUtil {
 	public static boolean isDecryptedDebugEnabled() {
 		return Boolean.getBoolean(SYSTEM_PROPERTY_DECRYPTED_DEBUG);
 	}
+
+	public static boolean isH2WebConsoleEnabled() {
+		return Boolean.getBoolean(SYSTEM_PROPERTY_H2_WEBCONSOLE);
+	}
+
 }

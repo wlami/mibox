@@ -94,12 +94,12 @@
 		<property name="password" value="" />
 	</bean>
 
-	<!-- TODO:  ONLY DEVELOPMENT     REMOVE LATER !             -->
-	<!-- provides a H2 console to look into the db if necessary -->
-	<bean id="org.h2.tools.Server-WebServer" class="org.h2.tools.Server"
-		factory-method="createWebServer" depends-on="dataSource"
-		init-method="start" lazy-init="false">
-		<constructor-arg value="-web,-webPort,11111" />
+	<!-- provides a H2 console to look into the db if necessary 
+	     switch on with "-Dcom.wlami.mibox.db.h2webconsole=true"
+	     -->
+	<bean id="h2WebConsole" class="com.wlami.mibox.client.db.H2WebConsole"
+		depends-on="dataSource" init-method="init" lazy-init="false">
+		<constructor-arg name="port" value="12300" />	
 	</bean>
 
 </beans>
