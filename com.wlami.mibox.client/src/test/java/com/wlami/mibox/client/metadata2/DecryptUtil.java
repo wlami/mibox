@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.wlami.mibox.client.metadata.MFile;
+import com.wlami.mibox.client.metadata.DecryptedMiFile;
 import com.wlami.mibox.core.encryption.PBKDF2;
 import com.wlami.mibox.core.util.HashUtil;
 
@@ -57,8 +57,8 @@ public class DecryptUtil {
 	public void test1() throws IOException, URISyntaxException {
 		DecryptedMiTree t1 = new DecryptedMiTree();
 		t1.setFolderName("Folder1");
-		t1.getFiles().put("File1", new MFile());
-		t1.getFiles().put("File2", new MFile());
+		t1.getFiles().put("File1", new DecryptedMiFile());
+		t1.getFiles().put("File2", new DecryptedMiFile());
 		t1.getSubfolder().put("subfolder1", new EncryptedMiTreeInformation());
 		t1.getSubfolder().put("subfolder2", new EncryptedMiTreeInformation());
 		EncryptedMiTree e1 = t1.encrypt("Folder1", key, iv);

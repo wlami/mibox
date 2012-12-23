@@ -29,7 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.wlami.mibox.client.metadata.MChunk;
-import com.wlami.mibox.client.metadata.MFile;
+import com.wlami.mibox.client.metadata.DecryptedMiFile;
 import com.wlami.mibox.core.encryption.PBKDF2;
 import com.wlami.mibox.core.util.HashUtil;
 
@@ -70,7 +70,7 @@ public class TreeEncryptionTest {
 		// foldername for root is SLASH
 		decryptedMiTree.setFolderName(rootName);
 
-		MFile mFile = new MFile();
+		DecryptedMiFile mFile = new DecryptedMiFile();
 		mFile.setFileHash("asdrftgjkl");
 		// mFile.setFolder("/"); This has to be the decrypted MiTree later
 		// on.!!!!!!!

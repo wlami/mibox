@@ -44,7 +44,7 @@ import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.client.exception.CryptoRuntimeException;
 import com.wlami.mibox.client.metadata2.DecryptedMiTree;
-import com.wlami.mibox.client.metadata2.EncryptableDecryptedMiTree;
+import com.wlami.mibox.client.metadata2.EncryptableDecryptedObject;
 import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeInformation;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
@@ -150,7 +150,7 @@ public class MetadataWorker extends Thread {
 	 * <li>traverse the file system recursively
 	 * <ol>
 	 * <li>add non existing {@link MFolder}s</li>
-	 * <li>add non existing {@link MFile}s or update them if they exist</li>
+	 * <li>add non existing {@link DecryptedMiFile}s or update them if they exist</li>
 	 * </ol>
 	 * </li>
 	 * </ol>
@@ -191,7 +191,7 @@ public class MetadataWorker extends Thread {
 		log.debug("Traversing file system. Processing folder [{}]", rootFolder.getName());
 		for (File file : rootFolder.listFiles()) {
 			if (file.isFile()) {
-				MFile mFile;
+				DecryptedMiFile mFile;
 				log.debug("Processing file [{}]", file.getName());
 				if (decryptedMiTree.getFiles().containsKey(file.getName())) {
 					// There is a matching MFile.
@@ -199,7 +199,7 @@ public class MetadataWorker extends Thread {
 					log.debug("Found file in metadata. [{}]", file.getName());
 				} else {
 					// There is no matching file, so we create it first
-					mFile = new MFile();
+					mFile = new DecryptedMiFile();
 					mFile.setName(file.getName());
 					decryptedMiTree.getFiles().put(mFile.getName(), mFile);
 					log.debug("Creating a new MFile in metadata for [{}]", file.getName());
@@ -270,8 +270,8 @@ public class MetadataWorker extends Thread {
 		// metadata.
 		for (String localMFileName : local.getFiles().keySet()) {
 			log.debug("Comparing MFiles for [{}]", localMFileName);
-			MFile localMFile = local.getFiles().get(localMFileName);
-			MFile remoteMFile = remote.getFiles().get(localMFileName);
+			DecryptedMiFile localMFile = local.getFiles().get(localMFileName);
+			DecryptedMiFile remoteMFile = remote.getFiles().get(localMFileName);
 			// if the remote file is newer than the local file we want to update
 			// it
 			if (remoteMFile == null || remoteMFile.getLastModified().after(localMFile.getLastModified())) {
@@ -289,8 +289,8 @@ public class MetadataWorker extends Thread {
 		newRemoteFileNames.removeAll(processedFiles);
 		for (String remoteMFileName : newRemoteFileNames) {
 			log.info("incoming new file [{}]", remoteMFileName);
-			MFile localMFile = null;
-			MFile remoteFile = remote.getFiles().get(remoteMFileName);
+			DecryptedMiFile localMFile = null;
+			DecryptedMiFile remoteFile = remote.getFiles().get(remoteMFileName);
 			File file = new File(f, remoteMFileName);
 			updateFileFromMetadata(file, localMFile, remoteFile);
 		}
@@ -348,7 +348,7 @@ public class MetadataWorker extends Thread {
 	 * 
 	 * 
 	 */
-	public void updateFileFromMetadata(final File file, final MFile localMFile, final MFile incomingMFile) {
+	public void updateFileFromMetadata(final File file, final DecryptedMiFile localMFile, final DecryptedMiFile incomingMFile) {
 		if (localMFile == null && incomingMFile == null) {
 			return;
 		}
@@ -387,7 +387,7 @@ public class MetadataWorker extends Thread {
 	 *            The settings are used for the retrieval of the temp-dir path.
 	 * @return A callback for finished download containers.
 	 */
-	public TransportCallback createDownloadContainerFinishedCallback(final File file, final MFile incomingMFile,
+	public TransportCallback createDownloadContainerFinishedCallback(final File file, final DecryptedMiFile incomingMFile,
 			final AppSettings appSettings) {
 		return new TransportCallback() {
 			@Override
@@ -476,7 +476,7 @@ public class MetadataWorker extends Thread {
 	 * @param mFile
 	 *            Reference to the metadata file.
 	 */
-	private void synchronizeFileMetadata(final File f, final MFile mFile) {
+	private void synchronizeFileMetadata(final File f, final DecryptedMiFile mFile) {
 		// Check whether the file has been modified since the last meta sync
 		log.debug("Start synchronization for file [{}]", f.getAbsolutePath());
 		final Date filesystemLastModified = new Date(f.lastModified());
@@ -538,7 +538,7 @@ public class MetadataWorker extends Thread {
 	/**
 	 * Creates a Callback which is executed when all uploads for a file have
 	 * been successfully executed. The callback persists the metadata (
-	 * {@link MFile} ) which got updated during the upload callback of each
+	 * {@link DecryptedMiFile} ) which got updated during the upload callback of each
 	 * chunk. At this point the {@link MChunk} inside the mFile contain the new
 	 * encrypted chunk hash.
 	 * 
@@ -549,13 +549,13 @@ public class MetadataWorker extends Thread {
 	 *            callback.
 	 * @return A callback for finished upload containers.
 	 */
-	public TransportCallback createUploadContainerFinishedCallback(final File f, final MFile mFile) {
+	public TransportCallback createUploadContainerFinishedCallback(final File f, final DecryptedMiFile mFile) {
 		return new TransportCallback() {
 			@Override
 			public void transportCallback(Map<String, Object> parameter) {
 				AppSettings appSettings = appSettingsDao.load();
 				try {
-					EncryptableDecryptedMiTree decryptedMiTree = metadataUtil
+					EncryptableDecryptedObject decryptedMiTree = metadataUtil
 							.locateDecryptedMiTree(getRelativePath(appSettings, f.getAbsolutePath()));
 					decryptedMiTree.getDecryptedMiTree().getFiles().put(mFile.getName(), mFile);
 					EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt();
@@ -626,7 +626,7 @@ public class MetadataWorker extends Thread {
 								.getRoot();
 						EncryptedMiTree encryptedRoot = encryptedMiTreeRepo.loadEncryptedMiTree(miTreeInformation
 								.getFileName());
-						MFile mFile = metadataUtil.locateMFile(relativePath);
+						DecryptedMiFile mFile = metadataUtil.locateMFile(relativePath);
 						synchronizeFileMetadata(f, mFile);
 					}
 

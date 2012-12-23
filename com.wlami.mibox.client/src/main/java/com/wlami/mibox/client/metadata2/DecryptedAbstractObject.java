@@ -40,6 +40,12 @@ implements Encryptable<Decryptable<?>> {
 	Class<T> clazz;
 
 	/**
+	 * @return the clazz
+	 */
+	public Class<T> getClazz() {
+		return clazz;
+	}
+	/**
 	 * Default constructor.
 	 */
 	public DecryptedAbstractObject(Class<T> clazz) {

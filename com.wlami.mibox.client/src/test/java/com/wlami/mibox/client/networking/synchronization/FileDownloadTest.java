@@ -34,7 +34,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.wlami.mibox.client.application.AppSettingsDao;
-import com.wlami.mibox.client.metadata.MFile;
+import com.wlami.mibox.client.metadata.DecryptedMiFile;
 import com.wlami.mibox.client.metadata.MetadataUtil;
 import com.wlami.mibox.client.metadata.MetadataWorker;
 import com.wlami.mibox.client.metadata2.EncryptedMetaMetaDataRepository;
@@ -106,7 +106,7 @@ public class FileDownloadTest {
 		MetadataWorker metadataWorker = new MetadataWorker(appSettingsDao, chunkTransportProvider, null, null, null,
 				null, chunkEncryption);
 
-		MFile mFile = metadataUtil.locateMFile("/13 - DJ Morgoth - Ein In The End Teil.mp3");
+		DecryptedMiFile mFile = metadataUtil.locateMFile("/13 - DJ Morgoth - Ein In The End Teil.mp3");
 
 		chunkTransportProvider.startProcessing();
 		System.out.println(mFile);

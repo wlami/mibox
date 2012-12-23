@@ -47,7 +47,7 @@ public class TestUtil {
 		DecryptedMiTree subfolder = new DecryptedMiTree();
 		EncryptedMiTreeInformation subfolderInfo = getTreeCrypto();
 		folder.getSubfolder().put("subfolder", subfolderInfo);
-		MFile file1 = new MFile();
+		DecryptedMiFile file1 = new DecryptedMiFile();
 		file1.setName("file1");
 		file1.setFileHash("affecaffebabe");
 		MChunk chunk1 = new MChunk(0);
@@ -59,7 +59,7 @@ public class TestUtil {
 		file1.getChunks().add(chunk1);
 		folder.getFiles().put(file1.getName(), file1);
 
-		MFile file2 = new MFile();
+		DecryptedMiFile file2 = new DecryptedMiFile();
 		file2.setName("file2");
 		file2.setFileHash("ffffaaaacc");
 		subfolder.getFiles().put(file2.getName(), file2);
@@ -67,7 +67,7 @@ public class TestUtil {
 		DecryptedMiTree subfolder2 = new DecryptedMiTree();
 		subfolder.getSubfolder().put("subfolder2", subfolderInfo);
 
-		MFile mFile3 = new MFile();
+		DecryptedMiFile mFile3 = new DecryptedMiFile();
 		mFile3.setName("file3");
 		subfolder2.getFiles().put(mFile3.getName(), mFile3);
 

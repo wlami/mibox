@@ -33,7 +33,7 @@ public class MChunk {
 	 * The file this chunk belongs to.
 	 */
 	@JsonBackReference
-	private MFile mfile;
+	private DecryptedMiFile mfile;
 
 	/**
 	 * Contains the hash of the encrypted chunk.
@@ -141,7 +141,7 @@ public class MChunk {
 	/**
 	 * @return the file
 	 */
-	public MFile getMFile() {
+	public DecryptedMiFile getMFile() {
 		return mfile;
 	}
 
@@ -149,7 +149,7 @@ public class MChunk {
 	 * @param file
 	 *            the file to set
 	 */
-	public void setMFile(MFile file) {
+	public void setMFile(DecryptedMiFile file) {
 		this.mfile = file;
 	}
 

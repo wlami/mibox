@@ -19,27 +19,28 @@ package com.wlami.mibox.client.metadata2;
 
 /**
  * @author wladislaw
- *
+ * 
  */
-public class EncryptableDecryptedMiTree {
+public class EncryptableDecryptedObject<T extends DecryptedAbstractObject<U>, U extends EncryptedAbstractObject<T>> {
 
 	EncryptedMiTreeInformation encryptedMiTreeInformation;
 
-	DecryptedMiTree decryptedMiTree;
+	T t;
 
 	/**
 	 * Default constructor
 	 * 
 	 * @param encryptedMiTreeInformation
 	 */
-	public EncryptableDecryptedMiTree(EncryptedMiTreeInformation encryptedMiTreeInformation,
-			DecryptedMiTree decryptedMiTree) {
+	public EncryptableDecryptedObject(
+			EncryptedMiTreeInformation encryptedMiTreeInformation, T t) {
 		this.encryptedMiTreeInformation = encryptedMiTreeInformation;
-		this.decryptedMiTree = decryptedMiTree;
+		this.t = t;
 	}
 
-	public EncryptedMiTree encrypt() {
-		return decryptedMiTree.encrypt(encryptedMiTreeInformation.getFileName(), encryptedMiTreeInformation.getKey(),
+	public U encrypt() {
+		return t.encrypt(encryptedMiTreeInformation.getFileName(),
+				encryptedMiTreeInformation.getKey(),
 				encryptedMiTreeInformation.getIv());
 	}
 
@@ -53,8 +54,8 @@ public class EncryptableDecryptedMiTree {
 	/**
 	 * @return the decryptedMiTree
 	 */
-	public DecryptedMiTree getDecryptedMiTree() {
-		return decryptedMiTree;
+	public T getDecryptedMiTree() {
+		return t;
 	}
 
 }

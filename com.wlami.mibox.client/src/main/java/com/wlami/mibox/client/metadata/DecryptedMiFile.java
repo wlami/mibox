@@ -23,11 +23,20 @@ import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonManagedReference;
 
+import com.wlami.mibox.client.metadata2.DecryptedAbstractObject;
+
 /**
  * @author Wladislaw Mitzel
  * @author Stefan Baust
  */
-public class MFile {
+public class DecryptedMiFile extends DecryptedAbstractObject<EncryptedMiFile>{
+
+	/**
+	 * @param clazz
+	 */
+	public DecryptedMiFile() {
+		super(EncryptedMiFile.class);
+	}
 
 	/**
 	 * Default size of chunks.

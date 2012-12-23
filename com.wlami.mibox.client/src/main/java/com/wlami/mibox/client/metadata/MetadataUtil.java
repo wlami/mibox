@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.metadata2.DecryptedMetaMetaData;
 import com.wlami.mibox.client.metadata2.DecryptedMiTree;
-import com.wlami.mibox.client.metadata2.EncryptableDecryptedMiTree;
+import com.wlami.mibox.client.metadata2.EncryptableDecryptedObject;
 import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeInformation;
 import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
@@ -56,7 +56,7 @@ public class MetadataUtil {
 	protected static final String UNIX_PATH_SEPARATOR = "/";
 
 	/**
-	 * Locates a {@link MFile} in the {@link EncryptedMiTree} structure root. If
+	 * Locates a {@link DecryptedMiFile} in the {@link EncryptedMiTree} structure root. If
 	 * it does not exist yet, the file and all {@link EncryptedMiTree}s in the
 	 * path get created.
 	 * 
@@ -70,21 +70,21 @@ public class MetadataUtil {
 	 * @throws JsonMappingException
 	 * @throws JsonParseException
 	 */
-	public MFile locateMFile(String relativePath)
+	public DecryptedMiFile locateMFile(String relativePath)
 			throws JsonParseException, JsonMappingException, CryptoException, IOException {
 		DecryptedMiTree decryptedMiTree = locateDecryptedMiTree(relativePath).getDecryptedMiTree();
 		String[] folder = relativePath.split(UNIX_PATH_SEPARATOR);
 
-		MFile file = decryptedMiTree.getFiles().get(folder[folder.length - 1]);
+		DecryptedMiFile file = decryptedMiTree.getFiles().get(folder[folder.length - 1]);
 		if (file == null) {
-			file = new MFile();
+			file = new DecryptedMiFile();
 			file.setName(folder[folder.length - 1]);
 			decryptedMiTree.getFiles().put(file.getName(), file);
 		}
 		return file;
 	}
 
-	public EncryptableDecryptedMiTree locateDecryptedMiTree(String relativePath) throws JsonParseException,
+	public EncryptableDecryptedObject locateDecryptedMiTree(String relativePath) throws JsonParseException,
 	JsonMappingException,
 	CryptoException, IOException {
 		DecryptedMetaMetaData decryptedMetaMetaData = metaMetaDataHolder.getDecryptedMetaMetaData();
@@ -94,7 +94,7 @@ public class MetadataUtil {
 		return locateDecryptedMiTree(root, information, relativePath);
 	}
 
-	public EncryptableDecryptedMiTree locateDecryptedMiTree(EncryptedMiTree root,
+	public EncryptableDecryptedObject locateDecryptedMiTree(EncryptedMiTree root,
 			EncryptedMiTreeInformation information,
 			String relativePath) throws JsonParseException, JsonMappingException, CryptoException, IOException {
 		if (!relativePath.startsWith(UNIX_PATH_SEPARATOR)) {
@@ -105,7 +105,7 @@ public class MetadataUtil {
 		System.out.println(Arrays.toString(folder));
 		DecryptedMiTree decryptedMiTree = root.decrypt(information.getKey(), information.getIv());
 		if (folder.length == 2) {
-			return new EncryptableDecryptedMiTree(information, decryptedMiTree);
+			return new EncryptableDecryptedObject(information, decryptedMiTree);
 		} else {
 			LOG.debug("we have to look in the subtrees.");
 			EncryptedMiTree subTree;

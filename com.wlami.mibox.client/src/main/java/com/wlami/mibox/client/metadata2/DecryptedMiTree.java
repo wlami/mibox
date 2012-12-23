@@ -23,7 +23,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.wlami.mibox.client.metadata.MFile;
+import com.wlami.mibox.client.metadata.DecryptedMiFile;
 
 /**
  * This class represents a folder in the metadata.
@@ -50,7 +50,7 @@ public class DecryptedMiTree extends
 
 	private Map<String, EncryptedMiTreeInformation> subfolder = new HashMap<>();
 
-	private Map<String, MFile> files = new HashMap<>();
+	private Map<String, EncryptedMiTreeInformation> files = new HashMap<>();
 
 	/**
 	 * @return the folderName
@@ -86,14 +86,14 @@ public class DecryptedMiTree extends
 	/**
 	 * @return the files
 	 */
-	public Map<String, MFile> getFiles() {
+	public Map<String, EncryptedMiTreeInformation> getFiles() {
 		return files;
 	}
 
 	/**
 	 * @param files the files to set
 	 */
-	public void setFiles(Map<String, MFile> files) {
+	public void setFiles(Map<String, EncryptedMiTreeInformation> files) {
 		this.files = files;
 	}
 
