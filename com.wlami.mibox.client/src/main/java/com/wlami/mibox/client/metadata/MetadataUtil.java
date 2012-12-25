@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.metadata2.DecryptedMetaMetaData;
 import com.wlami.mibox.client.metadata2.DecryptedMiTree;
+import com.wlami.mibox.client.metadata2.EMiFile;
 import com.wlami.mibox.client.metadata2.EMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMetadataObjectRepository;
 import com.wlami.mibox.client.metadata2.EncryptedMiTree;
@@ -76,7 +77,7 @@ public class MetadataUtil {
 	 * @throws JsonMappingException
 	 * @throws JsonParseException
 	 */
-	public DecryptedMiFile locateMFile(String relativePath)
+	public EMiFile locateMFile(String relativePath)
 			throws JsonParseException, JsonMappingException, CryptoException,
 			IOException {
 		// locate the decrypted MiTree which contains the file
@@ -89,24 +90,38 @@ public class MetadataUtil {
 		// Now get the encrypted MiFile!
 		EncryptedMiFile encryptedMiFile = encryptedMiFileRepository
 				.loadEncryptedMetadata(fileInformation.getFileName());
-		DecryptedMiFile file = null;
+		EMiFile file = null;
 		if (encryptedMiFile == null) {
-			file = new DecryptedMiFile();
-			file.setName(folder[folder.length - 1]);
-			EncryptedMetadataInformation encInfo = EncryptedMetadataInformation
-					.createRandom();
-			encryptedMiFile = file.encrypt(encInfo);
-			encryptedMiFileRepository.saveEncryptedMetadata(encryptedMiFile,
-					encInfo.getFileName());
-			decryptedMiTree.getFiles().put(file.getName(), encInfo);
-			EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt(emiTree
-					.getEncryptedMiTreeInformation());
-			encryptedMiTreeRepository.saveEncryptedMetadata(encryptedMiTree,
-					emiTree.getEncryptedMiTreeInformation().getFileName());
+			String filename = folder[folder.length - 1];
+			file = createMiFileInMiTree(emiTree, filename);
 		} else {
-			file = encryptedMiFile.decrypt(fileInformation);
+			file = new EMiFile(fileInformation, encryptedMiFile.decrypt(fileInformation));
 		}
 		return file;
+	}
+
+	/**
+	 * @param emiTree
+	 * @param filename
+	 * @return
+	 */
+	public EMiFile createMiFileInMiTree(EMiTree emiTree,
+			String filename) {
+		EncryptedMiFile encryptedMiFile;
+		DecryptedMiFile file= new DecryptedMiFile();
+		DecryptedMiTree decryptedMiTree = emiTree.getEncryptableObject();
+		file.setName(filename);
+		EncryptedMetadataInformation encInfo = EncryptedMetadataInformation
+				.createRandom();
+		encryptedMiFile = file.encrypt(encInfo);
+		encryptedMiFileRepository.saveEncryptedMetadata(encryptedMiFile,
+				encInfo.getFileName());
+		decryptedMiTree.getFiles().put(file.getName(), encInfo);
+		EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt(emiTree
+				.getEncryptedMiTreeInformation());
+		encryptedMiTreeRepository.saveEncryptedMetadata(encryptedMiTree,
+				emiTree.getEncryptedMiTreeInformation().getFileName());
+		return new EMiFile(encInfo, file);
 	}
 
 	public EMiTree locateDecryptedMiTree(String relativePath)

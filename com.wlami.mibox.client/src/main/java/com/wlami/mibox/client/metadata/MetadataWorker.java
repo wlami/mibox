@@ -42,14 +42,12 @@ import org.slf4j.LoggerFactory;
 
 import com.wlami.mibox.client.application.AppSettings;
 import com.wlami.mibox.client.application.AppSettingsDao;
-import com.wlami.mibox.client.exception.CryptoRuntimeException;
 import com.wlami.mibox.client.metadata2.DecryptedMiTree;
+import com.wlami.mibox.client.metadata2.EMiFile;
 import com.wlami.mibox.client.metadata2.EMiTree;
-import com.wlami.mibox.client.metadata2.EncryptableDecryptedObject;
-import com.wlami.mibox.client.metadata2.EncryptedMetadataInformation;
-import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.EncryptedMetadataInformation;
 import com.wlami.mibox.client.metadata2.EncryptedMetadataObjectRepository;
+import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.MetaMetaDataHolder;
 import com.wlami.mibox.client.networking.encryption.AesChunkEncryption;
 import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
@@ -209,19 +207,22 @@ public class MetadataWorker extends Thread {
 			if (file.isFile()) {
 				DecryptedMiFile mFile;
 				log.debug("Processing file [{}]", file.getName());
+				EMiFile emiFile = null;
 				if (decryptedMiTree.getFiles().containsKey(file.getName())) {
 					// There is a matching MFile.
-					mFile = decryptedMiTree.getFiles().get(file.getName());
+					EncryptedMetadataInformation encInfo = decryptedMiTree.getFiles().get(file.getName());
+					mFile = getDecryptedMiFile(false, encInfo);
+					emiFile = new EMiFile(miTreeInformation, mFile);
 					log.debug("Found file in metadata. [{}]", file.getName());
 				} else {
 					// There is no matching file, so we create it first
-					mFile = new DecryptedMiFile();
-					mFile.setName(file.getName());
-					decryptedMiTree.getFiles().put(mFile.getName(), mFile);
+					emiFile = metadataUtil.createMiFileInMiTree(
+							new EMiTree(miTreeInformation, decryptedMiTree), file.getName());
+
 					log.debug("Creating a new MFile in metadata for [{}]",
 							file.getName());
 				}
-				synchronizeFileMetadata(file, mFile);
+				synchronizeFileMetadata(file, emiFile);
 			} else if (file.isDirectory()) {
 				// find the right metadata
 				log.debug("Search folder metadata for [{}]", file.getName());
@@ -556,10 +557,11 @@ public class MetadataWorker extends Thread {
 	 *            Reference to the metadata file.
 	 */
 	private void synchronizeFileMetadata(final File f,
-			final DecryptedMiFile mFile) {
+			final EMiFile emiFile) {
 		// Check whether the file has been modified since the last meta sync
 		log.debug("Start synchronization for file [{}]", f.getAbsolutePath());
 		final Date filesystemLastModified = new Date(f.lastModified());
+		DecryptedMiFile mFile = emiFile.getEncryptableObject();
 		if ((mFile.getLastModified() == null)
 				|| (filesystemLastModified.after(mFile.getLastModified()))) {
 			// The file has been modified, so we have to update metadata
@@ -613,7 +615,7 @@ public class MetadataWorker extends Thread {
 				// uploaded.
 				uploadContainer
 						.setAllChildrenCompletedCallback(createUploadContainerFinishedCallback(
-								f, mFile));
+								f, emiFile));
 				transportProvider.addUploadContainer(uploadContainer);
 			} catch (NoSuchAlgorithmException e) {
 				log.error("No SHA availabe", e);
@@ -629,7 +631,7 @@ public class MetadataWorker extends Thread {
 	 * Creates a Callback which is executed when all uploads for a file have
 	 * been successfully executed. The callback persists the metadata (
 	 * {@link DecryptedMiFile} ) which got updated during the upload callback of
-	 * each chunk. At this point the {@link MChunk} inside the mFile contain the
+	 * each chunk. At this point the {@link MChunk} inside the mFile contains the
 	 * new encrypted chunk hash.
 	 * 
 	 * @param f
@@ -640,26 +642,14 @@ public class MetadataWorker extends Thread {
 	 * @return A callback for finished upload containers.
 	 */
 	public TransportCallback createUploadContainerFinishedCallback(
-			final File f, final DecryptedMiFile mFile) {
+			final File f, final EMiFile mFile) {
 		return new TransportCallback() {
 			@Override
 			public void transportCallback(Map<String, Object> parameter) {
-				AppSettings appSettings = appSettingsDao.load();
-				try {
-					// TODO
-					EMiTree decryptedMiTree = metadataUtil
-							.locateDecryptedMiTree(getRelativePath(appSettings,
-									f.getAbsolutePath()));
-					decryptedMiTree.getEncryptableObject().getFiles()
-							.put(mFile.getName(), mFile);
-					EncryptedMiTree encryptedMiTree = decryptedMiTree.encrypt();
-					encryptedMiTreeRepo.saveEncryptedMetadata(encryptedMiTree,
-							decryptedMiTree.getEncryptedMetadataInformation()
-									.getFileName());
-				} catch (CryptoException | IOException e) {
-					throw new CryptoRuntimeException(e);
-				}
-
+				DecryptedMiFile decryptedMiFile = mFile.getEncryptableObject();
+				EncryptedMetadataInformation encInfo = mFile.getEncryptedMiTreeInformation();
+				EncryptedMiFile encryptedMiFile = decryptedMiFile.encrypt(encInfo);
+				encryptedMiFileRepo.saveEncryptedMetadata(encryptedMiFile, encInfo.getFileName());
 			}
 		};
 	}
@@ -728,7 +718,7 @@ public class MetadataWorker extends Thread {
 						EncryptedMiTree encryptedRoot = encryptedMiTreeRepo
 								.loadEncryptedMetadata(miTreeInformation
 										.getFileName());
-						DecryptedMiFile mFile = metadataUtil
+						EMiFile mFile = metadataUtil
 								.locateMFile(relativePath);
 						synchronizeFileMetadata(f, mFile);
 					}

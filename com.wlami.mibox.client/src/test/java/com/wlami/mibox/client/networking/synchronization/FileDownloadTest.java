@@ -38,6 +38,7 @@ import com.wlami.mibox.client.metadata.DecryptedMiFile;
 import com.wlami.mibox.client.metadata.EncryptedMiFile;
 import com.wlami.mibox.client.metadata.MetadataUtil;
 import com.wlami.mibox.client.metadata.MetadataWorker;
+import com.wlami.mibox.client.metadata2.EMiFile;
 import com.wlami.mibox.client.metadata2.EncryptedMetaMetaDataRepository;
 import com.wlami.mibox.client.metadata2.EncryptedMetadataObjectRepository;
 import com.wlami.mibox.client.metadata2.EncryptedMiTree;
@@ -69,7 +70,6 @@ public class FileDownloadTest {
 
 	@Resource
 	public EncryptedMetadataObjectRepository<EncryptedMiTree> encryptedMiTreeRepository;
-
 
 	@Resource
 	public EncryptedMetadataObjectRepository<EncryptedMiFile> encryptedMiFileRepository;
@@ -108,17 +108,22 @@ public class FileDownloadTest {
 	}
 
 	@Test
-	public void test() throws JsonParseException, JsonMappingException, CryptoException, IOException {
-		MetadataWorker metadataWorker = new MetadataWorker(appSettingsDao, chunkTransportProvider, null, null,  null, null,
-				null, chunkEncryption);
+	public void test() throws JsonParseException, JsonMappingException,
+			CryptoException, IOException {
+		MetadataWorker metadataWorker = new MetadataWorker(appSettingsDao,
+				chunkTransportProvider, null, null, null, null, null,
+				chunkEncryption);
 
-		DecryptedMiFile mFile = metadataUtil.locateMFile("/13 - DJ Morgoth - Ein In The End Teil.mp3");
-
+		EMiFile emFile = metadataUtil
+				.locateMFile("/13 - DJ Morgoth - Ein In The End Teil.mp3");
+		DecryptedMiFile mFile = emFile.getEncryptableObject();
 		chunkTransportProvider.startProcessing();
 		System.out.println(mFile);
-		metadataWorker.updateFileFromMetadata(new File(
-				"/home/wladislaw/mibox/13 - DJ Morgoth - Ein In The End Teil.mp3"), null,
-				mFile);
+		metadataWorker
+				.updateFileFromMetadata(
+						new File(
+								"/home/wladislaw/mibox/13 - DJ Morgoth - Ein In The End Teil.mp3"),
+						null, mFile);
 		while (true) {
 			try {
 				Thread.sleep(6000);
