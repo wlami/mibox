@@ -119,6 +119,16 @@ public final class MiboxClientApp {
 			TransportProvider<EncryptedMetadataUploadRequest> encryptedMiTreeTransportProvider) {
 		this.encryptedMiTreeTransportProvider = encryptedMiTreeTransportProvider;
 	}
+	
+	TransportProvider<EncryptedMetadataUploadRequest> encryptedMiFileTransportProvider;
+	
+	/**
+	 * @param encryptedMiFileTransportProvider the encryptedMiFileTransportProvider to set
+	 */
+	public void setEncryptedMiFileTransportProvider(
+			TransportProvider<EncryptedMetadataUploadRequest> encryptedMiFileTransportProvider) {
+		this.encryptedMiFileTransportProvider = encryptedMiFileTransportProvider;
+	}
 
 	DirectoryWatchdog directoryWatchdog;
 
@@ -153,11 +163,12 @@ public final class MiboxClientApp {
 		DbBootstraper.bootstrap(dataSource);
 		// start the metadatarepo
 		metadataRepository.startProcessing();
+		
 
 		// start TransportProvider
 		chunkTransportProvider.startProcessing();
 		encryptedMiTreeTransportProvider.startProcessing();
-
+		encryptedMiFileTransportProvider.startProcessing();
 		// start the watchdog
 		startWatchdog();
 	}

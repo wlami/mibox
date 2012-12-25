@@ -13,6 +13,7 @@
 		<property name="encryptedMiTreeTransportProvider" ref="encryptedMiTreeTransportProvider" />
 		<property name="directoryWatchdog" ref="directoryWatchdog" />
 		<property name="dataSource" ref="dataSource" />
+		<property name="encryptedMiFileTransportProvider" ref="encryptedMiFileTransportProvider" />
 	</bean>
 
 	<bean id="appSettingsDao"
@@ -36,6 +37,7 @@
 	<bean id="metadataRepository" class="com.wlami.mibox.client.metadata.MetadataRepositoryImpl">
 		<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
 		<constructor-arg name="encryptedMiTreeRepository" ref="encryptedMiTreeRepository" />
+		<constructor-arg name="encryptedMiFileRepository" ref="encryptedMiFileRepository" />
 		<constructor-arg name="chunkTransport" ref="chunkTransportProvider" />
 		<constructor-arg name="metadataUtil" ref="metadataUtil" />
 		<constructor-arg name="encryptedMetaMetaDataRepository"
@@ -53,16 +55,18 @@
 		class="com.wlami.mibox.client.networking.encryption.AesChunkEncryption" />
 
 	<bean id="encryptedMiTreeRepository"
-		class="com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository">
+		class="com.wlami.mibox.client.metadata2.EncryptedMetadataObjectRepository">
 		<constructor-arg name="transportProvider"
 			ref="encryptedMiTreeTransportProvider" />
 		<constructor-arg name="lowLevelTransporter" ref="metadataRestTransporter" />
+		<constructor-arg name="metadataObjectClass" value="com.wlami.mibox.client.metadata2.EncryptedMiTree"/>
 	</bean>
 
 	<bean id="encryptedMiFileRepository"
-		class="com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository">
+		class="com.wlami.mibox.client.metadata2.EncryptedMetadataObjectRepository">
 		<constructor-arg name="lowLevelTransporter" ref="filemetadataRestTransporter" />
 		<constructor-arg name="transportProvider" ref="encryptedMiFileTransportProvider" />
+		<constructor-arg name="metadataObjectClass" value="com.wlami.mibox.client.metadata.EncryptedMiFile" />
 	</bean>
 	
 	
@@ -87,6 +91,7 @@
 	<bean id="metadataUtil" class="com.wlami.mibox.client.metadata.MetadataUtil">
 		<constructor-arg name="encryptedMiTreeRepository" ref="encryptedMiTreeRepository" />
 		<constructor-arg name="metaMetaDataHolder" ref="metaMetaDataHolder" />
+		<constructor-arg name="encryptedMiFileRepository" ref="encryptedMiFileRepository" />
 	</bean>
 
 	<bean id="metadataRestTransporter"
