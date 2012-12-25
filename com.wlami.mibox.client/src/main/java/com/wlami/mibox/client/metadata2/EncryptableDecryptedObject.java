@@ -18,33 +18,52 @@
 package com.wlami.mibox.client.metadata2;
 
 /**
- * @author wladislaw
+ * This class encapsulates an encryptable object with its encryption
+ * information.
+ * 
+ * @author wladislaw mitzel
+ * @author stefan baust.
  * 
  */
 public class EncryptableDecryptedObject<T extends DecryptedAbstractObject<U>, U extends EncryptedAbstractObject<T>> {
 
+	/** Information for the encryption of the object. */
 	EncryptedMiTreeInformation encryptedMiTreeInformation;
 
-	T t;
+	/** The actual object which shall be encrypted. */
+	T encryptableObject;
 
 	/**
 	 * Default constructor
 	 * 
 	 * @param encryptedMiTreeInformation
+	 *            .
+	 * @param encryptableObject
+	 *            the encryptable object.
 	 */
 	public EncryptableDecryptedObject(
-			EncryptedMiTreeInformation encryptedMiTreeInformation, T t) {
+			EncryptedMiTreeInformation encryptedMiTreeInformation,
+			T encryptableObject) {
 		this.encryptedMiTreeInformation = encryptedMiTreeInformation;
-		this.t = t;
+		this.encryptableObject = encryptableObject;
 	}
 
+	/**
+	 * Encrypts the underlying object using key and password from
+	 * {@link #encryptedMiTreeInformation}.
+	 * 
+	 * @return The encrypted Object.
+	 */
 	public U encrypt() {
-		return t.encrypt(encryptedMiTreeInformation.getFileName(),
+		return encryptableObject.encrypt(
+				encryptedMiTreeInformation.getFileName(),
 				encryptedMiTreeInformation.getKey(),
 				encryptedMiTreeInformation.getIv());
 	}
 
 	/**
+	 * Get the encryption information.
+	 * 
 	 * @return the encryptedMiTreeInformation
 	 */
 	public EncryptedMiTreeInformation getEncryptedMiTreeInformation() {
@@ -52,10 +71,10 @@ public class EncryptableDecryptedObject<T extends DecryptedAbstractObject<U>, U 
 	}
 
 	/**
-	 * @return the decryptedMiTree
+	 * @return the encryptableObject
 	 */
-	public T getDecryptedMiTree() {
-		return t;
+	public T getEncryptableObject() {
+		return encryptableObject;
 	}
 
 }
