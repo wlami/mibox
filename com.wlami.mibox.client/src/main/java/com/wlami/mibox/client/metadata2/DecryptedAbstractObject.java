@@ -28,10 +28,10 @@ import com.wlami.mibox.core.encryption.AesEncryption;
 
 /**
  * @author wladislaw
- *
+ * 
  */
 public class DecryptedAbstractObject<T extends EncryptedAbstractObject<?>>
-implements Encryptable<Decryptable<?>> {
+		implements Encryptable<Decryptable<?>> {
 
 	/** internal logger */
 	Logger log = LoggerFactory.getLogger(DecryptedAbstractObject.class);
@@ -45,6 +45,7 @@ implements Encryptable<Decryptable<?>> {
 	public Class<T> getClazz() {
 		return clazz;
 	}
+
 	/**
 	 * Default constructor.
 	 */
@@ -65,8 +66,7 @@ implements Encryptable<Decryptable<?>> {
 		try {
 			byte[] data = objectMapper.writeValueAsBytes(this);
 			byte[] encrypted = AesEncryption.crypt(true, data, iv, key);
-			T newObject = clazz
-					.newInstance();
+			T newObject = clazz.newInstance();
 			newObject.setContent(encrypted);
 			newObject.setName(filename);
 			return newObject;
@@ -75,5 +75,11 @@ implements Encryptable<Decryptable<?>> {
 			log.error("Error during encryption of MiTree", e);
 			return null;
 		}
+	}
+
+	public T encrypt(EncryptedMetadataInformation encryptedMiTreeInformation) {
+		return encrypt(encryptedMiTreeInformation.getFileName(),
+				encryptedMiTreeInformation.getKey(),
+				encryptedMiTreeInformation.getIv());
 	}
 }

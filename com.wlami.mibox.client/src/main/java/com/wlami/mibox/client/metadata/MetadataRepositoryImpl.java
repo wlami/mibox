@@ -27,7 +27,8 @@ import org.slf4j.LoggerFactory;
 import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.client.metadata2.DecryptedMetaMetaData;
 import com.wlami.mibox.client.metadata2.EncryptedMetaMetaDataRepository;
-import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
+import com.wlami.mibox.client.metadata2.EncryptedMetadataObjectRepository;
+import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.MetaMetaDataHolder;
 import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
 import com.wlami.mibox.client.networking.synchronization.ChunkUploadRequest;
@@ -40,7 +41,8 @@ import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 public class MetadataRepositoryImpl implements MetadataRepository {
 
 	/** internal logging object. */
-	private static final Logger log = LoggerFactory.getLogger(MetadataRepositoryImpl.class);
+	private static final Logger log = LoggerFactory
+			.getLogger(MetadataRepositoryImpl.class);
 
 	/** Reference to the {@link AppSettingsDao} bean. */
 	private final AppSettingsDao appSettingsDao;
@@ -61,8 +63,10 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	private MetadataWorker worker;
 
 	/** loader reference which is needed for the worker */
-	private final EncryptedMiTreeRepository encryptedMiTreeRepo;
+	private final EncryptedMetadataObjectRepository<EncryptedMiTree> encryptedMiTreeRepo;
 
+	/** loader reference which is needed for the worker */
+	private final EncryptedMetadataObjectRepository<EncryptedMiFile> encryptedMiFileRepo;
 
 	DecryptedMetaMetaData decryptedMetaMetaData;
 
@@ -80,13 +84,18 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	 * default constructor.
 	 */
 	@Inject()
-	public MetadataRepositoryImpl(AppSettingsDao appSettingsDao, TransportProvider<ChunkUploadRequest> chunkTransport,
-			EncryptedMiTreeRepository encryptedMiTreeRepository, MetadataUtil metadataUtil,
-			EncryptedMetaMetaDataRepository encryptedMetaMetaDataRepository, ChunkEncryption chunkEncryption,
+	public MetadataRepositoryImpl(AppSettingsDao appSettingsDao,
+			TransportProvider<ChunkUploadRequest> chunkTransport,
+			EncryptedMetadataObjectRepository<EncryptedMiTree> encryptedMiTreeRepository,
+			EncryptedMetadataObjectRepository<EncryptedMiFile> encryptedMiFileRepository,
+ 			MetadataUtil metadataUtil,
+			EncryptedMetaMetaDataRepository encryptedMetaMetaDataRepository,
+			ChunkEncryption chunkEncryption,
 			MetaMetaDataHolder metaMetaDataHolder) {
 		this.appSettingsDao = appSettingsDao;
 		this.chunkTransport = chunkTransport;
-		encryptedMiTreeRepo = encryptedMiTreeRepository;
+		this.encryptedMiTreeRepo = encryptedMiTreeRepository;
+		this.encryptedMiFileRepo = encryptedMiFileRepository;
 		this.metadataUtil = metadataUtil;
 		this.chunkEncryption = chunkEncryption;
 		this.encryptedMetaMetaDataRepository = encryptedMetaMetaDataRepository;
@@ -101,8 +110,9 @@ public class MetadataRepositoryImpl implements MetadataRepository {
 	@Override
 	public void startProcessing() {
 		if (worker == null) {
-			worker = new MetadataWorker(appSettingsDao, chunkTransport, incomingEvents, encryptedMiTreeRepo,
-					metadataUtil, metaMetaDataHolder, chunkEncryption);
+			worker = new MetadataWorker(appSettingsDao, chunkTransport,
+					incomingEvents, encryptedMiTreeRepo, encryptedMiFileRepo,  metadataUtil,
+					metaMetaDataHolder, chunkEncryption);
 			worker.start();
 			log.info("Starting MetadataRepository");
 		} else {

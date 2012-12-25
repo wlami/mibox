@@ -91,7 +91,7 @@ public class MetaMetaDataHolder {
 				}
 			} else {
 				decryptedMetaMetaData = new DecryptedMetaMetaData();
-				decryptedMetaMetaData.setRoot(EncryptedMiTreeInformation.createRandom());
+				decryptedMetaMetaData.setRoot(EncryptedMetadataInformation.createRandom());
 				String filename = appSettings.getUsername();
 				encryptedMetaMetaData = decryptedMetaMetaData.encrypt(filename, key, iv);
 				repository.persistMetaMetaData(encryptedMetaMetaData);

@@ -28,7 +28,7 @@ package com.wlami.mibox.client.metadata2;
 public class EncryptableDecryptedObject<T extends DecryptedAbstractObject<U>, U extends EncryptedAbstractObject<T>> {
 
 	/** Information for the encryption of the object. */
-	EncryptedMiTreeInformation encryptedMiTreeInformation;
+	EncryptedMetadataInformation encryptedMiTreeInformation;
 
 	/** The actual object which shall be encrypted. */
 	T encryptableObject;
@@ -42,7 +42,7 @@ public class EncryptableDecryptedObject<T extends DecryptedAbstractObject<U>, U 
 	 *            the encryptable object.
 	 */
 	public EncryptableDecryptedObject(
-			EncryptedMiTreeInformation encryptedMiTreeInformation,
+			EncryptedMetadataInformation encryptedMiTreeInformation,
 			T encryptableObject) {
 		this.encryptedMiTreeInformation = encryptedMiTreeInformation;
 		this.encryptableObject = encryptableObject;
@@ -66,7 +66,7 @@ public class EncryptableDecryptedObject<T extends DecryptedAbstractObject<U>, U 
 	 * 
 	 * @return the encryptedMiTreeInformation
 	 */
-	public EncryptedMiTreeInformation getEncryptedMiTreeInformation() {
+	public EncryptedMetadataInformation getEncryptedMiTreeInformation() {
 		return encryptedMiTreeInformation;
 	}
 

@@ -37,7 +37,7 @@ DecryptedAbstractObject<EncryptedMetaMetaData> {
 	Logger log = LoggerFactory.getLogger(DecryptedMetaMetaData.class);
 
 	/** this object contains information on the root metadata node */
-	private EncryptedMiTreeInformation root;
+	private EncryptedMetadataInformation root;
 
 	/**
 	 * Default constructor
@@ -49,7 +49,7 @@ DecryptedAbstractObject<EncryptedMetaMetaData> {
 	/**
 	 * @return the root
 	 */
-	public EncryptedMiTreeInformation getRoot() {
+	public EncryptedMetadataInformation getRoot() {
 		return root;
 	}
 
@@ -57,7 +57,7 @@ DecryptedAbstractObject<EncryptedMetaMetaData> {
 	 * @param root
 	 *            the root to set
 	 */
-	public void setRoot(EncryptedMiTreeInformation root) {
+	public void setRoot(EncryptedMetadataInformation root) {
 		this.root = root;
 	}
 

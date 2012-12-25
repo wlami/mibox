@@ -30,7 +30,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.wlami.mibox.client.application.AppFolders;
 import com.wlami.mibox.client.networking.adapter.LowLevelTransporter;
 import com.wlami.mibox.client.networking.adapter.TransportInfo;
-import com.wlami.mibox.client.networking.synchronization.EncryptedMiTreeUploadRequest;
+import com.wlami.mibox.client.networking.synchronization.EncryptedMetadataUploadRequest;
 import com.wlami.mibox.client.networking.synchronization.TransportCallback;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 
@@ -39,12 +39,17 @@ import com.wlami.mibox.client.networking.synchronization.TransportProvider;
  * @author wladislaw Mitzel
  * 
  */
-public class EncryptedMiTreeRepository {
+public class EncryptedMetadataObjectRepository<U extends EncryptedAbstractObject<?>> {
 
 	/**
 	 * reference to a transporter which can handle uploads of encrypted mi trees
 	 */
-	private final TransportProvider<EncryptedMiTreeUploadRequest> transportProvider;
+	private final TransportProvider<EncryptedMetadataUploadRequest> transportProvider;
+
+	/**
+	 * the retrieval operations will return objects of this class.
+	 */
+	Class<U> metadataObjectClass;
 
 	/**
 	 * reference to a lowLevel transporter. it is used for synchronous retrieval
@@ -54,10 +59,10 @@ public class EncryptedMiTreeRepository {
 
 	/** interal logger */
 	private static Logger log = LoggerFactory
-			.getLogger(EncryptedMiTreeRepository.class);
+			.getLogger(EncryptedMetadataObjectRepository.class);
 
 	/**
-	 * Creates a new {@link EncryptedMiTreeRepository}.
+	 * Creates a new {@link EncryptedMetadataObjectRepository}.
 	 * 
 	 * @param transportProvider
 	 *            A reference to a transport provider which is used for uploads
@@ -65,30 +70,35 @@ public class EncryptedMiTreeRepository {
 	 * @param lowLevelTransporter
 	 *            sets {@link #lowLevelTransporter}
 	 */
-	public EncryptedMiTreeRepository(
-			TransportProvider<EncryptedMiTreeUploadRequest> transportProvider,
+	public EncryptedMetadataObjectRepository(Class<U> metadataObjectClass,
+			TransportProvider<EncryptedMetadataUploadRequest> transportProvider,
 			LowLevelTransporter lowLevelTransporter) {
+		this.metadataObjectClass = metadataObjectClass;
 		this.transportProvider = transportProvider;
 		this.lowLevelTransporter = lowLevelTransporter;
 	}
 
-	public EncryptedMiTree loadRemoteEncryptedMiTree(String fileName) {
+	public U loadRemoteEncryptedMetadata(String fileName) {
 		if (fileName == null) {
-			throw new IllegalArgumentException(
-					"filename must not be null when invoking loadRemoteEncryptedMiTree(String)");
+			throw new IllegalArgumentException("filename must not be null");
 		}
-		log.debug("loading remote encrypted mitree [{}]", fileName);
+		log.debug("loading remote encrypted metadata [{}]", fileName);
 		TransportInfo transportInfo = new TransportInfo(fileName);
-		EncryptedMiTree encryptedMiTree = null;
+		U encryptedMetadata = null;
 		try {
 			byte[] result = lowLevelTransporter.download(transportInfo);
-			encryptedMiTree = new EncryptedMiTree();
-			encryptedMiTree.setContent(result);
-			encryptedMiTree.setName(transportInfo.getResourceName());
-		} catch (UniformInterfaceException e) {
+			log.debug("loading done. Creating new instance of [{}] now",
+					metadataObjectClass);
+			encryptedMetadata = metadataObjectClass.newInstance();
+			encryptedMetadata.setContent(result);
+			encryptedMetadata.setName(transportInfo.getResourceName());
+			log.debug("Setting name [{}] and content [{}] of metadata",
+					encryptedMetadata.getName(), encryptedMetadata.getContent());
+		} catch (UniformInterfaceException | InstantiationException
+				| IllegalAccessException e) {
 			throw new RuntimeException(e);
 		}
-		return encryptedMiTree;
+		return encryptedMetadata;
 	}
 
 	/**
@@ -99,36 +109,35 @@ public class EncryptedMiTreeRepository {
 	 * @return <code>null</code> if there is an error<br/>
 	 *         {@link EncryptedMiTree} otherwise
 	 */
-	public EncryptedMiTree loadEncryptedMiTree(String fileName) {
+	public U loadEncryptedMetadata(String fileName) {
 		File file = new File(AppFolders.getConfigFolder(), fileName);
 		try (FileInputStream fileInputStream = new FileInputStream(file)) {
 			byte[] content = new byte[(int) file.length()];
 			fileInputStream.read(content);
-			EncryptedMiTree encryptedMiTree = new EncryptedMiTree();
-			encryptedMiTree.setContent(content);
-			encryptedMiTree.setName(fileName);
-			return encryptedMiTree;
-		} catch (IOException e) {
-			log.info("Error during load of encrypted MiTree [{}]",
+			U encryptedMetadata = this.metadataObjectClass.newInstance();
+			encryptedMetadata.setContent(content);
+			encryptedMetadata.setName(fileName);
+			return encryptedMetadata;
+		} catch (IOException | InstantiationException | IllegalAccessException e) {
+			log.info("Error during load of encrypted metadata [{}]",
 					file.getName());
 			return null;
 		}
 	}
 
 	/**
-	 * Save an encrypted MiTree to local file system
+	 * Save encrypted metadata to local file system
 	 * 
-	 * @param encryptedMiT
-	 *            log.debug("Creating new instance of EncryptedMiTree");ree The
-	 *            tree which shall be saved.
+	 * @param encryptedMetadata
+	 *            The metadata which shall be saved.
 	 * @param fileName
-	 *            filename of the MiTree.
+	 *            filename of the metadata.
 	 */
-	public void saveEncryptedMiTree(EncryptedMiTree encryptedMiTree,
+	public void saveEncryptedMetadata(U encryptedMetadata,
 			String fileName) {
 		File file = new File(AppFolders.getConfigFolder(), fileName);
 		try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-			fileOutputStream.write(encryptedMiTree.getContent());
+			fileOutputStream.write(encryptedMetadata.getContent());
 			transportProvider.addChunkUpload(createUploadRequest(file));
 		} catch (IOException e) {
 			log.error("Error during save of encrypted MiTree", e);
@@ -136,14 +145,15 @@ public class EncryptedMiTreeRepository {
 	}
 
 	/**
-	 * Creates a new upload request for an encryptedMiTree which is located
+	 * Creates a new upload request for encrypted metadata
 	 * 
 	 * @param file
-	 *            a file representing the encryptedMiTree in the filesystem.
+	 *            a file representing the encrypted metadata in the filesystem.
 	 * @return An upload request containing a file and a callback.
 	 */
-	protected EncryptedMiTreeUploadRequest createUploadRequest(File file) {
-		EncryptedMiTreeUploadRequest request = new EncryptedMiTreeUploadRequest(this);
+	protected EncryptedMetadataUploadRequest createUploadRequest(File file) {
+		EncryptedMetadataUploadRequest request = new EncryptedMetadataUploadRequest(
+				this);
 		request.setFile(file);
 		request.setUploadCallback(new TransportCallback() {
 			@Override

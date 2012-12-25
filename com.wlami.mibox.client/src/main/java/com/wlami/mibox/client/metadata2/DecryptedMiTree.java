@@ -48,9 +48,9 @@ public class DecryptedMiTree extends
 	/** name of this folder */
 	private String folderName;
 
-	private Map<String, EncryptedMiTreeInformation> subfolder = new HashMap<>();
+	private Map<String, EncryptedMetadataInformation> subfolder = new HashMap<>();
 
-	private Map<String, EncryptedMiTreeInformation> files = new HashMap<>();
+	private Map<String, EncryptedMetadataInformation> files = new HashMap<>();
 
 	/**
 	 * @return the folderName
@@ -72,28 +72,28 @@ public class DecryptedMiTree extends
 	/**
 	 * @return the subfolder
 	 */
-	public Map<String, EncryptedMiTreeInformation> getSubfolder() {
+	public Map<String, EncryptedMetadataInformation> getSubfolder() {
 		return subfolder;
 	}
 
 	/**
 	 * @param subfolder the subfolder to set
 	 */
-	public void setSubfolder(Map<String, EncryptedMiTreeInformation> subfolder) {
+	public void setSubfolder(Map<String, EncryptedMetadataInformation> subfolder) {
 		this.subfolder = subfolder;
 	}
 
 	/**
 	 * @return the files
 	 */
-	public Map<String, EncryptedMiTreeInformation> getFiles() {
+	public Map<String, EncryptedMetadataInformation> getFiles() {
 		return files;
 	}
 
 	/**
 	 * @param files the files to set
 	 */
-	public void setFiles(Map<String, EncryptedMiTreeInformation> files) {
+	public void setFiles(Map<String, EncryptedMetadataInformation> files) {
 		this.files = files;
 	}
 

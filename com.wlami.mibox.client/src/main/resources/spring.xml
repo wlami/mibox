@@ -59,6 +59,14 @@
 		<constructor-arg name="lowLevelTransporter" ref="metadataRestTransporter" />
 	</bean>
 
+	<bean id="encryptedMiFileRepository"
+		class="com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository">
+		<constructor-arg name="lowLevelTransporter" ref="filemetadataRestTransporter" />
+		<constructor-arg name="transportProvider" ref="encryptedMiFileTransportProvider" />
+	</bean>
+	
+	
+
 	<bean id="chunkTransportProvider"
 		class="com.wlami.mibox.client.networking.synchronization.ChunkTransportProviderSingleThread">
 		<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
@@ -68,6 +76,13 @@
 		class="com.wlami.mibox.client.networking.synchronization.EncryptedMiTreeTransportProviderSingleThread">
 		<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
 	</bean>
+	
+	<bean id="encryptedMiFileTransportProvider"
+		class="com.wlami.mibox.client.networking.synchronization.EncryptedMiTreeTransportProviderSingleThread">
+		<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
+		<property name="serverUrlSuffix" value="rest/filemetadatamanager" />
+	</bean>
+	
 
 	<bean id="metadataUtil" class="com.wlami.mibox.client.metadata.MetadataUtil">
 		<constructor-arg name="encryptedMiTreeRepository" ref="encryptedMiTreeRepository" />
@@ -77,8 +92,15 @@
 	<bean id="metadataRestTransporter"
 		class="com.wlami.mibox.client.networking.adapter.RestTransporter">
 		<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
-		<constructor-arg name="dataStoreSuffix" value="rest/metadatamanager/"></constructor-arg>
+		<constructor-arg name="dataStoreSuffix" value="rest/metadatamanager/" />
 	</bean>
+	
+	<bean id="filemetadataRestTransporter"
+		class="com.wlami.mibox.client.networking.adapter.RestTransporter">
+		<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
+		<constructor-arg name="dataStoreSuffix" value="rest/filemetadatamanager/" />
+	</bean>
+	
 
 	<bean id="metaMetaDataHolder" class="com.wlami.mibox.client.metadata2.MetaMetaDataHolder">
 		<constructor-arg name="appSettingsDao" ref="appSettingsDao" />
@@ -94,12 +116,11 @@
 		<property name="password" value="" />
 	</bean>
 
-	<!-- provides a H2 console to look into the db if necessary 
-	     switch on with "-Dcom.wlami.mibox.db.h2webconsole=true"
-	     -->
+	<!-- provides a H2 console to look into the db if necessary switch on with 
+		"-Dcom.wlami.mibox.db.h2webconsole=true" -->
 	<bean id="h2WebConsole" class="com.wlami.mibox.client.db.H2WebConsole"
 		depends-on="dataSource" init-method="init" lazy-init="false">
-		<constructor-arg name="port" value="12300" />	
+		<constructor-arg name="port" value="12300" />
 	</bean>
 
 </beans>

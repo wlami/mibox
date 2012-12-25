@@ -17,21 +17,21 @@
  */
 package com.wlami.mibox.client.networking.synchronization;
 
-import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
+import com.wlami.mibox.client.metadata2.EncryptedMetadataObjectRepository;
 import com.wlami.mibox.client.networking.transporter.Transportable;
 
 /**
  * @author wladislaw
  *
  */
-public class EncryptedMiTreeUploadRequest extends
-UploadRequest<EncryptedMiTreeUploadRequest> {
+public class EncryptedMetadataUploadRequest extends
+UploadRequest<EncryptedMetadataUploadRequest> {
 
-	private final EncryptedMiTreeRepository encryptedMiTreeRepository;
+	private final EncryptedMetadataObjectRepository encryptedMetadataRepository;
 
-	public EncryptedMiTreeUploadRequest(
-			EncryptedMiTreeRepository encryptedMiTreeRepository) {
-		this.encryptedMiTreeRepository = encryptedMiTreeRepository;
+	public EncryptedMetadataUploadRequest(
+			EncryptedMetadataObjectRepository encryptedMetadataRepository) {
+		this.encryptedMetadataRepository = encryptedMetadataRepository;
 	}
 
 	/**
@@ -49,7 +49,7 @@ UploadRequest<EncryptedMiTreeUploadRequest> {
 	 * @see java.lang.Comparable#compareTo(java.lang.Object)
 	 */
 	@Override
-	public int compareTo(EncryptedMiTreeUploadRequest o) {
+	public int compareTo(EncryptedMetadataUploadRequest o) {
 		return o.getName().compareTo(getName());
 	}
 
@@ -61,6 +61,6 @@ UploadRequest<EncryptedMiTreeUploadRequest> {
 	 */
 	@Override
 	public Transportable getTransportable() {
-		return encryptedMiTreeRepository.loadEncryptedMiTree(file.getName());
+		return encryptedMetadataRepository.loadEncryptedMetadata(file.getName());
 	}
 }

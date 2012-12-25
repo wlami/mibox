@@ -39,7 +39,14 @@ import com.wlami.mibox.client.networking.transporter.Transporter;
  * 
  */
 @Named(value = "metaTransport")
-public class EncryptedMiTreeTransportProviderSingleThread implements TransportProvider<EncryptedMiTreeUploadRequest> {
+public class EncryptedMiTreeTransportProviderSingleThread implements
+		TransportProvider<EncryptedMetadataUploadRequest> {
+
+	/**
+	 * defines the suffix for server requests. Default is
+	 * {@value #SERVER_URL_SUFFIX_REST_INTERFACE}
+	 */
+	private String serverUrlSuffix = SERVER_URL_SUFFIX_REST_INTERFACE;
 
 	/**
 	 * 
@@ -47,27 +54,29 @@ public class EncryptedMiTreeTransportProviderSingleThread implements TransportPr
 	protected static final String SERVER_URL_SUFFIX_REST_INTERFACE = "rest/metadatamanager/";
 
 	/** internal logger. */
-	Logger log = LoggerFactory.getLogger(EncryptedMiTreeTransportProviderSingleThread.class);
+	Logger log = LoggerFactory
+			.getLogger(EncryptedMiTreeTransportProviderSingleThread.class);
 
 	/** reference to the {@link AppSettingsDao} for retrieving the appSettings */
 	AppSettingsDao appSettingsDao;
 
 	/** reference to our only working thread */
-	TransportWorker<EncryptedMiTreeUploadRequest, EncryptedMiTree> transportWorker;
+	TransportWorker<EncryptedMetadataUploadRequest, EncryptedMiTree> transportWorker;
 
 	/**
-	 * collection of {@link EncryptedMiTreeUploadRequest}s which shall be
+	 * collection of {@link EncryptedMetadataUploadRequest}s which shall be
 	 * uploaded.
 	 */
-	ConcurrentSkipListSet<EncryptedMiTreeUploadRequest> uploads;
+	ConcurrentSkipListSet<EncryptedMetadataUploadRequest> uploads;
 
 	ConcurrentSkipListSet<DownloadRequest> downloads;
 
 	/** default constructor. */
 	@Inject
-	public EncryptedMiTreeTransportProviderSingleThread(AppSettingsDao appSettingsDao) {
+	public EncryptedMiTreeTransportProviderSingleThread(
+			AppSettingsDao appSettingsDao) {
 		this.appSettingsDao = appSettingsDao;
-		uploads = new ConcurrentSkipListSet<EncryptedMiTreeUploadRequest>();
+		uploads = new ConcurrentSkipListSet<EncryptedMetadataUploadRequest>();
 		downloads = new ConcurrentSkipListSet<>();
 	}
 
@@ -81,11 +90,13 @@ public class EncryptedMiTreeTransportProviderSingleThread implements TransportPr
 	public void startProcessing() {
 		if (transportWorker == null) {
 			AppSettings appSettings = appSettingsDao.load();
-			String dataStoreUrl = appSettings.getServerUrl() + SERVER_URL_SUFFIX_REST_INTERFACE;
-			RestTransporter restTransporter = new RestTransporter(dataStoreUrl, appSettings.getUsername(),
-					appSettings.getPassword());
+			String dataStoreUrl = appSettings.getServerUrl()
+					+ this.serverUrlSuffix;
+			RestTransporter restTransporter = new RestTransporter(dataStoreUrl,
+					appSettings.getUsername(), appSettings.getPassword());
 			Transporter transporter = new Transporter(restTransporter);
-			transportWorker = new TransportWorker<>(transporter, uploads, downloads);
+			transportWorker = new TransportWorker<>(transporter, uploads,
+					downloads);
 			transportWorker.start();
 			log.info("Starting EncryptedMiTreeTransportProviderSingleThread");
 		} else {
@@ -124,7 +135,7 @@ public class EncryptedMiTreeTransportProviderSingleThread implements TransportPr
 	 * com.wlami.mibox.client.networking.synchronization.TransportCallback)
 	 */
 	@Override
-	public void addChunkUpload(EncryptedMiTreeUploadRequest mChunkUpload) {
+	public void addChunkUpload(EncryptedMetadataUploadRequest mChunkUpload) {
 		if (!uploads.add(mChunkUpload)) {
 			log.debug("Upload task not added. Already existing.");
 		}
@@ -152,7 +163,8 @@ public class EncryptedMiTreeTransportProviderSingleThread implements TransportPr
 	 * (com.wlami.mibox.client.networking.synchronization.RequestContainer)
 	 */
 	@Override
-	public void addDownloadContainer(RequestContainer<DownloadRequest> downloadRequestContainer) {
+	public void addDownloadContainer(
+			RequestContainer<DownloadRequest> downloadRequestContainer) {
 		downloads.addAll(downloadRequestContainer.getRequests());
 	}
 
@@ -164,7 +176,18 @@ public class EncryptedMiTreeTransportProviderSingleThread implements TransportPr
 	 * (com.wlami.mibox.client.networking.synchronization.RequestContainer)
 	 */
 	@Override
-	public void addUploadContainer(RequestContainer<EncryptedMiTreeUploadRequest> uploadRequestContainer) {
+	public void addUploadContainer(
+			RequestContainer<EncryptedMetadataUploadRequest> uploadRequestContainer) {
 		uploads.addAll(uploadRequestContainer.getRequests());
+	}
+
+	/**
+	 * Setter for {@link #serverUrlSuffix}
+	 * 
+	 * @param serverUrlSuffix
+	 *            the serverUrlSuffix to set
+	 */
+	public void setServerUrlSuffix(String serverUrlSuffix) {
+		this.serverUrlSuffix = serverUrlSuffix;
 	}
 }

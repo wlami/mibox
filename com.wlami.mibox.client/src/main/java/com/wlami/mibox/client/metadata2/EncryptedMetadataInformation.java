@@ -26,7 +26,7 @@ import com.wlami.mibox.core.encryption.KeyGen;
  * @author stefan baust
  * 
  */
-public class EncryptedMiTreeInformation {
+public class EncryptedMetadataInformation {
 
 	private String fileName;
 
@@ -80,14 +80,14 @@ public class EncryptedMiTreeInformation {
 	}
 
 	/**
-	 * Creates a new {@link EncryptedMiTreeInformation} with random key, iv and
+	 * Creates a new {@link EncryptedMetadataInformation} with random key, iv and
 	 * filename.
 	 * 
 	 * @return A new instance containing the random data.
 	 */
-	public static EncryptedMiTreeInformation createRandom() {
-		EncryptedMiTreeInformation encryptedMiTreeInformation;
-		encryptedMiTreeInformation = new EncryptedMiTreeInformation();
+	public static EncryptedMetadataInformation createRandom() {
+		EncryptedMetadataInformation encryptedMiTreeInformation;
+		encryptedMiTreeInformation = new EncryptedMetadataInformation();
 		KeyGen keyGen = new KeyGen();
 		encryptedMiTreeInformation.setIv(keyGen.generateRandomBytes(16));
 		encryptedMiTreeInformation.setKey(keyGen.generateRandomBytes(32));

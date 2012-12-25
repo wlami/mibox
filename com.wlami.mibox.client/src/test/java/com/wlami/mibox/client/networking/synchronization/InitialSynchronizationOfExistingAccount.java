@@ -31,11 +31,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.wlami.mibox.client.application.AppSettingsDao;
+import com.wlami.mibox.client.metadata.EncryptedMiFile;
 import com.wlami.mibox.client.metadata.MetadataUtil;
 import com.wlami.mibox.client.metadata.MetadataWorker;
 import com.wlami.mibox.client.metadata2.EncryptedMetaMetaDataRepository;
-import com.wlami.mibox.client.metadata2.EncryptedMiTreeInformation;
-import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
+import com.wlami.mibox.client.metadata2.EncryptedMetadataInformation;
+import com.wlami.mibox.client.metadata2.EncryptedMetadataObjectRepository;
+import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.MetaMetaDataHolder;
 import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
 
@@ -43,7 +45,7 @@ import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
  * Tests the initial download of the mibox content. <br/>
  * <br/>
  * <b>Prerequisite</b>: One has to be in posession of local meta meta data with
- * {@link EncryptedMiTreeInformation} for the root.
+ * {@link EncryptedMetadataInformation} for the root.
  * 
  * @author wladislaw
  * 
@@ -67,20 +69,26 @@ public class InitialSynchronizationOfExistingAccount {
 	@Resource
 	public MetadataUtil metadataUtil;
 
-	@Autowired
-	public EncryptedMiTreeRepository encryptedMiTreeRepository;
+	@Resource
+	public EncryptedMetadataObjectRepository<EncryptedMiTree> encryptedMiTreeRepository;
+
+	@Resource
+	public EncryptedMetadataObjectRepository<EncryptedMiFile> encryptedMiFileRepository;
 
 	@Resource
 	public MetaMetaDataHolder metaMetaDataHolder;
 
 	@Test
-	public void synchronizeExistingRemoteMiboxToFilesystem() throws JsonParseException, JsonMappingException,
-	CryptoException, IOException {
+	public void synchronizeExistingRemoteMiboxToFilesystem()
+			throws JsonParseException, JsonMappingException, CryptoException,
+			IOException {
 
 		chunkTransportProvider.startProcessing();
 
-		MetadataWorker metadataWorker = new MetadataWorker(appSettingsDao, chunkTransportProvider, null,
-				encryptedMiTreeRepository, metadataUtil, metaMetaDataHolder, chunkEncryption);
+		MetadataWorker metadataWorker = new MetadataWorker(appSettingsDao,
+				chunkTransportProvider, null, encryptedMiTreeRepository,
+				encryptedMiFileRepository, metadataUtil, metaMetaDataHolder,
+				chunkEncryption);
 
 		metadataWorker.synchronizeLocalMetadataWithRemoteMetadata();
 

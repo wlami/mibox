@@ -35,7 +35,7 @@ import com.wlami.mibox.client.db.DbBootstraper;
 import com.wlami.mibox.client.gui.MiboxTray;
 import com.wlami.mibox.client.metadata.MetadataRepository;
 import com.wlami.mibox.client.networking.synchronization.ChunkUploadRequest;
-import com.wlami.mibox.client.networking.synchronization.EncryptedMiTreeUploadRequest;
+import com.wlami.mibox.client.networking.synchronization.EncryptedMetadataUploadRequest;
 import com.wlami.mibox.client.networking.synchronization.TransportProvider;
 
 /**
@@ -109,14 +109,14 @@ public final class MiboxClientApp {
 		this.chunkTransportProvider = chunkTransportProvider;
 	}
 
-	TransportProvider<EncryptedMiTreeUploadRequest> encryptedMiTreeTransportProvider;
+	TransportProvider<EncryptedMetadataUploadRequest> encryptedMiTreeTransportProvider;
 
 	/**
 	 * @param encryptedMiTreeTransportProvider
 	 *            the encryptedMiTreeTransportProvider to set
 	 */
 	public void setEncryptedMiTreeTransportProvider(
-			TransportProvider<EncryptedMiTreeUploadRequest> encryptedMiTreeTransportProvider) {
+			TransportProvider<EncryptedMetadataUploadRequest> encryptedMiTreeTransportProvider) {
 		this.encryptedMiTreeTransportProvider = encryptedMiTreeTransportProvider;
 	}
 

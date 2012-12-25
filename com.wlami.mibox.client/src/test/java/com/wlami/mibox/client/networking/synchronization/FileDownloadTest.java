@@ -35,10 +35,12 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.wlami.mibox.client.application.AppSettingsDao;
 import com.wlami.mibox.client.metadata.DecryptedMiFile;
+import com.wlami.mibox.client.metadata.EncryptedMiFile;
 import com.wlami.mibox.client.metadata.MetadataUtil;
 import com.wlami.mibox.client.metadata.MetadataWorker;
 import com.wlami.mibox.client.metadata2.EncryptedMetaMetaDataRepository;
-import com.wlami.mibox.client.metadata2.EncryptedMiTreeRepository;
+import com.wlami.mibox.client.metadata2.EncryptedMetadataObjectRepository;
+import com.wlami.mibox.client.metadata2.EncryptedMiTree;
 import com.wlami.mibox.client.metadata2.MetaMetaDataHolder;
 import com.wlami.mibox.client.networking.encryption.ChunkEncryption;
 
@@ -65,8 +67,12 @@ public class FileDownloadTest {
 	@Resource
 	public MetadataUtil metadataUtil;
 
-	@Autowired
-	public EncryptedMiTreeRepository encryptedMiTreeRepository;
+	@Resource
+	public EncryptedMetadataObjectRepository<EncryptedMiTree> encryptedMiTreeRepository;
+
+
+	@Resource
+	public EncryptedMetadataObjectRepository<EncryptedMiFile> encryptedMiFileRepository;
 
 	@Resource
 	public MetaMetaDataHolder metaMetaDataHolder;
@@ -103,7 +109,7 @@ public class FileDownloadTest {
 
 	@Test
 	public void test() throws JsonParseException, JsonMappingException, CryptoException, IOException {
-		MetadataWorker metadataWorker = new MetadataWorker(appSettingsDao, chunkTransportProvider, null, null, null,
+		MetadataWorker metadataWorker = new MetadataWorker(appSettingsDao, chunkTransportProvider, null, null,  null, null,
 				null, chunkEncryption);
 
 		DecryptedMiFile mFile = metadataUtil.locateMFile("/13 - DJ Morgoth - Ein In The End Teil.mp3");

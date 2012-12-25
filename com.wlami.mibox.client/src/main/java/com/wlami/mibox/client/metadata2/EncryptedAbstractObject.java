@@ -102,5 +102,9 @@ implements Decryptable<Encryptable<?>>, Transportable {
 			throw new CryptoRuntimeException(e);
 		}
 	}
+	
+	public T decrypt(EncryptedMetadataInformation encryptedMiTreeInformation) {
+		return decrypt(encryptedMiTreeInformation.getKey(), encryptedMiTreeInformation.getIv());
+	}
 
 }
